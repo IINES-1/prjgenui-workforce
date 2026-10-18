@@ -49,6 +49,15 @@
     open: 'Open', matched: 'Matched', offered: 'Offered',
     filled: 'Filled', closed: 'Closed'
   };
+  var ASSIGN_STATUS = {
+    proposed: 'Proposed', confirmed: 'Confirmed', completed: 'Completed',
+    cancelled: 'Cancelled', legacy_recorded: 'Legacy'
+  };
+  var ASSIGN_BADGE = {
+    proposed: 'pending', confirmed: 'pass', completed: 'verified',
+    cancelled: 'fail', legacy_recorded: 'pending'
+  };
+  var currentRequest = null;
 
   var els = {
     loginView: document.getElementById('login-view'),
@@ -132,6 +141,13 @@
     matchesSummary: document.getElementById('matches-summary'),
     matchesRows: document.getElementById('matches-rows'),
     matchesClose: document.getElementById('matches-close'),
+    assignmentsPanel: document.getElementById('assignments-panel'),
+    assignmentRows: document.getElementById('assignment-rows'),
+    assignmentStatus: document.getElementById('assignment-status'),
+    outcomeForm: document.getElementById('outcome-form'),
+    outcomeTitle: document.getElementById('outcome-title'),
+    outcomeStatus: document.getElementById('outcome-status'),
+    outcomeCancel: document.getElementById('outcome-cancel'),
     signout: document.getElementById('signout')
   };
 
@@ -826,7 +842,7 @@
 
   function loadRequests() {
     sb.from('workforce_requests')
-      .select('id, public_reference, trade, number_needed, start_date, urgent, status')
+      .select('id, public_reference, trade, number_needed, start_date, urgent, status, contractor_id')
       .order('created_at', { ascending: false })
       .limit(50)
       .then(function (res) {
@@ -896,6 +912,7 @@
   }
 
   function loadMatches(r) {
+    currentRequest = r;
     els.matchesView.hidden = false;
     els.matchesTitle.textContent = 'Matches — ' +
       (r.public_reference || r.trade);
@@ -912,10 +929,9 @@
         els.matchesSummary.textContent = 'Generated ' + fmtDate(gen.created_at) +
           ' (rules ' + gen.rules_version + ')';
         return sb.from('matches')
-          .select('rank, factors, workers(full_name, passport_no, trade)')
+          .select('rank, factors, workers(id, full_name, passport_no, trade)')
           .eq('generation_id', gen.id)
-          .order('rank', { ascending: false, nullsFirst: false })
-          .order('workers(full_name)', { ascending: true });
+          .order('rank', { ascending: false, nullsFirst: false });
       })
       .then(function (res) {
         if (!res) return;
@@ -932,6 +948,15 @@
             (m.rank
               ? ' ' + badge('pass', 'Put forward #' + m.rank)
               : ' ' + badge('fail', 'Held back'));
+          if (m.rank && canManageRequests && w.id) {
+            var propose = document.createElement('button');
+            propose.type = 'button';
+            propose.className = 'btn small';
+            propose.textContent = 'Propose assignment';
+            propose.addEventListener('click', function () { proposeAssignment(w); });
+            head.appendChild(document.createTextNode(' '));
+            head.appendChild(propose);
+          }
           div.appendChild(head);
           var tbl = document.createElement('table');
           tbl.innerHTML = '<thead><tr><th>Factor</th><th>Result</th><th>Reason</th></tr></thead><tbody>' +
@@ -998,6 +1023,200 @@
     els.matchesView.hidden = true;
   });
 
+  function proposeAssignment(w) {
+    if (!currentRequest) return;
+    sb.from('assignments').insert({
+      request_id: currentRequest.id,
+      worker_id: w.id,
+      contractor_id: currentRequest.contractor_id || null,
+      trade: currentRequest.trade,
+      start_date: currentRequest.start_date || null,
+      role: 'worker'
+    }).then(function (res) {
+      if (res.error) {
+        showActionStatus(els.matchesSummary, false, friendlyDbError(res.error));
+        return;
+      }
+      sb.from('workforce_requests')
+        .update({ status: 'offered' })
+        .eq('id', currentRequest.id)
+        .in('status', ['open', 'matched'])
+        .then(function () {
+          loadRequests();
+          loadAssignments();
+        });
+    });
+  }
+
+  function loadAssignments() {
+    sb.from('assignments')
+      .select('id, public_reference, status, trade, start_date, request_id, ' +
+        'workers(full_name, passport_no), workforce_requests(public_reference, number_needed)')
+      .order('created_at', { ascending: false })
+      .limit(50)
+      .then(function (res) {
+        els.assignmentRows.innerHTML = '';
+        (res.data || []).forEach(function (a) {
+          var w = a.workers || {};
+          var req = a.workforce_requests || {};
+          var tr = document.createElement('tr');
+          [a.public_reference || '—',
+            (w.passport_no ? w.passport_no + ' · ' : '') + (w.full_name || 'Worker'),
+            a.trade || '—', fmtDate(a.start_date)].forEach(function (t) {
+            var td = document.createElement('td');
+            td.textContent = t;
+            tr.appendChild(td);
+          });
+          var tdS = document.createElement('td');
+          tdS.innerHTML = badge(ASSIGN_BADGE[a.status] || 'pending',
+            ASSIGN_STATUS[a.status] || a.status) +
+            (req.public_reference ? ' <span class="profile-line">' +
+              req.public_reference + '</span>' : '');
+          tr.appendChild(tdS);
+          var td = document.createElement('td');
+          td.className = 'right';
+          if (canManageRequests) {
+            if (a.status === 'proposed') {
+              var conf = document.createElement('button');
+              conf.type = 'button';
+              conf.className = 'btn small';
+              conf.textContent = 'Confirm';
+              conf.addEventListener('click', function () { confirmAssignment(a); });
+              td.appendChild(conf);
+              td.appendChild(document.createTextNode(' '));
+            }
+            if (a.status === 'proposed' || a.status === 'confirmed') {
+              var can = document.createElement('button');
+              can.type = 'button';
+              can.className = 'btn small ghost';
+              can.textContent = 'Cancel';
+              can.addEventListener('click', function () { cancelAssignment(a); });
+              td.appendChild(can);
+              td.appendChild(document.createTextNode(' '));
+            }
+            if (a.status === 'confirmed') {
+              var out = document.createElement('button');
+              out.type = 'button';
+              out.className = 'btn small';
+              out.textContent = 'Record outcome';
+              out.addEventListener('click', function () { openOutcome(a); });
+              td.appendChild(out);
+            }
+          }
+          tr.appendChild(td);
+          els.assignmentRows.appendChild(tr);
+        });
+      });
+  }
+
+  function confirmAssignment(a) {
+    sb.from('assignments').update({ status: 'confirmed' })
+      .eq('id', a.id)
+      .then(function (res) {
+        if (res.error) {
+          var msg = (res.error.message || '');
+          if (msg.indexOf('hard gate') !== -1) {
+            showActionStatus(els.assignmentStatus, false,
+              'The hard gate refused confirmation — this worker needs a current ' +
+              'passing readiness evaluation first. Open the worker\'s detail and ' +
+              'run a readiness check, then confirm.');
+          } else {
+            showActionStatus(els.assignmentStatus, false, friendlyDbError(res.error));
+          }
+          return;
+        }
+        els.assignmentStatus.hidden = true;
+        sb.from('assignments')
+          .select('id', { count: 'exact', head: true })
+          .eq('request_id', a.request_id)
+          .eq('status', 'confirmed')
+          .then(function (cnt) {
+            var req = a.workforce_requests || {};
+            if ((cnt.count || 0) >= (req.number_needed || 1)) {
+              sb.from('workforce_requests')
+                .update({ status: 'filled' })
+                .eq('id', a.request_id)
+                .eq('status', 'offered')
+                .then(function () { loadRequests(); loadAssignments(); });
+            } else {
+              loadRequests();
+              loadAssignments();
+            }
+          });
+      });
+  }
+
+  function cancelAssignment(a) {
+    sb.from('assignments').update({ status: 'cancelled' })
+      .eq('id', a.id)
+      .then(function (res) {
+        if (res.error) {
+          showActionStatus(els.assignmentStatus, false, friendlyDbError(res.error));
+          return;
+        }
+        els.assignmentStatus.hidden = true;
+        loadAssignments();
+        loadRequests();
+      });
+  }
+
+  var outcomeAssignment = null;
+
+  function openOutcome(a) {
+    outcomeAssignment = a;
+    var w = a.workers || {};
+    els.outcomeTitle.textContent = 'Record outcome — ' +
+      (a.public_reference || '') + ' · ' + (w.full_name || 'worker');
+    els.outcomeForm.hidden = false;
+    els.outcomeStatus.hidden = true;
+    document.getElementById('oc-attended').value = 'yes';
+    document.getElementById('oc-rating').value = '';
+    document.getElementById('oc-rehire').value = '';
+    document.getElementById('oc-feedback').value = '';
+    els.outcomeForm.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  els.outcomeCancel.addEventListener('click', function () {
+    els.outcomeForm.hidden = true;
+    outcomeAssignment = null;
+  });
+
+  els.outcomeForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!outcomeAssignment) return;
+    els.outcomeStatus.hidden = true;
+    var rating = document.getElementById('oc-rating').value;
+    var rehire = document.getElementById('oc-rehire').value;
+    if (!rating || !rehire) {
+      showActionStatus(els.outcomeStatus, false,
+        'Choose the rating and the rehire decision.');
+      return;
+    }
+    sb.from('assignment_outcomes').insert({
+      assignment_id: outcomeAssignment.id,
+      attended: document.getElementById('oc-attended').value === 'yes',
+      rating: parseInt(rating, 10),
+      rehire_decision: rehire,
+      client_feedback: document.getElementById('oc-feedback').value.trim() || null
+    }).then(function (res) {
+      if (res.error) {
+        showActionStatus(els.outcomeStatus, false, friendlyDbError(res.error));
+        return;
+      }
+      sb.from('assignments').update({ status: 'completed' })
+        .eq('id', outcomeAssignment.id)
+        .then(function (res2) {
+          if (res2.error) {
+            showActionStatus(els.outcomeStatus, false, friendlyDbError(res2.error));
+            return;
+          }
+          els.outcomeForm.hidden = true;
+          outcomeAssignment = null;
+          loadAssignments();
+        });
+    });
+  });
+
   function loadProfile(user) {
     els.noProfile.hidden = true;
     els.profileLine.textContent = 'Loading your profile…';
@@ -1054,9 +1273,12 @@
         els.requestsPanel.hidden = !canSeeRequests;
         els.requestForm.hidden = !canManageRequests;
         els.contractorDetails.hidden = !canManageRequests;
+        els.assignmentsPanel.hidden = !canSeeRequests;
+        els.outcomeForm.hidden = true;
         if (canSeeRequests) {
           loadRequests();
           if (canManageRequests) loadContractors();
+          loadAssignments();
         } else {
           els.matchesView.hidden = true;
         }

@@ -335,6 +335,57 @@
         <div id="matches-rows"></div>
       </div>
 
+      <!-- Assignments: Owner and Operations manage; Compliance and Auditor read -->
+      <div id="assignments-panel" class="card" hidden>
+        <h2>Assignments</h2>
+        <table>
+          <thead><tr><th>Ref</th><th>Worker</th><th>Trade</th><th>Start</th><th>Status</th><th></th></tr></thead>
+          <tbody id="assignment-rows"></tbody>
+        </table>
+        <p id="assignment-status" class="error" hidden></p>
+        <form id="outcome-form" class="card" hidden novalidate>
+          <h3 id="outcome-title">Record outcome</h3>
+          <div class="fields">
+            <div class="field">
+              <label for="oc-attended">Worker attended</label>
+              <select id="oc-attended">
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="oc-rating">Rating</label>
+              <select id="oc-rating">
+                <option value="">Choose…</option>
+                <option value="1">1 — poor</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5 — excellent</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="oc-rehire">Would rehire</label>
+              <select id="oc-rehire">
+                <option value="">Choose…</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+                <option value="undecided">Undecided</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="oc-feedback">Client feedback</label>
+            <textarea id="oc-feedback" rows="3" placeholder="How the job went, from the client's side"></textarea>
+          </div>
+          <div class="row-actions">
+            <button class="btn" type="submit" id="outcome-btn">Save outcome</button>
+            <button class="btn ghost" type="button" id="outcome-cancel">Back</button>
+          </div>
+          <p id="outcome-status" class="error" hidden></p>
+        </form>
+      </div>
+
       <!-- Invitations: Owner and Operations only -->
       <div id="invitations" class="card" hidden>
         <h2>Invitations</h2>
