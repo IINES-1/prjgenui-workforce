@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>More colour palettes | PRJGENUI Workforce</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1B2A4A">
+
+<!-- Fonts -->
+<link rel="preload" href="fonts/archivo.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/ibm-plex-sans.woff2" as="font" type="font/woff2" crossorigin>
+
+<!-- Styles -->
+<link rel="stylesheet" href="styles-legacy.css?v=1">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="/images/brand/favicon-48.png">
+<link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
+
+<style>
+.review-head{padding:64px 0 24px;}
+.review-head h1{font-size:clamp(2rem,4vw,2.75rem);}
+.review-head .lede{margin-top:18px;max-width:var(--measure);color:var(--ink-soft);font-size:1.1rem;}
+.review-head .intro-note{margin-top:18px;padding:16px 20px;background:var(--steel-pale);border-left:3px solid var(--steel);border-radius:2px;max-width:640px;}
+.review-head .intro-note p{font-size:.95rem;color:var(--ink-soft);line-height:1.6;}
+
+.scheme-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:28px;padding-bottom:40px;}
+
+.scheme-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;}
+
+.scheme-card .label{padding:18px 20px 10px;border-bottom:1px solid var(--line);}
+.scheme-card .label .num{font-family:var(--display);font-weight:800;font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);}
+.scheme-card .label h3{margin-top:4px;}
+.scheme-card .label p{margin-top:6px;font-size:.85rem;color:var(--slate);line-height:1.5;}
+
+.scheme-card .preview{padding:0;}
+.scheme-card .preview .bar{height:56px;display:flex;align-items:center;padding:0 20px;font-family:var(--display);font-weight:800;font-size:1rem;color:#fff;letter-spacing:-.02em;}
+.scheme-card .preview .bar span{margin-left:auto;font-family:var(--sans);font-weight:600;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;opacity:.8;}
+.scheme-card .preview .body{padding:20px;background:var(--paper);border-top:1px solid rgba(255,255,255,.08);}
+.scheme-card .preview .body h4{font-family:var(--display);font-weight:700;font-size:1.05rem;margin-bottom:8px;}
+.scheme-card .preview .body p{font-size:.9rem;color:var(--ink-soft);line-height:1.55;margin-bottom:14px;}
+.scheme-card .preview .body .btn-row{display:flex;gap:10px;flex-wrap:wrap;}
+.scheme-card .preview .body .btn{display:inline-block;padding:9px 18px;border-radius:2px;font-size:.85rem;font-weight:700;font-family:var(--sans);text-decoration:none;letter-spacing:.01em;}
+.scheme-card .preview .body .btn-primary{color:#fff;}
+.scheme-card .preview .body .btn-secondary{color:#fff;}
+.scheme-card .preview .body .link{font-size:.85rem;font-weight:600;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;}
+
+.scheme-card .swatches{display:flex;border-top:1px solid var(--line);}
+.scheme-card .swatches .sw{flex:1;padding:14px 8px 10px;text-align:center;font-size:.68rem;font-weight:700;letter-spacing:.04em;}
+.scheme-card .swatches .sw .dot{width:28px;height:28px;border-radius:50%;margin:0 auto 6px;border:1px solid rgba(0,0,0,.08);}
+.scheme-card .swatches .sw .hex{font-family:var(--sans);font-weight:600;font-size:.72rem;color:var(--slate);letter-spacing:0;}
+.scheme-card .swatches .sw .role{font-family:var(--display);font-weight:800;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-top:2px;}
+
+.current-badge{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ok);background:var(--ok-bg);padding:4px 10px;border-radius:2px;margin-left:10px;vertical-align:middle;}
+
+.reply-note{margin-top:8px;padding:18px 22px;background:var(--gold-pale);border-left:3px solid var(--gold);border-radius:2px;max-width:640px;}
+.reply-note p{font-size:.95rem;color:var(--ink-soft);line-height:1.6;}
+
+.review-footer{padding:32px 0 48px;border-top:1px solid var(--line);font-size:.85rem;color:var(--slate);}
+.review-footer a{font-weight:600;}
+
+/* ---- New palettes ---- */
+.btn-accent{display:inline-block;}
+.x1 .bar{background:#1F3A2E;} .x1 .bar span{color:#E8A33D;}
+.x1 .body{background:#F6F5F0;} .x1 .btn-primary{background:#1F3A2E;} .x1 .btn-secondary{background:#7A9A7E;color:#1F3A2E;} .x1 .btn-accent{background:#E8A33D;color:#1F3A2E;} .x1 .link{color:#5E7660;text-decoration-color:#E8A33D;}
+.x1 .sw1 .dot{background:#1F3A2E;} .x1 .sw2 .dot{background:#7A9A7E;} .x1 .sw3 .dot{background:#E8A33D;}
+.x2 .bar{background:#17302A;} .x2 .bar span{color:#EDAF45;}
+.x2 .body{background:#F7F6F1;} .x2 .btn-primary{background:#17302A;} .x2 .btn-secondary{background:#8FAE92;color:#17302A;} .x2 .btn-accent{background:#EDAF45;color:#17302A;} .x2 .link{color:#5C725E;text-decoration-color:#EDAF45;}
+.x2 .sw1 .dot{background:#17302A;} .x2 .sw2 .dot{background:#8FAE92;} .x2 .sw3 .dot{background:#EDAF45;}
+.x3 .bar{background:#1F3A2E;} .x3 .bar span{color:#F2A93B;}
+.x3 .body{background:#F8F6F0;} .x3 .btn-primary{background:#1F3A2E;} .x3 .btn-secondary{background:#A3B899;color:#1F3A2E;} .x3 .btn-accent{background:#F2A93B;color:#1F3A2E;} .x3 .link{color:#606D5A;text-decoration-color:#F2A93B;}
+.x3 .sw1 .dot{background:#1F3A2E;} .x3 .sw2 .dot{background:#A3B899;} .x3 .sw3 .dot{background:#F2A93B;}
+.x4 .bar{background:#14332B;} .x4 .bar span{color:#F4B942;}
+.x4 .body{background:#F4F6F3;} .x4 .btn-primary{background:#14332B;} .x4 .btn-secondary{background:#5F8F7E;color:#14332B;} .x4 .btn-accent{background:#F4B942;color:#14332B;} .x4 .link{color:#507869;text-decoration-color:#F4B942;}
+.x4 .sw1 .dot{background:#14332B;} .x4 .sw2 .dot{background:#5F8F7E;} .x4 .sw3 .dot{background:#F4B942;}
+.x5 .bar{background:#25402F;} .x5 .bar span{color:#D9922E;}
+.x5 .body{background:#F6F4EC;} .x5 .btn-primary{background:#25402F;} .x5 .btn-secondary{background:#8BA27A;color:#25402F;} .x5 .btn-accent{background:#D9922E;color:#25402F;} .x5 .link{color:#617356;text-decoration-color:#D9922E;}
+.x5 .sw1 .dot{background:#25402F;} .x5 .sw2 .dot{background:#8BA27A;} .x5 .sw3 .dot{background:#D9922E;}
+.x6 .bar{background:#1C3B34;} .x6 .bar span{color:#F0A35E;}
+.x6 .body{background:#F7F5F1;} .x6 .btn-primary{background:#1C3B34;} .x6 .btn-secondary{background:#86A89B;color:#1C3B34;} .x6 .btn-accent{background:#F0A35E;color:#1C3B34;} .x6 .link{color:#566C64;text-decoration-color:#F0A35E;}
+.x6 .sw1 .dot{background:#1C3B34;} .x6 .sw2 .dot{background:#86A89B;} .x6 .sw3 .dot{background:#F0A35E;}
+</style>
+</head>
+<body>
+
+<header class="review-head">
+  <div class="wrap">
+    <span class="tag">Client review</span>
+    <h1>More colour palettes</h1>
+    <p class="lede">Six palettes built from the ones she picked: forest green as the main colour, sage as the second colour and amber as the accent. Each one tweaks the shades slightly so you can see how they feel together.</p>
+    <div class="intro-note">
+      <p>Same fonts and layout as before. Each card shows an amber button, a green button and a sage button, plus a link with an amber underline. The three swatches are the main colour, the second colour and the accent.</p>
+    </div>
+  </div>
+</header>
+
+<section class="wrap" style="padding-bottom:24px;">
+  <div class="scheme-grid">
+
+    <div class="scheme-card x1">
+      <div class="label">
+        <div class="num">Palette 1</div>
+        <h3>The mix</h3>
+        <p>Exactly what she picked: Forest primary and Sage secondary from B, Amber accent from C. The baseline to compare the rest against.</p>
+      </div>
+      <div class="preview">
+        <div class="bar">PRJGENUI Workforce<span>Workforce certainty</span></div>
+        <div class="body">
+          <h4>Verified trades, on time</h4>
+          <p>We check every card with the body that issued it, then hold the CV to what the site manager actually needs.</p>
+          <div class="btn-row">
+            <a class="btn btn-accent">Start a search</a>
+            <a class="btn btn-primary">See how it works</a>
+            <a class="btn btn-secondary">Register for shifts</a>
+          </div>
+          <p style="margin-top:12px;"><a class="link">Read the FAQs</a></p>
+        </div>
+      </div>
+      <div class="swatches">
+        <div class="sw sw1"><div class="dot"></div><div class="hex">#1F3A2E</div><div class="role">Primary</div></div>
+        <div class="sw sw2"><div class="dot"></div><div class="hex">#7A9A7E</div><div class="role">Secondary</div></div>
+        <div class="sw sw3"><div class="dot"></div><div class="hex">#E8A33D</div><div class="role">Accent</div></div>
+      </div>
+    </div>
+
+    <div class="scheme-card x2">
+      <div class="label">
+        <div class="num">Palette 2</div>
+        <h3>Pine & Honey</h3>
+        <p>A slightly deeper pine, a greener sage and a warmer honey amber. Richer, a touch more premium.</p>
+      </div>
+      <div class="preview">
+        <div class="bar">PRJGENUI Workforce<span>Workforce certainty</span></div>
+        <div class="body">
+          <h4>Verified trades, on time</h4>
+          <p>We check every card with the body that issued it, then hold the CV to what the site manager actually needs.</p>
+          <div class="btn-row">
+            <a class="btn btn-accent">Start a search</a>
+            <a class="btn btn-primary">See how it works</a>
+            <a class="btn btn-secondary">Register for shifts</a>
+          </div>
+          <p style="margin-top:12px;"><a class="link">Read the FAQs</a></p>
+        </div>
+      </div>
+      <div class="swatches">
+        <div class="sw sw1"><div class="dot"></div><div class="hex">#17302A</div><div class="role">Primary</div></div>
+        <div class="sw sw2"><div class="dot"></div><div class="hex">#8FAE92</div><div class="role">Secondary</div></div>
+        <div class="sw sw3"><div class="dot"></div><div class="hex">#EDAF45</div><div class="role">Accent</div></div>
+      </div>
+    </div>
+
+    <div class="scheme-card x3">
+      <div class="label">
+        <div class="num">Palette 3</div>
+        <h3>Forest & Marigold</h3>
+        <p>Same forest as B with a lighter, softer sage and a brighter marigold. Fresher and friendlier.</p>
+      </div>
+      <div class="preview">
+        <div class="bar">PRJGENUI Workforce<span>Workforce certainty</span></div>
+        <div class="body">
+          <h4>Verified trades, on time</h4>
+          <p>We check every card with the body that issued it, then hold the CV to what the site manager actually needs.</p>
+          <div class="btn-row">
+            <a class="btn btn-accent">Start a search</a>
+            <a class="btn btn-primary">See how it works</a>
+            <a class="btn btn-secondary">Register for shifts</a>
+          </div>
+          <p style="margin-top:12px;"><a class="link">Read the FAQs</a></p>
+        </div>
+      </div>
+      <div class="swatches">
+        <div class="sw sw1"><div class="dot"></div><div class="hex">#1F3A2E</div><div class="role">Primary</div></div>
+        <div class="sw sw2"><div class="dot"></div><div class="hex">#A3B899</div><div class="role">Secondary</div></div>
+        <div class="sw sw3"><div class="dot"></div><div class="hex">#F2A93B</div><div class="role">Accent</div></div>
+      </div>
+    </div>
+
+    <div class="scheme-card x4">
+      <div class="label">
+        <div class="num">Palette 4</div>
+        <h3>Bottle & Saffron</h3>
+        <p>Darker bottle green, a cooler sea-sage secondary and a golden saffron. Crisp and modern.</p>
+      </div>
+      <div class="preview">
+        <div class="bar">PRJGENUI Workforce<span>Workforce certainty</span></div>
+        <div class="body">
+          <h4>Verified trades, on time</h4>
+          <p>We check every card with the body that issued it, then hold the CV to what the site manager actually needs.</p>
+          <div class="btn-row">
+            <a class="btn btn-accent">Start a search</a>
+            <a class="btn btn-primary">See how it works</a>
+            <a class="btn btn-secondary">Register for shifts</a>
+          </div>
+          <p style="margin-top:12px;"><a class="link">Read the FAQs</a></p>
+        </div>
+      </div>
+      <div class="swatches">
+        <div class="sw sw1"><div class="dot"></div><div class="hex">#14332B</div><div class="role">Primary</div></div>
+        <div class="sw sw2"><div class="dot"></div><div class="hex">#5F8F7E</div><div class="role">Secondary</div></div>
+        <div class="sw sw3"><div class="dot"></div><div class="hex">#F4B942</div><div class="role">Accent</div></div>
+      </div>
+    </div>
+
+    <div class="scheme-card x5">
+      <div class="label">
+        <div class="num">Palette 5</div>
+        <h3>Moss & Burnt Amber</h3>
+        <p>Warmer moss green with a deeper, burnt amber accent. Earthy and closer to the trades.</p>
+      </div>
+      <div class="preview">
+        <div class="bar">PRJGENUI Workforce<span>Workforce certainty</span></div>
+        <div class="body">
+          <h4>Verified trades, on time</h4>
+          <p>We check every card with the body that issued it, then hold the CV to what the site manager actually needs.</p>
+          <div class="btn-row">
+            <a class="btn btn-accent">Start a search</a>
+            <a class="btn btn-primary">See how it works</a>
+            <a class="btn btn-secondary">Register for shifts</a>
+          </div>
+          <p style="margin-top:12px;"><a class="link">Read the FAQs</a></p>
+        </div>
+      </div>
+      <div class="swatches">
+        <div class="sw sw1"><div class="dot"></div><div class="hex">#25402F</div><div class="role">Primary</div></div>
+        <div class="sw sw2"><div class="dot"></div><div class="hex">#8BA27A</div><div class="role">Secondary</div></div>
+        <div class="sw sw3"><div class="dot"></div><div class="hex">#D9922E</div><div class="role">Accent</div></div>
+      </div>
+    </div>
+
+    <div class="scheme-card x6">
+      <div class="label">
+        <div class="num">Palette 6</div>
+        <h3>Evergreen & Apricot</h3>
+        <p>Blue-leaning evergreen with a soft sage-teal secondary and a gentle apricot accent. The calmest of the six.</p>
+      </div>
+      <div class="preview">
+        <div class="bar">PRJGENUI Workforce<span>Workforce certainty</span></div>
+        <div class="body">
+          <h4>Verified trades, on time</h4>
+          <p>We check every card with the body that issued it, then hold the CV to what the site manager actually needs.</p>
+          <div class="btn-row">
+            <a class="btn btn-accent">Start a search</a>
+            <a class="btn btn-primary">See how it works</a>
+            <a class="btn btn-secondary">Register for shifts</a>
+          </div>
+          <p style="margin-top:12px;"><a class="link">Read the FAQs</a></p>
+        </div>
+      </div>
+      <div class="swatches">
+        <div class="sw sw1"><div class="dot"></div><div class="hex">#1C3B34</div><div class="role">Primary</div></div>
+        <div class="sw sw2"><div class="dot"></div><div class="hex">#86A89B</div><div class="role">Secondary</div></div>
+        <div class="sw sw3"><div class="dot"></div><div class="hex">#F0A35E</div><div class="role">Accent</div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="reply-note">
+    <p>Reply with the number of the palette you like (1 to 6). We can make any colour lighter or darker, or swap one colour between palettes.</p>
+  </div>
+</section>
+
+<footer class="review-footer">
+  <div class="wrap" style="display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between;">
+    <span>PRJGENUI Workforce Ltd. Company number 13205257. Registered office: 124 City Road, London EC1V 2NX.</span>
+    <a href="index.html">Back to the website</a>
+  </div>
+</footer>
+
+</body>
+</html>

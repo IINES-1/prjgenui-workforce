@@ -1,0 +1,13 @@
+index-client-original.html
+font-preview.html
+palette-preview.html
+colours.html
+colours-2.html
+logos.html
+logos-forest.html
+tools/
+research/
+docs/
+*.py
+*.sql
+SUPABASE_SETUP.md

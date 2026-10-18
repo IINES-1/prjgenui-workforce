@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Palette Preview | PRJGENUI Workforce</title>
+<link rel="preload" href="fonts/archivo.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/ibm-plex-sans.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face{font-family:'Archivo';src:url('fonts/archivo.woff2') format('woff2');font-weight:100 900;font-style:normal;font-display:swap;}
+@font-face{font-family:'IBM Plex Sans';src:url('fonts/ibm-plex-sans.woff2') format('woff2');font-weight:100 700;font-style:normal;font-display:swap;}
+
+/* ===== CURRENT PALETTE ===== */
+:root{
+  --cur-navy:#1B2A4A; --cur-navy-deep:#121E36;
+  --cur-gold:#9C7A2E; --cur-gold-dark:#7C6224; --cur-gold-light:#F3ECDA; --cur-gold-pale:#FAF6EA;
+  --cur-paper:#FAF9F6; --cur-paper-deep:#F1EDE3; --cur-panel:#FFFFFF;
+  --cur-ink:#1C2029; --cur-ink-soft:#454B58; --cur-slate:#6B7280;
+  --cur-line:#E0DBD0; --cur-line-strong:#CFC8B8;
+  --cur-ok:#2F7A4F; --cur-ok-bg:#E7F3EC; --cur-warn:#B8790A; --cur-warn-bg:#FBF0DD;
+  --cur-watch:#3B6FA0; --cur-watch-bg:#E8F0F8; --cur-danger:#B23A2F; --cur-danger-bg:#FBEAE8;
+}
+/* ===== NEW PALETTE ===== */
+:root{
+  --new-navy:#1B2A4A; --new-navy-deep:#121E36;
+  --new-gold:#C8933A; --new-gold-dark:#A67428; --new-gold-light:#F5E8C8; --new-gold-pale:#FBF5E4;
+  --new-steel:#4A85B0; --new-steel-dark:#3A6B8F; --new-steel-light:#D9E8F3; --new-steel-pale:#EBF2F8;
+  --new-paper:#FAF9F6; --new-paper-deep:#F1EDE3; --new-panel:#FFFFFF;
+  --new-ink:#1C2029; --new-ink-soft:#454B58; --new-slate:#6B7280;
+  --new-line:#E0DBD0; --new-line-strong:#CFC8B8;
+  --new-ok:#2F7A4F; --new-ok-bg:#E7F3EC; --new-warn:#B8790A; --new-warn-bg:#FBF0DD;
+  --new-watch:#3B6FA0; --new-watch-bg:#E8F0F8; --new-danger:#B23A2F; --new-danger-bg:#FBEAE8;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'IBM Plex Sans',sans-serif;background:#fff;color:#1C2029;line-height:1.6;padding:40px 20px;}
+h1,h2,h3{font-family:'Archivo',sans-serif;}
+.wrap{max-width:960px;margin:0 auto;}
+.intro{margin-bottom:48px;}
+.intro h1{font-size:2rem;font-weight:800;letter-spacing:-0.03em;margin-bottom:8px;}
+.intro p{color:#454B58;font-size:1.0625rem;}
+.intro .note{margin-top:12px;font-size:.875rem;color:#6B7280;}
+
+/* Palette sections */
+.palette-section{margin-bottom:56px;border:1px solid #E0DBD0;border-radius:6px;overflow:hidden;}
+.palette-section.cur{border-top:4px solid #9C7A2E;}
+.palette-section.new{border-top:4px solid #C8933A;}
+.palette-section-head{padding:20px 28px;border-bottom:1px solid #E0DBD0;display:flex;align-items:center;gap:12px;}
+.palette-section-head h2{font-size:1.375rem;font-weight:700;letter-spacing:-0.02em;}
+.palette-section-head .badge{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:3px;}
+.palette-section.cur .badge{background:#F3ECDA;color:#7C6224;}
+.palette-section.new .badge{background:#D9E8F3;color:#3A6B8F;}
+
+/* Swatch grid */
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;padding:24px 28px;}
+.swatch{border-radius:4px;overflow:hidden;border:1px solid #E0DBD0;}
+.swatch .chip{height:56px;}
+.swatch .meta{padding:8px 10px;font-size:.72rem;}
+.swatch .meta strong{display:block;font-weight:700;color:#1C2029;font-size:.78rem;}
+.swatch .meta span{color:#6B7280;font-family:ui-monospace,monospace;}
+
+/* Component demos */
+.demo{padding:28px;border-top:1px solid #E0DBD0;}
+.demo-label{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#6B7280;margin-bottom:16px;}
+
+/* Section background demo */
+.bg-row{display:grid;grid-template-columns:1fr 1fr;gap:0;border-radius:4px;overflow:hidden;border:1px solid #E0DBD0;}
+.bg-cell{padding:20px 24px;text-align:center;}
+.bg-cell .label{font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px;}
+.bg-cell .hex{font-family:ui-monospace,monospace;font-size:.72rem;color:#6B7280;}
+
+/* Buttons */
+.btn-row{display:flex;gap:12px;flex-wrap:wrap;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:14px 28px;border-radius:100px;font-family:'IBM Plex Sans',sans-serif;font-size:.9375rem;font-weight:700;text-decoration:none;border:1.5px solid transparent;cursor:pointer;white-space:nowrap;}
+.btn:active{transform:translateY(1px);}
+
+/* Cards */
+.card-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.panel{border:1px solid #E0DBD0;border-radius:4px;padding:24px;position:relative;}
+.panel h3{font-size:1.125rem;font-weight:700;margin-bottom:8px;}
+.panel p{font-size:.9375rem;color:#454B58;}
+.panel ul{list-style:none;margin:14px 0 0;display:grid;gap:8px;}
+.panel li{display:flex;gap:10px;align-items:flex-start;font-size:.9rem;color:#454B58;}
+.panel li::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;margin-top:7px;}
+
+/* Stats */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;padding-top:20px;border-top:1px solid #E0DBD0;}
+.stat strong{display:block;font-family:'Archivo',sans-serif;font-size:1.875rem;font-weight:800;line-height:1;letter-spacing:-0.02em;font-variant-numeric:tabular-ums;}
+.stat span{display:block;font-size:.8125rem;color:#6B7280;margin-top:6px;}
+
+/* Pills */
+.pills{display:flex;flex-wrap:wrap;gap:6px;}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:600;border-radius:2px;padding:4px 9px;}
+.pill.ok{background:var(--cur-ok-bg);color:var(--cur-ok);}
+.pill.neutral{background:var(--cur-paper-deep);color:var(--cur-ink-soft);}
+
+/* Badges */
+.badges{display:flex;flex-wrap:wrap;gap:8px;}
+.bdg{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;border-radius:2px;}
+.bdg.ok{background:var(--cur-ok-bg);color:var(--cur-ok);}
+.bdg.warn{background:var(--cur-warn-bg);color:var(--cur-warn);}
+.bdg.watch{background:var(--cur-watch-bg);color:var(--cur-watch);}
+.bdg.danger{background:var(--cur-danger-bg);color:var(--cur-danger);}
+
+/* Score bars */
+.bars{display:grid;gap:8px;max-width:360px;}
+.bar-row{display:grid;grid-template-columns:1fr auto;gap:8px;font-size:.78rem;color:#454B58;}
+.bar-track{grid-column:1/-1;height:4px;border-radius:2px;overflow:hidden;}
+.bar-fill{display:block;height:100%;border-radius:2px;}
+
+/* Links */
+.link-demo{font-size:.9375rem;}
+.link-demo a{text-decoration:underline;text-underline-offset:3px;}
+
+/* Table */
+table.comp{width:100%;border-collapse:collapse;font-size:.875rem;margin-top:8px;}
+table.comp th{color:#fff;text-align:left;padding:12px 14px;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;}
+table.comp th.us{font-weight:700;}
+table.comp td{padding:12px 14px;border-bottom:1px solid #E0DBD0;color:#454B58;vertical-align:top;}
+table.comp td:first-child{font-weight:600;color:#1C2029;width:28%;}
+table.comp td.us{font-weight:600;}
+table.comp .no{color:#B23A2F;font-weight:600;}
+table.comp .var{color:#B8790A;font-weight:600;}
+table.comp tr:last-child td{border-bottom:0;}
+</style>
+
+<!-- CURRENT PALETTE OVERRIDES -->
+<style id="cur-styles">
+.cur .btn-gold{background:var(--cur-gold);color:var(--cur-navy-deep);border-color:var(--cur-gold);}
+.cur .btn-gold:hover{background:var(--cur-gold-dark);border-color:var(--cur-gold-dark);color:#fff;}
+.cur .btn-navy{background:var(--cur-navy);color:#fff;border-color:var(--cur-navy);}
+.cur .btn-navy:hover{background:var(--cur-navy-deep);border-color:var(--cur-navy-deep);}
+.cur .btn-outline{background:transparent;color:var(--cur-ink);border-color:var(--cur-line-strong);}
+.cur .panel.gold{border-top:3px solid var(--cur-gold);background:var(--cur-panel);}
+.cur .panel.gold li::before{background:var(--cur-gold);}
+.cur .panel.deep{background:var(--cur-paper-deep);border-top:3px solid var(--cur-navy);}
+.cur .panel.deep li::before{background:var(--cur-navy);}
+.cur .stat strong{color:var(--cur-navy);}
+.cur .pill.neutral{background:var(--cur-paper-deep);color:var(--cur-ink-soft);}
+.cur .bar-track{background:var(--cur-paper-deep);}
+.cur .bar-fill{background:var(--cur-navy);}
+.cur .link-demo a{color:inherit;text-decoration-color:var(--cur-gold);}
+.cur .link-demo a:hover{text-decoration-color:var(--cur-gold-dark);}
+.cur table.comp th{background:var(--cur-navy);}
+.cur table.comp th.us{background:var(--cur-gold);color:var(--cur-navy-deep);}
+.cur table.comp td.us{background:var(--cur-gold-pale);}
+.cur .bg-cell.paper{background:var(--cur-paper);}
+.cur .bg-cell.deep{background:var(--cur-paper-deep);}
+.cur .kicker{color:var(--cur-gold);}
+</style>
+
+<!-- NEW PALETTE OVERRIDES -->
+<style id="new-styles">
+.new .btn-gold{background:var(--new-gold);color:var(--new-navy-deep);border-color:var(--new-gold);}
+.new .btn-gold:hover{background:var(--new-gold-dark);border-color:var(--new-gold-dark);color:#fff;}
+.new .btn-navy{background:var(--new-navy);color:#fff;border-color:var(--new-navy);}
+.new .btn-navy:hover{background:var(--new-navy-deep);border-color:var(--new-navy-deep);}
+.new .btn-outline{background:transparent;color:var(--new-ink);border-color:var(--new-line-strong);}
+.new .btn-steel{background:var(--new-steel);color:#fff;border-color:var(--new-steel);}
+.new .btn-steel:hover{background:var(--new-steel-dark);border-color:var(--new-steel-dark);}
+.new .panel.gold{border-top:3px solid var(--new-gold);background:var(--new-panel);}
+.new .panel.gold li::before{background:var(--new-gold);}
+.new .panel.deep{background:var(--new-steel-pale);border-top:3px solid var(--new-steel);}
+.new .panel.deep li::before{background:var(--new-steel);}
+.new .stat strong{color:var(--new-steel);}
+.new .stat:nth-child(2) strong{color:var(--new-gold);}
+.new .stat:nth-child(3) strong{color:var(--new-navy);}
+.new .pill.neutral{background:var(--new-steel-pale);color:var(--new-steel-dark);}
+.new .pill.steel{background:var(--new-steel-light);color:var(--new-steel-dark);}
+.new .bar-track{background:var(--new-paper-deep);}
+.new .bar-fill{background:var(--new-steel);}
+.new .link-demo a{color:var(--new-steel);text-decoration-color:var(--new-gold);}
+.new .link-demo a:hover{text-decoration-color:var(--new-gold-dark);color:var(--new-steel-dark);}
+.new table.comp th{background:var(--new-navy);}
+.new table.comp th.us{background:var(--new-gold);color:var(--new-navy-deep);}
+.new table.comp td.us{background:var(--new-gold-pale);}
+.new .bg-cell.paper{background:var(--new-paper);}
+.new .bg-cell.deep{background:var(--new-steel-pale);}
+.new .kicker{color:var(--new-gold);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="intro">
+  <h1>Palette preview</h1>
+  <p>Current palette on the left, proposed new palette on the right. The navy stays the same. Gold brightens from <code>#9C7A2E</code> to <code>#C8933A</code>. A new steel blue (<code>#4A85B0</code>) is introduced as a secondary accent.</p>
+  <p class="note">This page is excluded from the Vercel deploy. Nothing goes live until you approve.</p>
+</div>
+
+<!-- ===== CURRENT PALETTE ===== -->
+<div class="palette-section cur">
+  <div class="palette-section-head">
+    <h2>Current palette</h2>
+    <span class="badge">As live</span>
+  </div>
+
+  <div class="swatches">
+    <div class="swatch"><div class="chip" style="background:var(--cur-navy)"></div><div class="meta"><strong>Navy</strong><span>#1B2A4A</span></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--cur-navy-deep)"></div><div class="meta"><strong>Navy deep</strong><span>#121E36</span></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--cur-gold)"></div><div class="meta"><strong>Gold</strong><span>#9C7A2E</span></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--cur-gold-dark)"></div><div class="meta"><strong>Gold dark</strong><span>#7C6224</span></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--cur-gold-light)"></div><div class="meta"><strong>Gold light</strong><span>#F3ECDA</span></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--cur-gold-pale)"></div><div class="meta"><strong>Gold pale</strong><span>#FAF6EA</span></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--cur-paper);border-bottom:1px solid #E0DBD0"></div><div class="meta"><strong>Paper</strong><span>#FAF9F6</span></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--cur-paper-deep)"></div><div class="meta"><strong>Paper deep</strong><span>#F1EDE3</span></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--cur-ink)"></div><div class="meta"><strong>Ink</strong><span>#1C2029</span></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--cur-slate)"></div><div class="meta"><strong>Slate</strong><span>#6B7280</span></div></div>
+  </div>
+
+  <div class="demo">
+    <div class="demo-label">Section background alternation</div>
+    <div class="bg-row">
+      <div class="bg-cell paper"><div class="label">Paper</div><div class="hex">#FAF9F6</div></div>
+      <div class="bg-cell deep"><div class="label">Paper deep</div><div class="hex">#F1EDE3</div></div>
+    </div>
+    <p style="margin-top:10px;font-size:.82rem;color:#6B7280;">The two backgrounds are nearly indistinguishable.</p>
+  </div>
+
+  <div class="demo">
+    <div class="demo-label">Buttons</div>
+    <div class="btn-row">
+      <a href="#" class="btn btn-gold">Request a crew</a>
+      <a href="#" class="btn btn-navy">Request a crew</a>
+      <a href="#" class="btn btn-outline">Register for shifts</a>
+    </div>
+  </div>
+
+  <div class="demo">
+    <div class="demo-label">Audience split panels</div>
+    <div class="card-row">
+      <div class="panel gold">
+        <span class="kicker" style="display:block;font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;">For contractors</span>
+        <h3>Workers who turn up</h3>
+        <p>Cards checked, ranked by reliability, sent as a crew.</p>
+        <ul><li>Trust Score from real jobs</li><li>60-minute replacement</li></ul>
+      </div>
+      <div class="panel deep">
+        <span class="kicker" style="display:block;font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;color:var(--cur-navy);">For painters and decorators</span>
+        <h3>Shifts that suit your record</h3>
+        <p>Build your passport once. Better score, better shifts.</p>
+        <ul><li>No fee to join</li><li>Your record grows</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo">
+    <div class="demo-label">Hero stats</div>
+    <div class="stats-row">
+      <div class="stat"><strong>41,200</strong><span>Extra workers needed per year</span></div>
+      <div class="stat"><strong>60 min</strong><span>Replacement search deadline</span></div>
+      <div class="stat"><strong>5 factors</strong><span>Behind every Trust Score</span></div>
+    </div>
+  </div>
+
+  <div class="demo">
+    <div class="demo-label">Pills and badges</div>
+    <div class="pills" style="margin-bottom:12px;">
+      <span class="pill ok">&#10003; Right to work</span>
+      <span class="pill ok">&#10003; CSCS</span>
+      <span class="pill neutral">Pending</span>
+    </div>
+    <div class="badges">
+      <span class="bdg ok">Current</span>
+      <span class="bdg warn">Amber</span>
+      <span class="bdg watch">Watch</span>
+      <span class="bdg danger">Blocked</span>
+    </div>
+  </div>
+
+  <div class="demo">
+    <div class="demo-label">Score bars</div>
+    <div class="bars">
+      <div class="bar-row"><span>Verification</span><span>100%</span><div class="bar-track"><span class="bar-fill" style="width:100%"></span></div></div>
+      <div class="bar-row"><span>Competence</span><span>95%</span><div class="bar-track"><span class="bar-fill" style="width:95%"></span></div></div>
+      <div class="bar-row"><span>Reliability</span><span>94%</span><div class="bar-track"><span class="bar-fill" style="width:94%"></span></div></div>
+    </div>
+  </div>
+
+  <div class="demo">
+    <div class="demo-label">Links</div>
+    <div class="link-demo"><p>Still got a question? <a href="#">Ask us directly</a> and a person will reply within one business day.</p></div>
+  </div>
+
+  <div class="demo">
+    <div class="demo-label">Comparison table excerpt</div>
+    <table class="comp">
+      <thead><tr><th></th><th class="us">PRJGENUI Workforce</th><th>Traditional agency</th><th>Job boards</th></tr></thead>
+      <tbody>
+        <tr><td>Verification</td><td class="us">Confirmed with issuing bodies</td><td>Card glanced at on site</td><td><span class="no">None</span></td></tr>
+        <tr><td>No-show response</td><td class="us">Replacement within 60 min</td><td><span class="var">Phone round and hope</span></td><td><span class="no">Your problem</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== NEW PALETTE ===== -->
+<div class="palette-section new">
+  <div class="palette-section-head">
+    <h2>New palette</h2>
+    <span class="badge">Proposed</span>
+  </div>
+
+  <div class="swatches">
+    <div class="swatch"><div class="chip" style="background:var(--new-navy)"></div><div class="meta"><strong>Navy</strong><span>#1B2A4A</span></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--new-navy-deep)"></div><div class="meta"><strong>Navy deep</strong><span>#121E36</span></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--new-gold)"></div><div class="meta"><strong>Gold (brighter)</strong><span>#C8933A</span></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--new-gold-dark)"></div><div class="meta"><strong>Gold dark</strong><span>#A67428</span></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--new-gold-light)"></div><div class="meta"><strong>Gold light</strong><span>#F5E8C8</span></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--new-gold-pale)"></div><div class="meta"><strong>Gold pale</strong><span>#FBF5E4</span></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--new-steel)"></div><div class="meta"><strong>Steel (NEW)</strong><span>#4A85B0</span></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--new-steel-dark)"></div><div class="meta"><strong>Steel dark</strong><span>#3A6B8F</span></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--new-steel-light)"></div><div class="meta"><strong>Steel light</strong><span>#D9E8F3</span></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--new-steel-pale)"></div><div class="meta"><strong>Steel pale</strong><span>#EBF2F8</span></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--new-paper);border-bottom:1px solid #E0DBD0"></div><div class="meta"><strong>Paper</strong><span>#FAF9F6</span></div></div>
+    <div class="swatch"><div class="chip" style="background:var(--new-ink)"></div><div class="meta"><strong>Ink</strong><span>#1C2029</span></div></div>
+  </div>
+
+  <div class="demo">
+    <div class="demo-label">Section background alternation (paper vs steel pale)</div>
+    <div class="bg-row">
+      <div class="bg-cell paper"><div class="label">Paper</div><div class="hex">#FAF9F6</div></div>
+      <div class="bg-cell deep"><div class="label">Steel pale</div><div class="hex">#EBF2F8</div></div>
+    </div>
+    <p style="margin-top:10px;font-size:.82rem;color:#6B7280;">Clear visual rhythm between warm white and pale steel as you scroll.</p>
+  </div>
+
+  <div class="demo">
+    <div class="demo-label">Buttons (gold brighter, steel added)</div>
+    <div class="btn-row">
+      <a href="#" class="btn btn-gold">Request a crew</a>
+      <a href="#" class="btn btn-navy">Request a crew</a>
+      <a href="#" class="btn btn-steel">Register for shifts</a>
+      <a href="#" class="btn btn-outline">Register for shifts</a>
+    </div>
+  </div>
+
+  <div class="demo">
+    <div class="demo-label">Audience split panels (gold vs steel)</div>
+    <div class="card-row">
+      <div class="panel gold">
+        <span class="kicker" style="display:block;font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;">For contractors</span>
+        <h3>Workers who turn up</h3>
+        <p>Cards checked, ranked by reliability, sent as a crew.</p>
+        <ul><li>Trust Score from real jobs</li><li>60-minute replacement</li></ul>
+      </div>
+      <div class="panel deep">
+        <span class="kicker" style="display:block;font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;color:var(--new-steel);">For painters and decorators</span>
+        <h3>Shifts that suit your record</h3>
+        <p>Build your passport once. Better score, better shifts.</p>
+        <ul><li>No fee to join</li><li>Your record grows</li></ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo">
+    <div class="demo-label">Hero stats (mixed navy, gold, steel)</div>
+    <div class="stats-row">
+      <div class="stat"><strong>41,200</strong><span>Extra workers needed per year</span></div>
+      <div class="stat"><strong>60 min</strong><span>Replacement search deadline</span></div>
+      <div class="stat"><strong>5 factors</strong><span>Behind every Trust Score</span></div>
+    </div>
+  </div>
+
+  <div class="demo">
+    <div class="demo-label">Pills and badges (steel pill added)</div>
+    <div class="pills" style="margin-bottom:12px;">
+      <span class="pill ok">&#10003; Right to work</span>
+      <span class="pill ok">&#10003; CSCS</span>
+      <span class="pill steel">Verified</span>
+      <span class="pill neutral">Pending</span>
+    </div>
+    <div class="badges">
+      <span class="bdg ok">Current</span>
+      <span class="bdg warn">Amber</span>
+      <span class="bdg watch">Watch</span>
+      <span class="bdg danger">Blocked</span>
+    </div>
+  </div>
+
+  <div class="demo">
+    <div class="demo-label">Score bars (steel fill instead of navy)</div>
+    <div class="bars">
+      <div class="bar-row"><span>Verification</span><span>100%</span><div class="bar-track"><span class="bar-fill" style="width:100%"></span></div></div>
+      <div class="bar-row"><span>Competence</span><span>95%</span><div class="bar-track"><span class="bar-fill" style="width:95%"></span></div></div>
+      <div class="bar-row"><span>Reliability</span><span>94%</span><div class="bar-track"><span class="bar-fill" style="width:94%"></span></div></div>
+    </div>
+  </div>
+
+  <div class="demo">
+    <div class="demo-label">Links (steel blue with gold underline)</div>
+    <div class="link-demo"><p>Still got a question? <a href="#">Ask us directly</a> and a person will reply within one business day.</p></div>
+  </div>
+
+  <div class="demo">
+    <div class="demo-label">Comparison table excerpt</div>
+    <table class="comp">
+      <thead><tr><th></th><th class="us">PRJGENUI Workforce</th><th>Traditional agency</th><th>Job boards</th></tr></thead>
+      <tbody>
+        <tr><td>Verification</td><td class="us">Confirmed with issuing bodies</td><td>Card glanced at on site</td><td><span class="no">None</span></td></tr>
+        <tr><td>No-show response</td><td class="us">Replacement within 60 min</td><td><span class="var">Phone round and hope</span></td><td><span class="no">Your problem</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== SUMMARY OF CHANGES ===== -->
+<div style="margin-top:48px;padding:28px;border:1px solid #E0DBD0;border-radius:6px;background:#FAF9F6;">
+  <h2 style="font-size:1.25rem;font-weight:700;margin-bottom:16px;">What changes</h2>
+  <ul style="list-style:none;display:grid;gap:10px;font-size:.9375rem;color:#454B58;">
+    <li><strong style="color:#1C2029;">Gold brightens</strong> from #9C7A2E to #C8933A. CTAs and accents become warmer and more visible.</li>
+    <li><strong style="color:#1C2029;">Steel blue (#4A85B0) added</strong> as a secondary accent. Used for the "For workers" panel, links, score bars, some pills, and stat numerals.</li>
+    <li><strong style="color:#1C2029;">Section backgrounds</strong> alternate between warm white (#FAF9F6) and pale steel (#EBF2F8) instead of two nearly identical warm whites.</li>
+    <li><strong style="color:#1C2029;">Hero stats</strong> use a mix of steel, gold, and navy instead of all navy. Adds colour variety to the most viewed part of the page.</li>
+    <li><strong style="color:#1C2029;">Score bars</strong> fill with steel blue instead of navy. Adds colour inside the passport card.</li>
+    <li><strong style="color:#1C2029;">Links</strong> are steel blue with gold underline. More distinctive than inherited colour.</li>
+    <li><strong style="color:#1C2029;">Navy stays the same.</strong> No change to the primary brand colour.</li>
+  </ul>
+</div>
+
+</div>
+</body>
+</html>

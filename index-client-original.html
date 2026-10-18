@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>PRJGENUI Workforce — Workforce certainty, not CVs</title>
+<meta name="description" content="Verified construction workers, proven crews and real reliability data for contractors across Hampshire, Surrey and the South East.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16233F; --navy-dark:#0E1729; --gold:#9C7A2E; --gold-dark:#7C6224;
+    --paper:#F6F4EE; --panel:#FFFFFF; --ink:#1C2029; --slate:#5B6270;
+    --line:#DEDACD; --ok:#2F7A4F; --ok-bg:#E7F3EC;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{margin:0;font-family:'Public Sans',-apple-system,sans-serif;background:var(--paper);color:var(--ink);line-height:1.55;}
+  h1,h2,h3{font-weight:700;margin:0;color:var(--ink);}
+  p{margin:0;}
+  a{color:inherit;}
+  img,svg{max-width:100%;display:block;}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px;}
+  section{padding:72px 0;}
+  @media(max-width:720px){section{padding:48px 0;}}
+
+  /* Buttons */
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:13px 22px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;border:1.5px solid transparent;cursor:pointer;font-family:inherit;}
+  .btn-primary{background:var(--gold);color:var(--navy-dark);}
+  .btn-primary:hover{background:var(--gold-dark);color:#fff;}
+  .btn-outline{border-color:rgba(255,255,255,0.4);color:#fff;background:transparent;}
+  .btn-outline:hover{border-color:#fff;}
+  .btn-outline-dark{border-color:var(--line);color:var(--ink);background:transparent;}
+  .btn-outline-dark:hover{border-color:var(--navy);}
+
+  /* Header */
+  header{position:sticky;top:0;z-index:50;background:var(--navy);color:#fff;}
+  .nav-row{display:flex;align-items:center;justify-content:space-between;padding:18px 0;gap:20px;}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:-0.01em;}
+  .logo .mark{width:30px;height:30px;border-radius:7px;background:var(--gold);color:var(--navy-dark);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;}
+  nav.links{display:flex;gap:28px;font-size:14px;font-weight:500;}
+  nav.links a{opacity:0.85;text-decoration:none;}
+  nav.links a:hover{opacity:1;}
+  .nav-cta{display:flex;align-items:center;gap:16px;}
+  .menu-toggle{display:none;background:none;border:none;color:#fff;font-size:22px;}
+  @media(max-width:800px){
+    nav.links{display:none;}
+    .menu-toggle{display:block;}
+  }
+
+  /* Hero */
+  .hero{background:var(--navy);color:#fff;padding:64px 0 84px;}
+  .hero-grid{display:grid;grid-template-columns:1.15fr 1fr;gap:56px;align-items:center;}
+  @media(max-width:880px){.hero-grid{grid-template-columns:1fr;gap:40px;}}
+  .eyebrow{font-size:14px;color:#C9D2E4;margin-bottom:14px;}
+  .hero h1{font-size:44px;line-height:1.12;letter-spacing:-0.015em;color:#fff;}
+  @media(max-width:560px){.hero h1{font-size:32px;}}
+  .hero p.sub{margin-top:18px;font-size:17px;color:#D6DCEA;max-width:46ch;}
+  .hero-ctas{margin-top:30px;display:flex;gap:14px;flex-wrap:wrap;}
+  .hero-stats{margin-top:40px;display:flex;gap:36px;flex-wrap:wrap;}
+  .hero-stats .stat .n{display:block;font-size:26px;font-weight:700;}
+  .hero-stats .stat .s{display:block;font-size:13px;color:#B7C0D6;margin-top:2px;}
+
+  .readiness-card{background:var(--panel);color:var(--ink);border-radius:12px;padding:22px 24px;box-shadow:0 20px 50px rgba(0,0,0,0.25);}
+  .readiness-card .tag{font-size:12px;color:var(--slate);margin-bottom:10px;}
+  .readiness-card .score{font-size:40px;font-weight:700;color:var(--navy);}
+  .readiness-card .score-label{font-size:13px;color:var(--slate);margin-bottom:16px;}
+  .check-list{display:flex;flex-direction:column;gap:9px;}
+  .check-list div{display:flex;align-items:center;gap:9px;font-size:13.5px;}
+  .check-dot{width:16px;height:16px;border-radius:50%;background:var(--ok-bg);color:var(--ok);flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;}
+
+  /* Problem */
+  .problem-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-top:32px;}
+  @media(max-width:800px){.problem-grid{grid-template-columns:1fr;}}
+  ul.q-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px;}
+  ul.q-list li{padding-left:22px;position:relative;font-size:15px;}
+  ul.q-list li::before{content:"";position:absolute;left:0;top:9px;width:7px;height:7px;border-radius:50%;background:var(--gold);}
+  .section-head{max-width:60ch;margin-bottom:8px;}
+  .section-head h2{font-size:28px;letter-spacing:-0.01em;}
+  .section-head p{color:var(--slate);font-size:15.5px;margin-top:10px;}
+
+  /* Products */
+  .product-row{display:flex;gap:20px;padding:22px 0;border-top:1px solid var(--line);}
+  .product-row:last-child{border-bottom:1px solid var(--line);}
+  .product-tab{width:5px;border-radius:4px;flex:none;}
+  .product-body h3{font-size:17px;margin-bottom:5px;}
+  .product-body p{font-size:14.5px;color:var(--slate);max-width:64ch;}
+
+  /* Two-col feature (passport / deploy) */
+  .feature{display:grid;grid-template-columns:0.9fr 1.1fr;gap:52px;align-items:start;}
+  @media(max-width:880px){.feature{grid-template-columns:1fr;}}
+  .feature-copy .step{display:flex;gap:12px;margin-bottom:16px;}
+  .feature-copy .step .num{width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none;}
+  .feature-copy .step p{font-size:14.5px;color:var(--slate);margin-top:2px;}
+  .feature-copy .step strong{font-size:15px;}
+  .illustrative-tag{display:inline-block;font-size:11.5px;color:var(--slate);background:var(--panel);border:1px solid var(--line);padding:3px 10px;border-radius:20px;margin-bottom:14px;}
+
+  .passport-card,.deploy-card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:22px 24px;}
+  .passport-head{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+  .avatar{width:42px;height:42px;border-radius:50%;background:#EFEAD9;color:var(--gold-dark);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;}
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:5px 11px;margin:0 6px 6px 0;}
+  .metric-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
+  .metric{background:var(--paper);border-radius:8px;padding:12px 14px;}
+  .metric .n{display:block;font-size:19px;font-weight:700;}
+  .metric .s{display:block;font-size:12px;color:var(--slate);}
+
+  .deploy-query{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:12px 14px;font-size:14px;margin-bottom:14px;}
+
+  /* Early access */
+  .early-panel{background:var(--navy);color:#fff;border-radius:14px;padding:40px;display:flex;justify-content:space-between;gap:30px;align-items:center;flex-wrap:wrap;}
+  .early-panel h2{color:#fff;font-size:24px;max-width:32ch;}
+  .early-panel p{color:#C9D2E4;margin-top:10px;max-width:48ch;font-size:15px;}
+
+  /* Contact */
+  .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;}
+  @media(max-width:800px){.contact-grid{grid-template-columns:1fr;}}
+  form .f{margin-bottom:14px;}
+  form label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;}
+  form input,form select,form textarea{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:8px;font-size:14.5px;font-family:inherit;background:#fff;}
+  form textarea{min-height:80px;resize:vertical;}
+  .form-note{font-size:12.5px;color:var(--slate);margin-top:10px;}
+
+  footer{background:var(--navy-dark);color:#B7C0D6;padding:40px 0;font-size:13.5px;}
+  .foot-row{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+  footer a{text-decoration:none;color:#B7C0D6;}
+  footer a:hover{color:#fff;}
+
+  :focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+  @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto;}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap nav-row">
+    <div class="logo"><span class="mark">P</span>PRJGENUI Workforce</div>
+    <nav class="links">
+      <a href="#products">Products</a>
+      <a href="#how-it-works">How it works</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <div class="nav-cta">
+      <a href="#contact" class="btn btn-outline">Request a crew</a>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow">Workforce intelligence for construction</p>
+      <h1>Workforce certainty, not CVs.</h1>
+      <p class="sub">Verified workers, proven crews and real reliability data — built from real construction operations, not a recruitment desk.</p>
+      <div class="hero-ctas">
+        <a href="#contact" class="btn btn-primary">Request a crew</a>
+        <a href="#how-it-works" class="btn btn-outline">See how it works</a>
+      </div>
+      <div class="hero-stats">
+        <div class="stat"><span class="n">41,200</span><span class="s">Additional UK construction workers needed per year to 2030 (CITB)</span></div>
+        <div class="stat"><span class="n">60 min</span><span class="s">Target time to start a replacement search after a no-show</span></div>
+      </div>
+    </div>
+    <div class="readiness-card">
+      <p class="tag">Example — Guildford, education site, Monday start</p>
+      <div class="score">96%</div>
+      <p class="score-label">workforce readiness</p>
+      <div class="check-list">
+        <div><span class="check-dot">✓</span> 10 workers identified, all compliant</div>
+        <div><span class="check-dot">✓</span> Average reliability 94%</div>
+        <div><span class="check-dot">✓</span> 7 have worked together before</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>A card check tells you almost nothing</h2>
+      <p>Traditional recruitment answers one question — can a body be found. Contractors are actually trying to answer a much longer list.</p>
+    </div>
+    <div class="problem-grid">
+      <ul class="q-list">
+        <li>Will the worker actually arrive?</li>
+        <li>Can they genuinely perform the trade, not just claim to?</li>
+        <li>Are their cards and qualifications currently valid?</li>
+        <li>Do they hold the specific training this project requires?</li>
+      </ul>
+      <ul class="q-list">
+        <li>Have they worked in this type of environment before?</li>
+        <li>Who has used them before, and would that client use them again?</li>
+        <li>How quickly can an entire team be mobilised?</li>
+        <li>What happens the moment somebody doesn't show up?</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="products" style="background:var(--panel);border-top:1px solid var(--line);border-bottom:1px solid var(--line);">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Six products, one dataset</h2>
+      <p>Each is useful on its own. Together they build a record a competitor can't buy — only earn, assignment by assignment.</p>
+    </div>
+    <div style="margin-top:24px;">
+      <div class="product-row"><div class="product-tab" style="background:var(--gold);"></div><div class="product-body"><h3>Verify</h3><p>Identity, Right to Work, CSCS and trade cards, qualifications and training, checked against the issuing bodies and monitored for expiry.</p></div></div>
+      <div class="product-row"><div class="product-tab" style="background:var(--navy);"></div><div class="product-body"><h3>Proof</h3><p>Evidence that someone can actually do the work they claim — supervisor-confirmed, tied to named competencies, not a generic trade label.</p></div></div>
+      <div class="product-row"><div class="product-tab" style="background:var(--gold);"></div><div class="product-body"><h3>Score</h3><p>A reliability signal built from real assignment outcomes — attendance, feedback, safety — not self-reported experience.</p></div></div>
+      <div class="product-row"><div class="product-tab" style="background:var(--navy);"></div><div class="product-body"><h3>Deploy</h3><p>Fast, verified mobilisation, including a rapid-replacement process that starts the moment someone doesn't show up.</p></div></div>
+      <div class="product-row"><div class="product-tab" style="background:var(--gold);"></div><div class="product-body"><h3>Crews</h3><p>Teams with a track record of working well together, sent as a proven unit instead of a list of strangers.</p></div></div>
+      <div class="product-row"><div class="product-tab" style="background:var(--navy);"></div><div class="product-body"><h3>Europe</h3><p>An international sourcing pipeline built around what current UK immigration rules actually allow, not around what would be convenient.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="how-it-works">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>What a Workforce Passport looks like</h2>
+      <p>Instead of a CV, every worker builds a living, verified record.</p>
+    </div>
+    <div class="feature" style="margin-top:32px;">
+      <div class="feature-copy">
+        <div class="step"><div class="num">1</div><div><strong>Compliance, checked properly</strong><p>Identity, Right to Work and CSCS confirmed against the actual issuing systems — never just a card glanced at on site.</p></div></div>
+        <div class="step"><div class="num">2</div><div><strong>Proof of specific skill</strong><p>Photo or video evidence tied to a named competency, confirmed by whoever supervised the work.</p></div></div>
+        <div class="step"><div class="num">3</div><div><strong>A reliability record that compounds</strong><p>Every assignment — attended or not — becomes part of the score. It only gets more accurate with time.</p></div></div>
+      </div>
+      <div>
+        <span class="illustrative-tag">Illustrative example, not a real worker</span>
+        <div class="passport-card">
+          <div class="passport-head">
+            <div class="avatar">JC</div>
+            <div><strong>J. Carter</strong><div style="font-size:13px;color:var(--slate);">Painter and decorator · PW-UK-000004</div></div>
+          </div>
+          <div>
+            <span class="pill">✓ Right to work</span>
+            <span class="pill">✓ CSCS</span>
+            <span class="pill">✓ Working at height</span>
+            <span class="pill">✓ Asbestos awareness</span>
+          </div>
+          <div class="metric-row">
+            <div class="metric"><span class="n">97%</span><span class="s">Trust Score</span></div>
+            <div class="metric"><span class="n">91%</span><span class="s">Rehire rate</span></div>
+          </div>
+          <p style="font-size:12px;color:var(--slate);margin-top:12px;">Built from five checked factors — verification, competence, compliance, reliability, client feedback — never self-reported.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="background:var(--panel);border-top:1px solid var(--line);border-bottom:1px solid var(--line);">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Ask for a crew, not a CV</h2>
+      <p>Tell us the trade, the headcount and the compliance requirements. The compliance gate runs first, then matches are ranked by reliability.</p>
+    </div>
+    <div class="feature" style="margin-top:32px;">
+      <div>
+        <span class="illustrative-tag">Illustrative example</span>
+        <div class="deploy-card">
+          <div class="deploy-query">6 painters, 3 decorators, a supervisor — Guildford, Monday, education site</div>
+          <div class="metric-row" style="grid-template-columns:1fr;">
+            <div class="metric"><span class="n">10 of 10</span><span class="s">Eligible matches — compliance gate cleared, average Trust Score 94%</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="feature-copy">
+        <div class="step"><div class="num">1</div><div><strong>Compliance is a hard gate</strong><p>No expired card, no lapsed training. That's checked before anything else runs — not a nice-to-have.</p></div></div>
+        <div class="step"><div class="num">2</div><div><strong>Then ranked by reliability and fit</strong><p>Score, whether a crew has worked together before, and what this specific client prefers.</p></div></div>
+        <div class="step"><div class="num">3</div><div><strong>A replacement search starts immediately</strong><p>If someone doesn't show, the search for a same-trade, same-area replacement begins straight away.</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="early-panel">
+      <div>
+        <h2>Currently onboarding our first pilot partners</h2>
+        <p>Built from a live construction site, not a recruitment desk — and starting with a small number of contractors across Hampshire, Surrey and the South East. If that's you, we'd rather talk than send a brochure.</p>
+      </div>
+      <a href="#contact" class="btn btn-outline">Get in touch</a>
+    </div>
+  </div>
+</section>
+
+<section id="contact" style="background:var(--panel);border-top:1px solid var(--line);">
+  <div class="wrap contact-grid">
+    <div>
+      <h2 style="font-size:26px;">Tell us what you need</h2>
+      <p style="color:var(--slate);margin-top:12px;font-size:15px;max-width:42ch;">A short form, not a sales funnel. A person replies within one business day — no bot, no drip campaign.</p>
+    </div>
+    <form id="contactForm" action="mailto:hello@prjgenuiworkforce.co.uk" method="post" enctype="text/plain">
+      <div class="f">
+        <label for="need">What do you need?</label>
+        <select id="need" name="What do you need">
+          <option>Workers for a project</option>
+          <option>To explore a pilot</option>
+          <option>I'm a worker looking for shifts</option>
+          <option>Something else</option>
+        </select>
+      </div>
+      <div class="f"><label for="name">Name</label><input id="name" name="Name" type="text" required></div>
+      <div class="f"><label for="company">Company, if applicable</label><input id="company" name="Company" type="text"></div>
+      <div class="f"><label for="email">Email</label><input id="email" name="Email" type="email" required></div>
+      <div class="f"><label for="details">Anything else? Optional</label><textarea id="details" name="Details" placeholder="Trade, location, timing — whatever you know"></textarea></div>
+      <button type="submit" class="btn btn-primary">Send</button>
+      <p class="form-note">This opens your email client to send the message. Replace with a form service (Formspree, or a link to your own intake sheet) once you're ready to collect enquiries directly.</p>
+    </form>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-row">
+    <div>PRJGENUI Workforce Ltd — Hampshire, Surrey &amp; the South East<br><span style="color:#8492AC;">Company number: to be added once incorporation completes</span></div>
+    <div style="display:flex;gap:20px;">
+      <a href="#products">Products</a>
+      <a href="#how-it-works">How it works</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

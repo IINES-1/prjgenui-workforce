@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Font options | PRJGENUI Workforce (internal preview)</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,500&family=Public+Sans:wght@400;600;700;800&family=Archivo:wght@500;700;800&family=Bitter:ital,wght@0,500;0,600;0,700;1,500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+<style>
+
+  :root{--navy:#1B2A4A;--navy-deep:#121E36;--gold:#9C7A2E;--gold-dark:#7C6224;--paper:#FAF9F6;--paper-deep:#F1EDE3;--ink:#1C2029;--ink-soft:#454B58;--slate:#6B7280;--line:#E0DBD0;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:#E9E5DB;color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;}
+  .intro{max-width:1100px;margin:0 auto;padding:40px 28px 8px;}
+  .intro h1{font:600 1.5rem/1.2 'IBM Plex Sans',sans-serif;margin:0 0 8px;}
+  .intro p{margin:0;color:var(--ink-soft);max-width:70ch;}
+  .option{max-width:1100px;margin:28px auto;background:var(--paper);border:1px solid var(--line);}
+  .label{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:14px 28px;background:var(--navy-deep);color:#fff;font:600 .875rem/1.3 'IBM Plex Sans',sans-serif;}
+  .label span{color:#E4C883;}
+  .label small{color:#B7C0D6;font-weight:400;}
+  .inner{padding:44px 28px 40px;}
+  .brand{display:flex;align-items:center;gap:12px;margin-bottom:36px;}
+  .brand .mark{width:36px;height:36px;border-radius:4px;background:var(--navy);color:#E4C883;display:grid;place-items:center;font-weight:700;font-size:1.25rem;}
+  .brand .word{font-weight:600;font-size:1.25rem;line-height:1;}
+  .brand .word small{display:block;font-size:.6875rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-top:4px;}
+  h1.hero{margin:0;font-size:clamp(2.25rem,4.5vw,3.5rem);line-height:1.05;letter-spacing:-0.02em;font-weight:700;}
+  h1.hero em{font-style:italic;color:var(--gold);font-weight:500;}
+  .lede{font-size:1.1875rem;line-height:1.55;color:var(--ink-soft);max-width:62ch;margin:22px 0 0;}
+  .btn{display:inline-block;margin-top:28px;padding:14px 28px;border-radius:100px;background:var(--gold);color:var(--navy-deep);font-weight:700;font-size:.9375rem;text-decoration:none;}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:40px;padding-top:28px;border-top:1px solid var(--line);}
+  .stats strong{display:block;font-size:2rem;line-height:1;font-weight:700;letter-spacing:-0.02em;}
+  .stats span{display:block;margin-top:8px;font-size:.875rem;color:var(--slate);line-height:1.5;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:44px;padding-top:36px;border-top:1px solid var(--line);}
+  h2{margin:0;font-size:2rem;line-height:1.15;letter-spacing:-0.012em;font-weight:600;}
+  h3{margin:20px 0 6px;font-size:1.25rem;line-height:1.3;font-weight:600;}
+  p.body{margin:0;font-size:1.0625rem;line-height:1.65;color:var(--ink);}
+  table{width:100%;border-collapse:collapse;font-size:.9375rem;margin-top:8px;}
+  th{text-align:left;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--slate);padding:0 0 10px;border-bottom:1px solid var(--line);font-weight:700;}
+  td{padding:12px 12px 12px 0;border-bottom:1px solid var(--line);vertical-align:top;}
+  td.us{font-weight:600;color:var(--navy);}
+  .no{color:#B23A2F;font-weight:600;}
+  @media(max-width:760px){.grid,.stats{grid-template-columns:1fr;}.inner{padding:32px 20px;}}
+
+  /* Current */
+  .o-current{--h:'Source Serif 4',Georgia,serif;--b:'Public Sans',sans-serif;}
+  .o-current h1.hero{font-family:var(--b);font-weight:800;letter-spacing:-0.03em;}
+  /* A: Newsreader + IBM Plex Sans */
+  .o-a{--h:'Newsreader',Georgia,serif;--b:'IBM Plex Sans',sans-serif;}
+  .o-a h1.hero{font-family:var(--h);font-weight:600;letter-spacing:-0.015em;}
+  /* B: Archivo + IBM Plex Sans */
+  .o-b{--h:'Archivo',sans-serif;--b:'IBM Plex Sans',sans-serif;}
+  .o-b h1.hero{font-family:var(--h);font-weight:800;letter-spacing:-0.03em;}
+  .o-b h2,.o-b h3{font-weight:700;letter-spacing:-0.02em;}
+  /* C: Bitter + IBM Plex Sans */
+  .o-c{--h:'Bitter',Georgia,serif;--b:'IBM Plex Sans',sans-serif;}
+  .o-c h1.hero{font-family:var(--h);font-weight:700;letter-spacing:-0.02em;}
+
+  .option .brand .word,.option h2,.option h3,.option .brand .mark{font-family:var(--h);}
+  .option .brand .word small,.option .lede,.option .btn,.option .stats,.option p.body,.option table{font-family:var(--b);}
+</style>
+</head>
+<body>
+
+<div class="intro">
+  <h1>Font options for the PRJGENUI Workforce site</h1>
+  <p>Same content, same colours, four typefaces. Option B was chosen and is now live. Scroll to compare, and look at the small text and the numbers as much as the headings, because that is most of what a visitor reads.</p>
+</div>
+
+<!-- ================= CURRENT ================= -->
+<section class="option o-current">
+  <div class="label"><div><span>Previous</span> Source Serif 4 headings, Public Sans text</div><small>What was live before the change</small></div>
+  <div class="inner">
+    <div class="brand"><div class="mark">P</div><div class="word">PRJGENUI Workforce<small>Workforce intelligence</small></div></div>
+    <h1 class="hero">Workforce <em>certainty</em>,<br>not CVs.</h1>
+    <p class="lede">Verified painters and decorators, proven crews and real reliability data for contractors across Hampshire, Surrey and the South East. Built on a live construction site rather than at a recruitment desk.</p>
+    <a class="btn" href="#">Request a crew</a>
+    <div class="stats">
+      <div><strong>41,200</strong><span>Extra construction workers the UK needs every year to 2030, according to CITB</span></div>
+      <div><strong>60 min</strong><span>The most time we allow ourselves to start a replacement search after a no-show</span></div>
+      <div><strong>5 factors</strong><span>Behind every Trust Score. All of them checked, none of them self-reported</span></div>
+    </div>
+    <div class="grid">
+      <div>
+        <h2>Six checks before anyone reaches your site</h2>
+        <h3>Cards checked with the people who issued them</h3>
+        <p class="body">Identity, Right to Work and CSCS are confirmed with the issuing systems rather than glanced at on site. We track expiry dates so nobody gets caught out by a lapsed card.</p>
+      </div>
+      <div>
+        <table>
+          <tr><th></th><th>PRJGENUI</th><th>Agency</th></tr>
+          <tr><td>Verification</td><td class="us">Confirmed with issuing bodies</td><td>Card glanced at</td></tr>
+          <tr><td>Reliability data</td><td class="us">Trust Score, 94%</td><td><span class="no">None</span></td></tr>
+          <tr><td>No-show response</td><td class="us">Search within 60 minutes</td><td>Phone round and hope</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= OPTION A ================= -->
+<section class="option o-a">
+  <div class="label"><div><span>Option A</span> Newsreader headings, IBM Plex Sans text</div><small>Broadsheet authority. Clearer numbers. Keeps the serif look the site already has, but with more weight behind it.</small></div>
+  <div class="inner">
+    <div class="brand"><div class="mark">P</div><div class="word">PRJGENUI Workforce<small>Workforce intelligence</small></div></div>
+    <h1 class="hero">Workforce <em>certainty</em>,<br>not CVs.</h1>
+    <p class="lede">Verified painters and decorators, proven crews and real reliability data for contractors across Hampshire, Surrey and the South East. Built on a live construction site rather than at a recruitment desk.</p>
+    <a class="btn" href="#">Request a crew</a>
+    <div class="stats">
+      <div><strong>41,200</strong><span>Extra construction workers the UK needs every year to 2030, according to CITB</span></div>
+      <div><strong>60 min</strong><span>The most time we allow ourselves to start a replacement search after a no-show</span></div>
+      <div><strong>5 factors</strong><span>Behind every Trust Score. All of them checked, none of them self-reported</span></div>
+    </div>
+    <div class="grid">
+      <div>
+        <h2>Six checks before anyone reaches your site</h2>
+        <h3>Cards checked with the people who issued them</h3>
+        <p class="body">Identity, Right to Work and CSCS are confirmed with the issuing systems rather than glanced at on site. We track expiry dates so nobody gets caught out by a lapsed card.</p>
+      </div>
+      <div>
+        <table>
+          <tr><th></th><th>PRJGENUI</th><th>Agency</th></tr>
+          <tr><td>Verification</td><td class="us">Confirmed with issuing bodies</td><td>Card glanced at</td></tr>
+          <tr><td>Reliability data</td><td class="us">Trust Score, 94%</td><td><span class="no">None</span></td></tr>
+          <tr><td>No-show response</td><td class="us">Search within 60 minutes</td><td>Phone round and hope</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= OPTION B ================= -->
+<section class="option o-b">
+  <div class="label"><div><span>Option B (applied)</span> Archivo headings, IBM Plex Sans text</div><small>Sturdier and more modern. Reads as a construction business rather than a consultancy. No serif anywhere.</small></div>
+  <div class="inner">
+    <div class="brand"><div class="mark">P</div><div class="word">PRJGENUI Workforce<small>Workforce intelligence</small></div></div>
+    <h1 class="hero">Workforce <em>certainty</em>,<br>not CVs.</h1>
+    <p class="lede">Verified painters and decorators, proven crews and real reliability data for contractors across Hampshire, Surrey and the South East. Built on a live construction site rather than at a recruitment desk.</p>
+    <a class="btn" href="#">Request a crew</a>
+    <div class="stats">
+      <div><strong>41,200</strong><span>Extra construction workers the UK needs every year to 2030, according to CITB</span></div>
+      <div><strong>60 min</strong><span>The most time we allow ourselves to start a replacement search after a no-show</span></div>
+      <div><strong>5 factors</strong><span>Behind every Trust Score. All of them checked, none of them self-reported</span></div>
+    </div>
+    <div class="grid">
+      <div>
+        <h2>Six checks before anyone reaches your site</h2>
+        <h3>Cards checked with the people who issued them</h3>
+        <p class="body">Identity, Right to Work and CSCS are confirmed with the issuing systems rather than glanced at on site. We track expiry dates so nobody gets caught out by a lapsed card.</p>
+      </div>
+      <div>
+        <table>
+          <tr><th></th><th>PRJGENUI</th><th>Agency</th></tr>
+          <tr><td>Verification</td><td class="us">Confirmed with issuing bodies</td><td>Card glanced at</td></tr>
+          <tr><td>Reliability data</td><td class="us">Trust Score, 94%</td><td><span class="no">None</span></td></tr>
+          <tr><td>No-show response</td><td class="us">Search within 60 minutes</td><td>Phone round and hope</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= OPTION C ================= -->
+<section class="option o-c">
+  <div class="label"><div><span>Option C</span> Bitter headings, IBM Plex Sans text</div><small>Slab serif. The most "trade" of the three, like a good builders' merchant letterhead. Distinctive, but easiest to get wrong.</small></div>
+  <div class="inner">
+    <div class="brand"><div class="mark">P</div><div class="word">PRJGENUI Workforce<small>Workforce intelligence</small></div></div>
+    <h1 class="hero">Workforce <em>certainty</em>,<br>not CVs.</h1>
+    <p class="lede">Verified painters and decorators, proven crews and real reliability data for contractors across Hampshire, Surrey and the South East. Built on a live construction site rather than at a recruitment desk.</p>
+    <a class="btn" href="#">Request a crew</a>
+    <div class="stats">
+      <div><strong>41,200</strong><span>Extra construction workers the UK needs every year to 2030, according to CITB</span></div>
+      <div><strong>60 min</strong><span>The most time we allow ourselves to start a replacement search after a no-show</span></div>
+      <div><strong>5 factors</strong><span>Behind every Trust Score. All of them checked, none of them self-reported</span></div>
+    </div>
+    <div class="grid">
+      <div>
+        <h2>Six checks before anyone reaches your site</h2>
+        <h3>Cards checked with the people who issued them</h3>
+        <p class="body">Identity, Right to Work and CSCS are confirmed with the issuing systems rather than glanced at on site. We track expiry dates so nobody gets caught out by a lapsed card.</p>
+      </div>
+      <div>
+        <table>
+          <tr><th></th><th>PRJGENUI</th><th>Agency</th></tr>
+          <tr><td>Verification</td><td class="us">Confirmed with issuing bodies</td><td>Card glanced at</td></tr>
+          <tr><td>Reliability data</td><td class="us">Trust Score, 94%</td><td><span class="no">None</span></td></tr>
+          <tr><td>No-show response</td><td class="us">Search within 60 minutes</td><td>Phone round and hope</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

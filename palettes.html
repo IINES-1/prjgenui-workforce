@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Colour options | PRJGENUI Workforce (review page)</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'IBM Plex Sans',system-ui,sans-serif;background:#EDEDEA;color:#1c2029}
+  header{padding:20px 28px 8px}
+  h1{margin:0 0 4px;font-size:1.4rem}
+  header p{margin:0;color:#555;font-size:.95rem;max-width:86ch}
+  .pals{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;padding:14px 28px}
+  .pal{all:unset;box-sizing:border-box;cursor:pointer;background:#fff;border:3px solid transparent;padding:10px;display:block}
+  .pal:hover{border-color:#bbb}
+  .pal[aria-pressed="true"]{border-color:#111}
+  .pal:focus-visible{outline:3px solid #2563eb}
+  .sw{display:flex;height:46px;margin-bottom:8px}
+  .sw i{flex:1}
+  .pal b{display:block;font-size:.95rem}
+  .pal span{display:block;font-size:.8rem;color:#555;line-height:1.35;margin-top:2px}
+  .bar{display:flex;gap:8px;align-items:center;padding:0 28px 10px;flex-wrap:wrap}
+  .bar button{font:inherit;padding:8px 14px;border:2px solid #111;background:#fff;cursor:pointer}
+  .bar button[aria-pressed="true"]{background:#111;color:#fff}
+  .bar .sp{flex:1}
+  iframe{display:block;width:calc(100% - 56px);margin:0 28px 28px;height:calc(100vh - 20px);min-height:720px;border:3px solid #111;background:#fff}
+  .w375{width:395px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Colour options for the PRJGENUI Workforce site</h1>
+  <p>Every option stays in the logo's family, the deep green circle with the warm amber crane, so the two always sit well together. The difference between options is how soft or warm the site feels. Pick one and the real site recolours live underneath; scroll it, switch pages, and tick "Phone width" for mobile. This is a review page, not part of the public site.</p>
+</header>
+
+<div class="pals" id="pals"></div>
+
+<div class="bar">
+  <button type="button" data-page="index.html" aria-pressed="true">Home</button>
+  <button type="button" data-page="request.html" aria-pressed="false">Request form</button>
+  <button type="button" data-page="about.html" aria-pressed="false">About</button>
+  <span class="sp"></span>
+  <button type="button" id="mobile" aria-pressed="false">Phone width</button>
+</div>
+
+<iframe id="f" src="index.html" title="Site preview"></iframe>
+
+<script>
+var P = [
+  { id:'a', name:'Current, for reference', note:'Deep forest green with strong safety amber. The boldest of the set.',
+    v:{} },
+  { id:'b', name:'Forest, softened', note:'The same greens as the logo, lifted a touch, with honey instead of bright amber.',
+    v:{'--forest':'#2A4A38','--forest-deep':'#1D3628','--forest-ink':'#12261B','--forest-soft':'#3A5C48',
+       '--amber':'#DFA356','--amber-dark':'#C08A3B','--amber-text':'#8A5E18','--amber-light':'#F5E3C2','--amber-pale':'#FBF3E3',
+       '--sage':'#8CA88E','--sage-dark':'#5C7A60','--sage-light':'#E0E9E1','--sage-pale':'#F0F4F0',
+       '--paper':'#F8F6F0','--paper-deep':'#EFECE3','--on-dark':'#CBD8CE','--on-dark-mute':'#A2B5A7','--line':'#E3DFD4','--line-strong':'#D2CCBE'} },
+  { id:'c', name:'Sage and honey', note:'Calmest of the set. Grey-green panels, gentle honey accents, cream paper.',
+    v:{'--forest':'#37503F','--forest-deep':'#28402F','--forest-ink':'#172A1E','--forest-soft':'#48654F',
+       '--amber':'#DFA968','--amber-dark':'#C4914A','--amber-text':'#8A621F','--amber-light':'#F3E3C8','--amber-pale':'#FAF3E6',
+       '--sage':'#93A893','--sage-dark':'#667F66','--sage-light':'#E2E9E2','--sage-pale':'#F1F4F0',
+       '--paper':'#F7F5ED','--paper-deep':'#EDEAE0','--on-dark':'#CDD8CF','--on-dark-mute':'#A4B4A6','--line':'#E2DECF','--line-strong':'#D0CAB6'} },
+  { id:'d', name:'Moss and clay', note:'Earthy moss green with soft clay. Warm and tradesman-like without shouting.',
+    v:{'--forest':'#3E4A38','--forest-deep':'#2C3627','--forest-ink':'#1A2115','--forest-soft':'#4F5C46',
+       '--amber':'#CE8A5C','--amber-dark':'#B07145','--amber-text':'#875430','--amber-light':'#F0DCC8','--amber-pale':'#F9EFE4',
+       '--sage':'#8C967F','--sage-dark':'#5F6B54','--sage-light':'#E2E5DA','--sage-pale':'#F0F1EA',
+       '--paper':'#F8F6EF','--paper-deep':'#EEEAE0','--on-dark':'#D2D6C9','--on-dark-mute':'#A8AD9B','--line':'#E3DFD2','--line-strong':'#D1CBB9'} },
+  { id:'e', name:'Fog blue and wheat', note:'Dusty slate blue with soft wheat. Cooler and quieter, still warm enough for the crane.',
+    v:{'--forest':'#3D5566','--forest-deep':'#2A3E4C','--forest-ink':'#16242D','--forest-soft':'#4C687B',
+       '--amber':'#DCB068','--amber-dark':'#C09548','--amber-text':'#8A6524','--amber-light':'#F3E5C6','--amber-pale':'#FAF3E3',
+       '--sage':'#7E97A5','--sage-dark':'#53707F','--sage-light':'#DEE6EA','--sage-pale':'#EFF3F5',
+       '--paper':'#F7F7F3','--paper-deep':'#ECEBE4','--on-dark':'#C9D4DB','--on-dark-mute':'#9DADB8','--line':'#E0DFD6','--line-strong':'#CBC9BB'} },
+  { id:'f', name:'Deep teal and sand', note:'Muted teal with sandy ochre. Distinctive but gentle.',
+    v:{'--forest':'#2F5457','--forest-deep':'#214043','--forest-ink':'#122B2D','--forest-soft':'#3F686B',
+       '--amber':'#DCA963','--amber-dark':'#C28F45','--amber-text':'#8A6020','--amber-light':'#F3E4C4','--amber-pale':'#FAF3E3',
+       '--sage':'#6F9C98','--sage-dark':'#48736F','--sage-light':'#D9E7E5','--sage-pale':'#EDF3F2',
+       '--paper':'#F8F7F1','--paper-deep':'#EDEBE2','--on-dark':'#C6D6D5','--on-dark-mute':'#9BB2B0','--line':'#E0DED2','--line-strong':'#CCC9B8'} },
+  { id:'g', name:'Graphite and ochre', note:'Soft charcoal with muted ochre. Neutral, grown-up, lets the logo carry the colour.',
+    v:{'--forest':'#383B33','--forest-deep':'#292B25','--forest-ink':'#151711','--forest-soft':'#494C42',
+       '--amber':'#D6A45C','--amber-dark':'#BC8B44','--amber-text':'#8A6326','--amber-light':'#F2E3C6','--amber-pale':'#FAF3E4',
+       '--sage':'#94917F','--sage-dark':'#666352','--sage-light':'#E4E2D6','--sage-pale':'#F1F0E8',
+       '--paper':'#F8F6F0','--paper-deep':'#EEEBE2','--on-dark':'#D1D1C7','--on-dark-mute':'#A6A69A','--line':'#E2DFD3','--line-strong':'#CFCBBB'} }
+];
+var KEYS = ['--forest','--forest-deep','--forest-ink','--forest-soft','--amber','--amber-dark','--amber-text','--amber-light','--amber-pale','--sage','--sage-dark','--sage-light','--sage-pale','--paper','--paper-deep','--on-dark','--on-dark-mute','--line','--line-strong'];
+var BASE = {'--forest':'#1F3A2E','--amber':'#E8A33D','--sage':'#7A9A7E','--paper':'#FAF9F6','--forest-deep':'#14271E'};
+
+var pals = document.getElementById('pals'), f = document.getElementById('f');
+var cur = (location.hash || '#b').slice(1);
+if (!P.some(function (p) { return p.id === cur; })) cur = 'b';
+
+P.forEach(function (p) {
+  var b = document.createElement('button');
+  b.type = 'button'; b.className = 'pal'; b.dataset.id = p.id;
+  var v = function (k) { return p.v[k] || BASE[k]; };
+  b.innerHTML = '<div class="sw"><i style="background:' + v('--forest-deep') + '"></i><i style="background:' + v('--forest') + '"></i><i style="background:' + v('--amber') + '"></i><i style="background:' + v('--sage') + '"></i><i style="background:' + v('--paper') + ';border:1px solid #ddd"></i></div><b>' + p.name + '</b><span>' + p.note + '</span>';
+  b.addEventListener('click', function () { cur = p.id; history.replaceState(null, '', '#' + cur); apply(); });
+  pals.appendChild(b);
+});
+
+function css() {
+  var p = P.filter(function (x) { return x.id === cur; })[0];
+  var s = ':root{';
+  KEYS.forEach(function (k) { if (p.v[k]) s += k + ':' + p.v[k] + ';'; });
+  return s + '}';
+}
+function apply() {
+  Array.prototype.forEach.call(pals.children, function (b) { b.setAttribute('aria-pressed', b.dataset.id === cur ? 'true' : 'false'); });
+  try {
+    var d = f.contentDocument;
+    if (!d || !d.head) return;
+    var el = d.getElementById('pal-override');
+    if (!el) { el = d.createElement('style'); el.id = 'pal-override'; d.head.appendChild(el); }
+    el.textContent = css();
+    var m = d.querySelector('meta[name="theme-color"]');
+    if (m) m.content = (P.filter(function (x) { return x.id === cur; })[0].v['--forest'] || BASE['--forest']);
+  } catch (e) {}
+}
+f.addEventListener('load', apply);
+
+var page = 'index.html';
+document.querySelectorAll('[data-page]').forEach(function (b) {
+  b.addEventListener('click', function () {
+    page = b.dataset.page; f.src = page;
+    document.querySelectorAll('[data-page]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+  });
+});
+document.getElementById('mobile').addEventListener('click', function () {
+  var on = f.classList.toggle('w375'); this.setAttribute('aria-pressed', on ? 'true' : 'false');
+});
+apply();
+</script>
+</body>
+</html>

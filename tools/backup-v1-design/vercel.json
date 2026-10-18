@@ -1,0 +1,18 @@
+{
+  "headers": [
+    { "source": "/(.*)", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] }
+  ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.prjgenuiworkforce.co.uk" }],
+      "destination": "https://prjgenuiworkforce.co.uk/:path*",
+      "permanent": true
+    },
+    { "source": "/services.html", "destination": "/#services", "permanent": true },
+    { "source": "/how-it-works.html", "destination": "/#how-it-works", "permanent": true },
+    { "source": "/coverage.html", "destination": "/#coverage", "permanent": true },
+    { "source": "/compare.html", "destination": "/#compare", "permanent": true },
+    { "source": "/faq.html", "destination": "/#faq", "permanent": true }
+  ]
+}

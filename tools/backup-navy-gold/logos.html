@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logo options and a few questions | PRJGENUI Workforce</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1B2A4A">
+
+<!-- Fonts -->
+<link rel="preload" href="fonts/archivo.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/ibm-plex-sans.woff2" as="font" type="font/woff2" crossorigin>
+
+<!-- Styles -->
+<link rel="stylesheet" href="styles.css?v=9">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%231B2A4A'/%3E%3Ctext x='16' y='23' font-family='Arial,Helvetica,sans-serif' font-size='20' font-weight='700' fill='%23E4C883' text-anchor='middle'%3EP%3C/text%3E%3C/svg%3E">
+
+<style>
+/* Page-specific styles for the client review page. Not linked from the site nav. */
+.tag{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--steel-dark);background:var(--steel-light);padding:5px 10px;border-radius:2px;white-space:nowrap;}
+.review-head{padding:64px 0 24px;}
+.review-head h1{font-size:clamp(2rem,4vw,2.75rem);}
+.review-head .lede{margin-top:18px;}
+.review-head .steps-note{margin-top:22px;display:grid;gap:8px;max-width:var(--measure);font-size:1rem;color:var(--ink-soft);}
+.review-head .steps-note span{font-family:var(--display);font-weight:800;color:var(--gold);margin-right:8px;font-variant-numeric:tabular-nums;}
+
+.logo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;}
+.logo-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow);}
+.logo-card .img{background:#fff;padding:20px;border-bottom:1px solid var(--line);}
+.logo-card .img img{width:100%;aspect-ratio:1/1;object-fit:contain;display:block;}
+.logo-card .body{padding:18px 22px 22px;display:flex;flex-direction:column;gap:8px;flex:1;}
+.logo-card .num{font-family:var(--display);font-weight:800;font-size:1.375rem;color:var(--gold);font-variant-numeric:tabular-nums;line-height:1;}
+.logo-card h3{font-size:1.125rem;}
+.logo-card p{font-size:.9375rem;color:var(--ink-soft);margin:0;}
+.logo-card .open{margin-top:auto;padding-top:10px;font-size:.875rem;font-weight:700;color:var(--steel);text-decoration:none;}
+.logo-card .open:hover{color:var(--steel-dark);text-decoration:underline;text-decoration-color:var(--gold);text-underline-offset:3px;}
+
+.qs{list-style:none;counter-reset:q;display:grid;gap:24px;max-width:760px;}
+.qs li{display:grid;grid-template-columns:44px 1fr;gap:16px;}
+.qs li::before{counter-increment:q;content:counter(q,decimal-leading-zero);font-family:var(--display);font-weight:800;font-size:1.25rem;color:var(--gold);font-variant-numeric:tabular-nums;line-height:1.3;}
+.qs strong{display:block;font-size:1.0625rem;color:var(--ink);line-height:1.4;}
+.qs p{margin-top:6px;font-size:.9375rem;color:var(--ink-soft);}
+.reply-note{margin-top:36px;padding:18px 20px;border-left:3px solid var(--gold);background:var(--gold-pale);font-size:.9375rem;color:var(--ink-soft);max-width:760px;}
+
+.review-footer{padding:28px 0 48px;border-top:1px solid var(--line);font-size:.8125rem;color:var(--slate);display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between;}
+.review-footer a{color:var(--steel);text-decoration:none;font-weight:600;}
+.review-footer a:hover{text-decoration:underline;text-decoration-color:var(--gold);}
+@media(max-width:760px){.review-head{padding:44px 0 16px;}.logo-card .body{padding:16px 18px 18px;}}
+</style>
+</head>
+<body>
+
+<div class="top-rule"></div>
+
+<header class="site-header">
+  <div class="wrap">
+    <a href="index.html" class="brand">
+      <span class="mark">P</span>
+      <span class="word">PRJGENUI Workforce<span>Workforce intelligence</span></span>
+    </a>
+    <span class="tag">For review</span>
+  </div>
+</header>
+
+<!-- ====== Intro ====== -->
+<section class="review-head">
+  <div class="wrap">
+    <h1>Two things to look at</h1>
+    <p class="lede">This page isn't part of the public website. It's just for you, and it should take about ten minutes.</p>
+    <div class="steps-note">
+      <div><span>01</span>Six logo concepts. Tell us which one you like most, or what you'd take from each.</div>
+      <div><span>02</span>Eight short questions about how the website should sound. Your answers set the wording for every page.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== Logos ====== -->
+<section class="section" id="logos">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Logo concepts</h2>
+      <p class="lede">All six use the website's navy and gold. They are concepts to choose a direction from. Whichever you pick gets redrawn as a clean vector file so it stays sharp everywhere, from the browser tab to the side of a van. Text, spacing and colour can all be adjusted.</p>
+    </div>
+    <div class="logo-grid">
+
+      <div class="logo-card">
+        <div class="img"><img src="images/logos/web/logo-1-shield.webp" alt="Logo concept 1: navy shield with a gold letter P, company name and tagline underneath" width="900" height="900" loading="lazy"></div>
+        <div class="body">
+          <div class="num">01</div>
+          <h3>Shield</h3>
+          <p>A navy shield with a gold P, the company name underneath and the tagline in gold. Reads as protection and vetting, which is the business. The shield works on its own as an icon.</p>
+          <a class="open" href="images/logos/logo-1-shield.png" target="_blank" rel="noopener">Open full size</a>
+        </div>
+      </div>
+
+      <div class="logo-card">
+        <div class="img"><img src="images/logos/web/logo-2-paint-roller.webp" alt="Logo concept 2: letter P built around a gold paint roller in a navy square, with the company name alongside" width="900" height="494" loading="lazy"></div>
+        <div class="body">
+          <div class="num">02</div>
+          <h3>Paint roller</h3>
+          <p>The P is built around a paint roller, so the trade is in the mark itself. The wide layout suits a website header and letterhead. It is the most specific to painting and decorating, which is a strength now and a limit if you add other trades later.</p>
+          <a class="open" href="images/logos/logo-2-paint-roller.png" target="_blank" rel="noopener">Open full size</a>
+        </div>
+      </div>
+
+      <div class="logo-card">
+        <div class="img"><img src="images/logos/web/logo-3-crane.webp" alt="Logo concept 3: a gold tower crane forming the letter P inside a navy circle, company name underneath" width="900" height="900" loading="lazy"></div>
+        <div class="body">
+          <div class="num">03</div>
+          <h3>Crane</h3>
+          <p>A tower crane forms the stem of the P inside a navy circle. Says construction broadly rather than one trade. The round layout suits social media profiles and the browser tab.</p>
+          <a class="open" href="images/logos/logo-3-crane.png" target="_blank" rel="noopener">Open full size</a>
+        </div>
+      </div>
+
+      <div class="logo-card">
+        <div class="img"><img src="images/logos/web/logo-4-badge.webp" alt="Logo concept 4: round seal with three workers in hard hats, company name around the edge and EST. 2021 at the bottom" width="900" height="900" loading="lazy"></div>
+        <div class="body">
+          <div class="num">04</div>
+          <h3>Crew badge</h3>
+          <p>A round seal with three workers in hard hats and hi-vis, the full company name around the edge and the founding year. The most established look of the six. It is also the busiest, so it needs room and the text gets small on a phone.</p>
+          <a class="open" href="images/logos/logo-4-badge.png" target="_blank" rel="noopener">Open full size</a>
+        </div>
+      </div>
+
+      <div class="logo-card">
+        <div class="img"><img src="images/logos/web/logo-5-monogram.webp" alt="Logo concept 5: gold PW monogram in a navy square, company name and tagline alongside" width="900" height="494" loading="lazy"></div>
+        <div class="body">
+          <div class="num">05</div>
+          <h3>PW monogram</h3>
+          <p>A gold PW in a navy square, with the name alongside and the tagline in grey under a thin gold rule. The most corporate of the six. The monogram stands on its own at small sizes.</p>
+          <a class="open" href="images/logos/logo-5-monogram.png" target="_blank" rel="noopener">Open full size</a>
+        </div>
+      </div>
+
+      <div class="logo-card">
+        <div class="img"><img src="images/logos/web/logo-6-hardhat-tick.webp" alt="Logo concept 6: navy hard hat with a gold tick cut into it, PRJGENUI in heavy navy capitals and WORKFORCE in gold alongside" width="900" height="450" loading="lazy"></div>
+        <div class="body">
+          <div class="num">06</div>
+          <h3>Hard hat and tick</h3>
+          <p>A navy hard hat with a gold tick cut into it, next to the name in heavy capitals. The tick says checked and approved, which is the promise the website makes. The simplest of the six, so it stays sharp at any size and the hat works alone as an icon.</p>
+          <a class="open" href="images/logos/logo-6-hardhat-tick.png" target="_blank" rel="noopener">Open full size</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ====== Questions ====== -->
+<section class="section paper-deep" id="questions">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Eight questions about the website</h2>
+      <p class="lede">There are no wrong answers. Short answers in your own words are the most useful, because the way you naturally describe the business is the tone the website should have.</p>
+    </div>
+    <ol class="qs">
+      <li>
+        <div>
+          <strong>How would you describe PRJGENUI to a site manager you'd just met?</strong>
+          <p>Two or three sentences, the way you'd actually say it. Don't tidy it up.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Who is the website mainly for: contractors who need people, workers who want shifts, or both?</strong>
+          <p>If both, who comes first? That decides what a visitor sees at the top of the page.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>After thirty seconds on the site, what is the one thing you want a contractor to believe about you?</strong>
+          <p>And do you want the site to tell the story of how the business started on a live site, with your name on it?</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>What do contractors complain about most with the agencies they've used?</strong>
+          <p>The more specific the better. Real complaints make better copy than anything we could write.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Is there anything on the current site you would never say out loud?</strong>
+          <p>Words, claims or a tone that doesn't feel like you. Also any words you'd rather we used or avoided, for example labour, operatives, crew, passport, Trust Score.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>How should it sound?</strong>
+          <p>Pick the closest: a professional firm, a straight-talking site manager, or somewhere in between. If there is a company or website whose tone you like, in construction or not, tell us which.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>Which promises are you comfortable putting in writing?</strong>
+          <p>The site currently says: a replacement search within 60 minutes of a no-show, cards checked with the bodies that issued them, and a reply within one business day. Keep, change or drop each one.</p>
+        </div>
+      </li>
+      <li>
+        <div>
+          <strong>What should a visitor do first: fill in the form, call, WhatsApp or email?</strong>
+          <p>And which phone number and email address should the site show?</p>
+        </div>
+      </li>
+    </ol>
+    <div class="reply-note">
+      Reply however is easiest: WhatsApp, email or a voice note. Numbered answers help but aren't essential. If a question doesn't apply, skip it.
+    </div>
+  </div>
+</section>
+
+<footer class="review-footer">
+  <div class="wrap" style="display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between;">
+    <span>PRJGENUI Workforce Ltd. Company number 13205257. Registered office: 124 City Road, London EC1V 2NX.</span>
+    <a href="index.html">Back to the website</a>
+  </div>
+</footer>
+
+</body>
+</html>

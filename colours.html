@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Colour scheme options | PRJGENUI Workforce</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1B2A4A">
+
+<!-- Fonts -->
+<link rel="preload" href="fonts/archivo.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/ibm-plex-sans.woff2" as="font" type="font/woff2" crossorigin>
+
+<!-- Styles -->
+<link rel="stylesheet" href="styles-legacy.css?v=1">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="/images/brand/favicon-48.png">
+<link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
+
+<style>
+.review-head{padding:64px 0 24px;}
+.review-head h1{font-size:clamp(2rem,4vw,2.75rem);}
+.review-head .lede{margin-top:18px;max-width:var(--measure);color:var(--ink-soft);font-size:1.1rem;}
+.review-head .intro-note{margin-top:18px;padding:16px 20px;background:var(--steel-pale);border-left:3px solid var(--steel);border-radius:2px;max-width:640px;}
+.review-head .intro-note p{font-size:.95rem;color:var(--ink-soft);line-height:1.6;}
+
+.scheme-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:28px;padding-bottom:40px;}
+
+.scheme-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;}
+
+.scheme-card .label{padding:18px 20px 10px;border-bottom:1px solid var(--line);}
+.scheme-card .label .num{font-family:var(--display);font-weight:800;font-size:.8rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);}
+.scheme-card .label h3{margin-top:4px;}
+.scheme-card .label p{margin-top:6px;font-size:.85rem;color:var(--slate);line-height:1.5;}
+
+.scheme-card .preview{padding:0;}
+.scheme-card .preview .bar{height:56px;display:flex;align-items:center;padding:0 20px;font-family:var(--display);font-weight:800;font-size:1rem;color:#fff;letter-spacing:-.02em;}
+.scheme-card .preview .bar span{margin-left:auto;font-family:var(--sans);font-weight:600;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;opacity:.8;}
+.scheme-card .preview .body{padding:20px;background:var(--paper);border-top:1px solid rgba(255,255,255,.08);}
+.scheme-card .preview .body h4{font-family:var(--display);font-weight:700;font-size:1.05rem;margin-bottom:8px;}
+.scheme-card .preview .body p{font-size:.9rem;color:var(--ink-soft);line-height:1.55;margin-bottom:14px;}
+.scheme-card .preview .body .btn-row{display:flex;gap:10px;flex-wrap:wrap;}
+.scheme-card .preview .body .btn{display:inline-block;padding:9px 18px;border-radius:2px;font-size:.85rem;font-weight:700;font-family:var(--sans);text-decoration:none;letter-spacing:.01em;}
+.scheme-card .preview .body .btn-primary{color:#fff;}
+.scheme-card .preview .body .btn-secondary{color:#fff;}
+.scheme-card .preview .body .link{font-size:.85rem;font-weight:600;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;}
+
+.scheme-card .swatches{display:flex;border-top:1px solid var(--line);}
+.scheme-card .swatches .sw{flex:1;padding:14px 8px 10px;text-align:center;font-size:.68rem;font-weight:700;letter-spacing:.04em;}
+.scheme-card .swatches .sw .dot{width:28px;height:28px;border-radius:50%;margin:0 auto 6px;border:1px solid rgba(0,0,0,.08);}
+.scheme-card .swatches .sw .hex{font-family:var(--sans);font-weight:600;font-size:.72rem;color:var(--slate);letter-spacing:0;}
+.scheme-card .swatches .sw .role{font-family:var(--display);font-weight:800;font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-top:2px;}
+
+.current-badge{display:inline-block;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ok);background:var(--ok-bg);padding:4px 10px;border-radius:2px;margin-left:10px;vertical-align:middle;}
+
+.reply-note{margin-top:8px;padding:18px 22px;background:var(--gold-pale);border-left:3px solid var(--gold);border-radius:2px;max-width:640px;}
+.reply-note p{font-size:.95rem;color:var(--ink-soft);line-height:1.6;}
+
+.review-footer{padding:32px 0 48px;border-top:1px solid var(--line);font-size:.85rem;color:var(--slate);}
+.review-footer a{font-weight:600;}
+
+/* ---- Scheme A: Current (Navy & Gold) ---- */
+.sa .bar{background:#1B2A4A;} .sa .bar span{color:#C8933A;}
+.sa .body{background:#FAF9F6;} .sa .btn-primary{background:#1B2A4A;} .sa .btn-secondary{background:#4A85B0;} .sa .link{color:#4A85B0;text-decoration-color:#C8933A;}
+.sa .sw1 .dot{background:#1B2A4A;} .sa .sw2 .dot{background:#C8933A;} .sa .sw3 .dot{background:#4A85B0;}
+
+/* ---- Scheme B: Forest & Copper ---- */
+.sb .bar{background:#1F3A2E;} .sb .bar span{color:#B87333;}
+.sb .body{background:#F5F4F0;} .sb .btn-primary{background:#1F3A2E;} .sb .btn-secondary{background:#7A9A7E;} .sb .link{color:#7A9A7E;text-decoration-color:#B87333;}
+.sb .sw1 .dot{background:#1F3A2E;} .sb .sw2 .dot{background:#B87333;} .sb .sw3 .dot{background:#7A9A7E;}
+
+/* ---- Scheme C: Slate & Amber ---- */
+.sc .bar{background:#2D3142;} .sc .bar span{color:#E8A33D;}
+.sc .body{background:#F4F4F6;} .sc .btn-primary{background:#2D3142;} .sc .btn-secondary{background:#6B8AAD;} .sc .link{color:#6B8AAD;text-decoration-color:#E8A33D;}
+.sc .sw1 .dot{background:#2D3142;} .sc .sw2 .dot{background:#E8A33D;} .sc .sw3 .dot{background:#6B8AAD;}
+
+/* ---- Scheme D: Teal & Rust ---- */
+.sd .bar{background:#1A4D4A;} .sd .bar span{color:#C66B3D;}
+.sd .body{background:#F2F4F3;} .sd .btn-primary{background:#1A4D4A;} .sd .btn-secondary{background:#5A9A96;} .sd .link{color:#5A9A96;text-decoration-color:#C66B3D;}
+.sd .sw1 .dot{background:#1A4D4A;} .sd .sw2 .dot{background:#C66B3D;} .sd .sw3 .dot{background:#5A9A96;}
+
+/* ---- Scheme E: Graphite & Gold ---- */
+.se .bar{background:#2A2D34;} .se .bar span{color:#D4A437;}
+.se .body{background:#F5F5F4;} .se .btn-primary{background:#2A2D34;} .se .btn-secondary{background:#5C7A99;} .se .link{color:#5C7A99;text-decoration-color:#D4A437;}
+.se .sw1 .dot{background:#2A2D34;} .se .sw2 .dot{background:#D4A437;} .se .sw3 .dot{background:#5C7A99;}
+
+/* ---- Scheme F: Olive & Bronze ---- */
+.sf .bar{background:#28331E;} .sf .bar span{color:#A67838;}
+.sf .body{background:#F3F2EC;} .sf .btn-primary{background:#28331E;} .sf .btn-secondary{background:#7A8B5C;} .sf .link{color:#7A8B5C;text-decoration-color:#A67838;}
+.sf .sw1 .dot{background:#28331E;} .sf .sw2 .dot{background:#A67838;} .sf .sw3 .dot{background:#7A8B5C;}
+</style>
+</head>
+<body>
+
+<header class="review-head">
+  <div class="wrap">
+    <span class="tag">Client review</span>
+    <h1>Colour scheme options <span class="current-badge">Current: Navy &amp; Gold</span></h1>
+    <p class="lede">Six palettes below. Each shows the same layout with its own dark bar, buttons, link and accent colour. Pick the one that feels right for the brand, or mix and match.</p>
+    <div class="intro-note">
+      <p>Every scheme uses the same fonts (Archivo for headings, IBM Plex Sans for text) and the same layout. Only the colours change. The swatches under each preview show the three core colours: the dark primary, the accent, and the secondary.</p>
+    </div>
+  </div>
+</header>
+
+<section class="wrap" style="padding-bottom:24px;">
+  <div class="scheme-grid">
+
+    <!-- Scheme A: Current -->
+    <div class="scheme-card sa">
+      <div class="label">
+        <div class="num">Option A</div>
+        <h3>Navy &amp; Gold <span class="current-badge">Current</span></h3>
+        <p>Deep navy with a warm gold accent and steel blue secondary. Classic, professional, slightly formal.</p>
+      </div>
+      <div class="preview">
+        <div class="bar">PRJGENUI Workforce<span>Workforce certainty</span></div>
+        <div class="body">
+          <h4>Verified trades, on time</h4>
+          <p>We check every card with the body that issued it, then hold the CV to what the site manager actually needs.</p>
+          <div class="btn-row">
+            <a class="btn btn-primary">Start a search</a>
+            <a class="btn btn-secondary">See how it works</a>
+          </div>
+          <p style="margin-top:12px;"><a class="link">Read the FAQs</a></p>
+        </div>
+      </div>
+      <div class="swatches">
+        <div class="sw sw1"><div class="dot"></div><div class="hex">#1B2A4A</div><div class="role">Primary</div></div>
+        <div class="sw sw2"><div class="dot"></div><div class="hex">#C8933A</div><div class="role">Accent</div></div>
+        <div class="sw sw3"><div class="dot"></div><div class="hex">#4A85B0</div><div class="role">Secondary</div></div>
+      </div>
+    </div>
+
+    <!-- Scheme B: Forest & Copper -->
+    <div class="scheme-card sb">
+      <div class="label">
+        <div class="num">Option B</div>
+        <h3>Forest &amp; Copper</h3>
+        <p>Deep forest green with a copper accent and sage secondary. Earthy, natural, feels close to the trades.</p>
+      </div>
+      <div class="preview">
+        <div class="bar">PRJGENUI Workforce<span>Workforce certainty</span></div>
+        <div class="body">
+          <h4>Verified trades, on time</h4>
+          <p>We check every card with the body that issued it, then hold the CV to what the site manager actually needs.</p>
+          <div class="btn-row">
+            <a class="btn btn-primary">Start a search</a>
+            <a class="btn btn-secondary">See how it works</a>
+          </div>
+          <p style="margin-top:12px;"><a class="link">Read the FAQs</a></p>
+        </div>
+      </div>
+      <div class="swatches">
+        <div class="sw sw1"><div class="dot"></div><div class="hex">#1F3A2E</div><div class="role">Primary</div></div>
+        <div class="sw sw2"><div class="dot"></div><div class="hex">#B87333</div><div class="role">Accent</div></div>
+        <div class="sw sw3"><div class="dot"></div><div class="hex">#7A9A7E</div><div class="role">Secondary</div></div>
+      </div>
+    </div>
+
+    <!-- Scheme C: Slate & Amber -->
+    <div class="scheme-card sc">
+      <div class="label">
+        <div class="num">Option C</div>
+        <h3>Slate &amp; Amber</h3>
+        <p>Charcoal slate with a bright amber accent and dusty blue secondary. Modern, industrial, clean.</p>
+      </div>
+      <div class="preview">
+        <div class="bar">PRJGENUI Workforce<span>Workforce certainty</span></div>
+        <div class="body">
+          <h4>Verified trades, on time</h4>
+          <p>We check every card with the body that issued it, then hold the CV to what the site manager actually needs.</p>
+          <div class="btn-row">
+            <a class="btn btn-primary">Start a search</a>
+            <a class="btn btn-secondary">See how it works</a>
+          </div>
+          <p style="margin-top:12px;"><a class="link">Read the FAQs</a></p>
+        </div>
+      </div>
+      <div class="swatches">
+        <div class="sw sw1"><div class="dot"></div><div class="hex">#2D3142</div><div class="role">Primary</div></div>
+        <div class="sw sw2"><div class="dot"></div><div class="hex">#E8A33D</div><div class="role">Accent</div></div>
+        <div class="sw sw3"><div class="dot"></div><div class="hex">#6B8AAD</div><div class="role">Secondary</div></div>
+      </div>
+    </div>
+
+    <!-- Scheme D: Teal & Rust -->
+    <div class="scheme-card sd">
+      <div class="label">
+        <div class="num">Option D</div>
+        <h3>Teal &amp; Rust</h3>
+        <p>Deep teal with a rust orange accent and muted teal secondary. Bold, distinctive, stands out from competitors.</p>
+      </div>
+      <div class="preview">
+        <div class="bar">PRJGENUI Workforce<span>Workforce certainty</span></div>
+        <div class="body">
+          <h4>Verified trades, on time</h4>
+          <p>We check every card with the body that issued it, then hold the CV to what the site manager actually needs.</p>
+          <div class="btn-row">
+            <a class="btn btn-primary">Start a search</a>
+            <a class="btn btn-secondary">See how it works</a>
+          </div>
+          <p style="margin-top:12px;"><a class="link">Read the FAQs</a></p>
+        </div>
+      </div>
+      <div class="swatches">
+        <div class="sw sw1"><div class="dot"></div><div class="hex">#1A4D4A</div><div class="role">Primary</div></div>
+        <div class="sw sw2"><div class="dot"></div><div class="hex">#C66B3D</div><div class="role">Accent</div></div>
+        <div class="sw sw3"><div class="dot"></div><div class="hex">#5A9A96</div><div class="role">Secondary</div></div>
+      </div>
+    </div>
+
+    <!-- Scheme E: Graphite & Gold -->
+    <div class="scheme-card se">
+      <div class="label">
+        <div class="num">Option E</div>
+        <h3>Graphite &amp; Gold</h3>
+        <p>Near-black graphite with a brighter gold accent and slate blue secondary. Premium, corporate, sharper than the current navy.</p>
+      </div>
+      <div class="preview">
+        <div class="bar">PRJGENUI Workforce<span>Workforce certainty</span></div>
+        <div class="body">
+          <h4>Verified trades, on time</h4>
+          <p>We check every card with the body that issued it, then hold the CV to what the site manager actually needs.</p>
+          <div class="btn-row">
+            <a class="btn btn-primary">Start a search</a>
+            <a class="btn btn-secondary">See how it works</a>
+          </div>
+          <p style="margin-top:12px;"><a class="link">Read the FAQs</a></p>
+        </div>
+      </div>
+      <div class="swatches">
+        <div class="sw sw1"><div class="dot"></div><div class="hex">#2A2D34</div><div class="role">Primary</div></div>
+        <div class="sw sw2"><div class="dot"></div><div class="hex">#D4A437</div><div class="role">Accent</div></div>
+        <div class="sw sw3"><div class="dot"></div><div class="hex">#5C7A99</div><div class="role">Secondary</div></div>
+      </div>
+    </div>
+
+    <!-- Scheme F: Olive & Bronze -->
+    <div class="scheme-card sf">
+      <div class="label">
+        <div class="num">Option F</div>
+        <h3>Olive &amp; Bronze</h3>
+        <p>Dark olive with a bronze accent and olive green secondary. Grounded, natural, slightly heritage feel.</p>
+      </div>
+      <div class="preview">
+        <div class="bar">PRJGENUI Workforce<span>Workforce certainty</span></div>
+        <div class="body">
+          <h4>Verified trades, on time</h4>
+          <p>We check every card with the body that issued it, then hold the CV to what the site manager actually needs.</p>
+          <div class="btn-row">
+            <a class="btn btn-primary">Start a search</a>
+            <a class="btn btn-secondary">See how it works</a>
+          </div>
+          <p style="margin-top:12px;"><a class="link">Read the FAQs</a></p>
+        </div>
+      </div>
+      <div class="swatches">
+        <div class="sw sw1"><div class="dot"></div><div class="hex">#28331E</div><div class="role">Primary</div></div>
+        <div class="sw sw2"><div class="dot"></div><div class="hex">#A67838</div><div class="role">Accent</div></div>
+        <div class="sw sw3"><div class="dot"></div><div class="hex">#7A8B5C</div><div class="role">Secondary</div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="reply-note">
+    <p>Reply with the letter of the scheme you like (A, B, C, D, E or F). If you want to mix colours from different schemes, just say which ones. We can also adjust any colour lighter or darker.</p>
+  </div>
+</section>
+
+<footer class="review-footer">
+  <div class="wrap" style="display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between;">
+    <span>PRJGENUI Workforce Ltd. Company number 13205257. Registered office: 124 City Road, London EC1V 2NX.</span>
+    <a href="index.html">Back to the website</a>
+  </div>
+</footer>
+
+</body>
+</html>

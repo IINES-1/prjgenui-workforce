@@ -1,0 +1,3260 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>PRJGENUI Workforce | Verified Workforce Operating System</title>
+<link rel="preload" href="fonts/archivo.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/ibm-plex-sans.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="/images/brand/favicon-48.png">
+<link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
+
+<!-- Supabase client library. Uncomment when you have your free database set up.
+     Sign up at supabase.com, create a project, add a table called 'kv' with
+     columns: key (text, primary key), value (jsonb). Then fill in DB_CONFIG
+     below and set enabled to true. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="secrets.js"></script>
+<style>
+  @font-face{font-family:'Archivo';src:url('fonts/archivo.woff2') format('woff2');font-weight:100 900;font-style:normal;font-display:swap;}
+  @font-face{font-family:'IBM Plex Sans';src:url('fonts/ibm-plex-sans.woff2') format('woff2');font-weight:100 700;font-style:normal;font-display:swap;}
+  :root{
+    --navy:#1F3A2E; --navy-dark:#14271E; --gold:#E8A33D; --gold-light:#FBE9C6; --steel:#7A9A7E; --steel-dark:#4D6A51; --steel-light:#DCE7DD; --steel-pale:#EEF3EE;
+    --paper:#FAF9F6; --panel:#FFFFFF; --ink:#1C2029; --slate:#6B7280;
+    --line:#E0DBD0; --ok:#2F7A4F; --ok-bg:#E7F3EC; --warn:#B8790A; --warn-bg:#FBF0DD;
+    --watch:#3B6FA0; --watch-bg:#E8F0F8;
+    --danger:#B23A2F; --danger-bg:#FBEAE8; --none-bg:#EFEEEA;
+    --review:#5B3A8E; --review-bg:#EFE7F6;
+    --display:'Archivo', 'Helvetica Neue', Arial, sans-serif;
+    --sans:'IBM Plex Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --radius:4px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:var(--sans);background:var(--paper);color:var(--ink);-webkit-font-smoothing:antialiased;}
+  a{color:inherit;}
+  button{font-family:var(--sans);cursor:pointer;}
+  input,select,textarea{font-family:var(--sans);}
+  input:focus,select:focus,textarea:focus,button:focus{outline:2px solid var(--gold);outline-offset:1px;}
+  .top-rule{height:3px;background:var(--gold);}
+
+  .prototype-notice{background:var(--navy-dark);color:#D3DED6;font-size:11.5px;text-align:center;padding:7px 14px;}
+
+  header.topbar{background:var(--navy);color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:16px;}
+  .brand .mark{width:30px;height:30px;border-radius:50%;box-shadow:0 0 0 1.5px var(--gold);flex:none;display:block;}
+  .brand .sub{font-size:10.5px;color:#B5C4B9;font-weight:500;display:block;margin-top:1px;}
+  nav.tabs{display:flex;gap:2px;flex-wrap:wrap;}
+  nav.tabs button{background:transparent;border:none;color:#CBD8CF;padding:8px 11px;border-radius:var(--radius);font-size:13px;font-weight:500;transition:color 150ms ease,background 150ms ease;}
+  nav.tabs button.active{background:rgba(255,255,255,0.12);color:#fff;}
+  nav.tabs button:hover{color:#fff;}
+
+  main{max-width:960px;margin:0 auto;padding:24px 20px 60px;}
+  h1{font-family:var(--display);font-size:24px;font-weight:700;margin:0 0 4px;letter-spacing:-0.02em;}
+  h2{font-family:var(--display);font-size:17px;font-weight:600;margin:0 0 10px;letter-spacing:-0.008em;}
+  h3{font-family:var(--sans);font-size:14px;font-weight:600;margin:0 0 8px;}
+  p.lead{color:var(--slate);font-size:14px;margin:0 0 20px;}
+
+  .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:13px;}
+  .stat .n{font-family:var(--sans);font-size:22px;font-weight:800;line-height:1.1;letter-spacing:-0.02em;color:var(--navy);}
+  .stat .l{font-size:11.5px;color:var(--slate);margin-top:4px;}
+  @media(max-width:640px){.stat-row{grid-template-columns:repeat(2,1fr);}}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-bottom:20px;}
+  .panel.dim{background:var(--paper);}
+  .empty{text-align:center;padding:36px 20px;color:var(--slate);}
+  .empty h3{color:var(--ink);margin-bottom:6px;}
+
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:2px;white-space:nowrap;}
+  .badge.ok{background:var(--ok-bg);color:var(--ok);}
+  .badge.warn{background:var(--warn-bg);color:var(--warn);}
+  .badge.watch{background:var(--watch-bg);color:var(--watch);}
+  .badge.danger{background:var(--danger-bg);color:var(--danger);}
+  .badge.none{background:var(--none-bg);color:var(--slate);}
+  .badge.gold{background:var(--gold-light);color:#865800;}
+  .badge.review{background:var(--review-bg);color:var(--review);}
+
+  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px;}
+  .toolbar input[type=text]{flex:1;min-width:160px;padding:9px 12px;border:1px solid var(--line);border-radius:var(--radius);font-size:14px;background:#fff;}
+  .chip{border:1px solid var(--line);background:#fff;border-radius:var(--radius);padding:6px 13px;font-size:13px;color:var(--slate);transition:background 150ms ease,color 150ms ease,border-color 150ms ease;}
+  .chip.active{background:var(--navy);color:#fff;border-color:var(--navy);}
+
+  .btn{border-radius:var(--radius);padding:9px 16px;font-size:14px;font-weight:600;border:1px solid var(--line);background:#fff;color:var(--ink);transition:background 150ms ease,border-color 150ms ease;}
+  .btn:hover{border-color:var(--slate);}
+  .btn.primary{background:var(--navy);color:#fff;border-color:var(--navy);}
+  .btn.primary:hover{background:var(--navy-dark);}
+  .btn.danger{color:var(--danger);}
+  .btn.small{padding:5px 11px;font-size:12px;}
+  .btn.ghost{background:transparent;border-color:transparent;color:var(--slate);}
+
+  .row{display:flex;align-items:center;gap:14px;padding:13px 4px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .row:last-child{border-bottom:none;}
+  .row-main{flex:1;min-width:160px;}
+  .row-main .name{font-weight:600;font-size:14px;}
+  .row-main .sub{font-size:12px;color:var(--slate);}
+  .row-badges{display:flex;gap:6px;flex-wrap:wrap;}
+  .row-score{font-size:13px;font-weight:600;min-width:44px;text-align:right;}
+  .row-score .u{display:block;font-size:10px;font-weight:400;color:var(--slate);}
+  .passport-tag{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:var(--slate);background:var(--paper);border:1px solid var(--line);border-radius:2px;padding:1px 6px;}
+
+  .alert-row{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:13px;}
+  .alert-row:last-child{border-bottom:none;}
+  .alert-row .who{font-weight:600;}
+  .alert-row .what{color:var(--slate);}
+  .alert-row .action{font-size:11.5px;color:var(--slate);display:block;margin-top:1px;}
+
+  form .field{margin-bottom:14px;}
+  form label{display:block;font-size:12px;color:var(--slate);margin-bottom:5px;font-weight:600;}
+  form .hint{font-size:11px;color:var(--slate);margin-top:4px;font-weight:400;}
+  form input[type=text],form input[type=tel],form input[type=email],form input[type=date],form input[type=number],form select,form textarea{
+    width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:var(--radius);font-size:14px;background:#fff;color:var(--ink);
+  }
+  form textarea{min-height:56px;resize:vertical;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .field-row.three{grid-template-columns:1fr 1fr 1fr;}
+  @media(max-width:560px){.field-row,.field-row.three{grid-template-columns:1fr;}}
+
+  .subsection{border-top:1px solid var(--line);margin-top:18px;padding-top:16px;}
+  .kicker{font-size:11px;color:var(--slate);font-weight:600;margin-bottom:4px;letter-spacing:0;}
+  .sub-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end;margin-bottom:8px;padding:10px;background:var(--paper);border-radius:var(--radius);}
+  @media(max-width:640px){.sub-row{grid-template-columns:1fr;}}
+  .sub-row label{margin-bottom:3px;}
+  .sub-row .btn{align-self:center;}
+
+  .checkgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+  @media(max-width:560px){.checkgrid{grid-template-columns:1fr;}}
+  .checkgrid label{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:400;color:var(--ink);}
+
+  .form-actions{display:flex;justify-content:space-between;gap:10px;margin-top:22px;padding-top:16px;border-top:1px solid var(--line);}
+
+  .audit-item{font-size:12.5px;color:var(--slate);padding:6px 0;border-bottom:1px dashed var(--line);}
+  .audit-item:last-child{border-bottom:none;}
+  .audit-item b{color:var(--ink);}
+
+  .score-breakdown{display:flex;flex-direction:column;gap:6px;margin-top:8px;}
+  .score-breakdown .part{display:flex;justify-content:space-between;font-size:12.5px;color:var(--slate);}
+  .score-bar{background:var(--none-bg);border-radius:2px;height:6px;overflow:hidden;margin-top:2px;}
+  .score-bar div{background:var(--steel);height:100%;}
+
+  .search-summary{display:flex;align-items:baseline;gap:8px;margin-bottom:4px;}
+  .search-summary .big{font-family:var(--sans);font-size:28px;font-weight:800;color:var(--navy);letter-spacing:-0.02em;}
+  .search-summary .small{font-size:13px;color:var(--slate);}
+
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:var(--radius);font-size:13px;box-shadow:0 4px 16px rgba(0,0,0,0.2);z-index:999;opacity:0;transition:opacity 0.2s;pointer-events:none;}
+  .toast.show{opacity:1;}
+  .toast.danger{background:var(--danger);}
+
+  footer.foot{max-width:960px;margin:0 auto;padding:0 20px 40px;text-align:center;display:flex;justify-content:center;gap:16px;flex-wrap:wrap;}
+  footer.foot button{font-size:11.5px;color:var(--slate);background:none;border:none;text-decoration:underline;}
+  .callout{border:1px solid var(--line);background:var(--gold-light);border-radius:var(--radius);padding:10px 12px;font-size:12.5px;color:#6B5424;margin-bottom:16px;}
+  .storage-tag{font-size:10.5px;color:var(--slate);}
+  .action-group{margin-bottom:18px;}
+  .action-group h3{font-size:12.5px;text-transform:none;color:var(--slate);letter-spacing:.02em;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--line);}
+
+  /* ---- 0.2C additions ---- */
+  .breadcrumb{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--slate);margin-bottom:14px;flex-wrap:wrap;}
+  .breadcrumb a{cursor:pointer;color:var(--steel-dark);text-decoration:none;}
+  .breadcrumb a:hover{text-decoration:underline;}
+  .breadcrumb .sep{color:var(--line);}
+  .breadcrumb .current{color:var(--ink);font-weight:600;}
+
+  .conflict-note{border:1px solid var(--gold);background:var(--gold-light);border-radius:var(--radius);padding:10px 12px;font-size:12.5px;color:#6B5424;margin-bottom:16px;}
+  .conflict-note b{color:var(--navy-dark);}
+
+  .snapshot-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;}
+  .snapshot-card .snap-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .snapshot-card .snap-date{font-size:11.5px;color:var(--slate);}
+
+  .stepper{display:flex;gap:0;flex-wrap:wrap;margin-bottom:16px;}
+  .stepper .step{flex:1;min-width:80px;text-align:center;position:relative;padding:8px 4px;font-size:11.5px;color:var(--slate);}
+  .stepper .step .dot{width:22px;height:22px;border-radius:50%;background:var(--none-bg);border:2px solid var(--line);display:flex;align-items:center;justify-content:center;margin:0 auto 6px;font-size:11px;font-weight:600;color:var(--slate);}
+  .stepper .step.done .dot{background:var(--ok);border-color:var(--ok);color:#fff;}
+  .stepper .step.current .dot{background:var(--navy);border-color:var(--navy);color:#fff;}
+  .stepper .step.review .dot{background:var(--review);border-color:var(--review);color:#fff;}
+  .stepper .step:not(:last-child)::after{content:'';position:absolute;top:18px;right:-50%;width:100%;height:2px;background:var(--line);z-index:-1;}
+  .stepper .step.done:not(:last-child)::after{background:var(--ok);}
+
+  .timeline{border-left:2px solid var(--line);padding-left:16px;margin:8px 0;}
+  .timeline .tl-item{position:relative;padding-bottom:14px;font-size:12.5px;color:var(--slate);}
+  .timeline .tl-item:last-child{padding-bottom:0;}
+  .timeline .tl-item::before{content:'';position:absolute;left:-21px;top:3px;width:10px;height:10px;border-radius:50%;background:var(--steel);border:2px solid #fff;}
+  .timeline .tl-item .tl-date{font-size:11px;color:var(--slate);}
+  .timeline .tl-item .tl-label{color:var(--ink);font-weight:600;}
+
+  .ref-tag{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:var(--navy);background:var(--steel-pale);border:1px solid var(--steel-light);border-radius:2px;padding:1px 6px;}
+  .match-factors{font-size:12px;color:var(--slate);margin-top:6px;}
+  .match-factors .factor{display:inline-block;margin:2px 4px 2px 0;padding:2px 7px;border-radius:2px;font-size:11px;font-weight:600;}
+  .match-factors .factor.pass{background:var(--ok-bg);color:var(--ok);}
+  .match-factors .factor.fail{background:var(--danger-bg);color:var(--danger);}
+  .match-factors .factor.review{background:var(--review-bg);color:var(--review);}
+</style>
+</head>
+<body>
+
+<div class="top-rule"></div>
+<div class="prototype-notice">Prototype environment. Data is stored in this browser only. Do not use as the sole legal compliance record.</div>
+
+<header class="topbar">
+  <div class="brand"><img class="mark" src="images/brand/crane-mark-96.png" srcset="images/brand/crane-mark-96.png 1x, images/brand/crane-mark-192.png 2x" width="44" height="44" alt=""><span>PRJGENUI Workforce<span class="sub" id="storageTag">Verified Workforce Operating System</span></span></div>
+  <nav class="tabs" id="tabs">
+    <button data-view="dashboard">Dashboard</button>
+    <button data-view="workers">Workers</button>
+    <button data-view="compliance">Compliance</button>
+    <button data-view="crews">Crews</button>
+    <button data-view="contractors">Contractors</button>
+    <button data-view="requests">Requests</button>
+    <button data-view="assignments">Assignments</button>
+  </nav>
+</header>
+
+<main id="app"></main>
+
+<footer class="foot">
+  <button id="initEasbergBtn">Initialise Easberg pilot</button>
+  <button id="integrityCheckBtn">Run integrity check</button>
+  <button id="exportBtn">Export data</button>
+  <button id="importBtn">Import data</button>
+  <input type="file" id="importFile" accept="application/json,.json" style="display:none;">
+  <button id="resetBtn">Clear all data</button>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   CONFIG — Schema v7 (Release 0.2C)
+   ========================================================= */
+const SCHEMA_VERSION = 7;
+const READINESS_RULES_VERSION = '0.1';
+const MATCHING_RULES_VERSION = '0.1';
+const DB_NAME = 'prjgenui-workforce';
+const DB_VERSION = 1;
+const STORE_NAME = 'kv';
+const W_KEY = 'workers';
+const C_KEY = 'crews';
+const CL_KEY = 'clients';           // legacy — kept for migration source
+const META_KEY = 'meta';
+const CTR_KEY = 'contractors';
+const PRJ_KEY = 'projects';
+const STE_KEY = 'sites';
+const ASN_KEY = 'assignmentEntities';
+const MIGRATIONS_KEY = 'migrations';
+const WFR_KEY = 'workforceRequests';
+const MG_KEY = 'matchGenerations';
+const MATCH_KEY = 'matches';
+const OFFER_KEY = 'assignmentOffers';
+const SNAPSHOT_KEY = 'readinessSnapshots';
+
+const CERT_OPTIONS = ['H&S Awareness','Working at height','Asbestos awareness','Manual handling','COSHH','PPE','RAMS Awareness','Fire Safety','First aid','Fire marshal'];
+// The single authoritative source for universally-mandatory training and the
+// performance evidence review threshold. Nothing else in the app should
+// hardcode either of these.
+// coreTrainingRequirements is empty by default: no certificate is assumed
+// universally mandatory just by existing. Add certificate names here only
+// when there's a genuine company-wide requirement.
+const WORKFORCE_POLICY = {
+  performanceEvidenceReviewThreshold: 70,
+  coreTrainingRequirements: []
+};
+const SECTOR_OPTIONS = ['Education','Housing / residential','Commercial','Healthcare','Industrial','Occupied buildings'];
+const AVAILABILITY_OPTIONS = ['To confirm','Available','Within 24h','Unavailable','Booked'];
+
+/* =========================================================
+   REMOTE DATABASE CONFIG
+   ========================================================= */
+const DB_CONFIG = {
+  enabled: true,
+  url: (window.PRJGENUI && window.PRJGENUI.supabaseUrl) || '',
+  anonKey: (window.PRJGENUI && window.PRJGENUI.supabaseAnonKey) || ''
+};
+
+/* =========================================================
+   STORAGE — Supabase primary, IndexedDB fallback, localStorage last resort.
+   One abstraction used everywhere; nothing else touches
+   indexedDB/localStorage directly.
+   ========================================================= */
+const Storage = (function(){
+  let backend = null;
+  let dbPromise = null;
+  let supabaseClient = null;
+  let changeHandler = function(){};
+  function onBackendChange(){ try{ changeHandler(backend); }catch(e){} }
+
+  function openDB(){
+    if(dbPromise) return dbPromise;
+    dbPromise = new Promise((resolve, reject)=>{
+      if(!window.indexedDB){ reject(new Error('IndexedDB unavailable')); return; }
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = (e)=>{
+        const db = e.target.result;
+        if(!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME);
+      };
+      req.onsuccess = ()=> resolve(req.result);
+      req.onerror = ()=> reject(req.error);
+      req.onblocked = ()=> reject(new Error('IndexedDB blocked'));
+    });
+    return dbPromise;
+  }
+
+  async function idbGet(key){
+    const db = await openDB();
+    return new Promise((resolve, reject)=>{
+      const tx = db.transaction(STORE_NAME, 'readonly');
+      const req = tx.objectStore(STORE_NAME).get(key);
+      req.onsuccess = ()=> resolve(req.result === undefined ? null : req.result);
+      req.onerror = ()=> reject(req.error);
+    });
+  }
+  async function idbSet(key, value){
+    const db = await openDB();
+    return new Promise((resolve, reject)=>{
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      tx.objectStore(STORE_NAME).put(value, key);
+      tx.oncomplete = ()=> resolve(true);
+      tx.onerror = ()=> reject(tx.error);
+    });
+  }
+  async function idbRemove(key){
+    const db = await openDB();
+    return new Promise((resolve, reject)=>{
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      tx.objectStore(STORE_NAME).delete(key);
+      tx.oncomplete = ()=> resolve(true);
+      tx.onerror = ()=> reject(tx.error);
+    });
+  }
+  function lsGet(key){
+    try{ const raw = localStorage.getItem('prjgenui:'+key); return raw===null ? null : JSON.parse(raw); }
+    catch(e){ return null; }
+  }
+  function lsSet(key, value){
+    try{ localStorage.setItem('prjgenui:'+key, JSON.stringify(value)); return true; }
+    catch(e){ return false; }
+  }
+  function lsRemove(key){
+    try{ localStorage.removeItem('prjgenui:'+key); return true; }
+    catch(e){ return false; }
+  }
+
+  async function remoteGet(key){
+    const { data, error } = await supabaseClient.from('kv').select('value').eq('key', key).single();
+    if(error && error.code !== 'PGRST116') throw error;
+    return data ? data.value : null;
+  }
+  async function remoteSet(key, value){
+    const { error } = await supabaseClient.from('kv').upsert({ key, value });
+    if(error) throw error;
+    return true;
+  }
+  async function remoteRemove(key){
+    const { error } = await supabaseClient.from('kv').delete().eq('key', key);
+    if(error) throw error;
+    return true;
+  }
+
+  return {
+    async init(){
+      if(DB_CONFIG.enabled && window.supabase){
+        try{
+          supabaseClient = window.supabase.createClient(DB_CONFIG.url, DB_CONFIG.anonKey);
+          await remoteSet('__healthcheck', true);
+          await remoteGet('__healthcheck');
+          backend = 'supabase';
+          return backend;
+        }catch(e){
+          console.warn('Supabase connection failed, falling back to local storage:', e);
+          supabaseClient = null;
+        }
+      }
+      try{
+        await openDB();
+        await idbSet('__healthcheck', true);
+        await idbGet('__healthcheck');
+        backend = 'indexeddb';
+      }catch(e){
+        backend = 'localstorage';
+      }
+      return backend;
+    },
+    backend(){ return backend; },
+    onChange(fn){ changeHandler = fn; },
+    async get(key){
+      if(backend==='supabase'){
+        try{ return await remoteGet(key); }
+        catch(e){ console.warn('Supabase read error:', e); throw e; }
+      }
+      if(backend==='indexeddb'){
+        try{ return await idbGet(key); }
+        catch(e){ backend = 'localstorage'; onBackendChange(); return lsGet(key); }
+      }
+      return lsGet(key);
+    },
+    async set(key, value){
+      if(backend==='supabase'){
+        try{ return await remoteSet(key, value); }
+        catch(e){ console.warn('Supabase write error:', e); throw e; }
+      }
+      if(backend==='indexeddb'){
+        try{ return await idbSet(key, value); }
+        catch(e){ backend = 'localstorage'; onBackendChange(); return lsSet(key, value); }
+      }
+      return lsSet(key, value);
+    },
+    async remove(key){
+      if(backend==='supabase'){
+        try{ return await remoteRemove(key); }
+        catch(e){ console.warn('Supabase delete error:', e); throw e; }
+      }
+      if(backend==='indexeddb'){
+        try{ return await idbRemove(key); }
+        catch(e){ backend = 'localstorage'; onBackendChange(); return lsRemove(key); }
+      }
+      return lsRemove(key);
+    }
+  };
+})();
+
+/* =========================================================
+   MIGRATIONS — upgrade older saved shapes to the current
+   schema. Never destructive.
+   ========================================================= */
+function legacyMap(w){
+  const legacyIdentity = (w && w.identity) || {};
+  const legacyPerf = (w && w.performance) || {};
+  const legacyComm = (w && w.commercial) || {};
+  const legacyRtw = legacyIdentity.rtw || {};
+  const legacyCscs = legacyIdentity.cscs || {};
+
+  const existingUUID = (w && w.id) || (w && w.identity && w.identity.workerUUID) || null;
+  const internalUUID = existingUUID || uid();
+
+  return {
+    schemaVersion: SCHEMA_VERSION,
+    id: internalUUID,
+    identity: {
+      fullName: (w && w.name) || (w && w.identity && w.identity.fullName) || '',
+      preferredName: (w && w.identity && w.identity.preferredName) || '',
+      phone: (w && w.phone) || (w && w.identity && w.identity.phone) || '',
+      email: (w && w.identity && w.identity.email) || '',
+      postcode: legacyComm.postcode || (w && w.identity && w.identity.postcode) || '',
+      nationality: (w && w.identity && w.identity.nationality) || '',
+      workerUUID: internalUUID,
+      passportId: (w && w.identity && w.identity.passportId) || null,
+      status: (w && w.identity && w.identity.status) || 'active'
+    },
+    rightToWork: (w && w.rightToWork) || {
+      status: legacyRtw.status || 'not_verified', method: legacyRtw.method || '',
+      checkedDate: legacyRtw.checkedDate || '', expiryDate: legacyRtw.expiryDate || '',
+      verifier: '', reference: '', evidenceNote: legacyRtw.evidence || '',
+      evidenceFileReference: '', lastReviewed: ''
+    },
+    cscs: (w && w.cscs) || {
+      status: legacyCscs.status || 'not_checked', registrationNumber: legacyCscs.regNumber || '',
+      cardType: legacyCscs.cardType || '', occupation:'', scheme:'', issueDate:'',
+      expiryDate: legacyCscs.expiryDate || '', verificationMethod:'', verifier:'', verificationDate:'',
+      evidenceReference: legacyCscs.evidence || ''
+    },
+    trainingCertificates: (w && w.trainingCertificates) || (legacyIdentity.certs||[]).map(c=>({
+      id: uid(), name: c.name, category:'core', issuer:'', certificateNumber:'',
+      issueDate:'', expiryDate: c.expiryDate||'', status:'to_confirm', requirementType:'deployment_specific',
+      verificationMethod:'', verifier:'', verificationDate:'', evidenceReference:'', notes:''
+    })),
+    tradeProfile: (w && w.tradeProfile) || {
+      primaryTrade: (w && w.trade) || '', secondaryTrades: [],
+      yearsExperience: '', competenceScore: (legacyPerf.competenceScore ?? null),
+      competenceAssessedBy: legacyPerf.competenceNotes || '', competenceAssessmentDate: '',
+      competenceEvidence: '', notes: (w && w.notes) || ''
+    },
+    proofOfWork: (w && w.proofOfWork) || (legacyPerf.proofOfSkill||[]).map(s=>({
+      id: uid(), project:'', client:'', site:'', trade:'', description: s.competency||'',
+      dateFrom: s.date||'', dateTo:'', supervisor: s.confirmedBy||'',
+      verified: !!s.confirmedBy, verifiedBy: s.confirmedBy||'',
+      evidenceReferences: [], imagesReferences: [], notes:''
+    })),
+    assignments: (w && w.assignments) || (legacyPerf.assignments||[]).map(a=>({
+      id: uid(), deploymentId:'', client:'', project: a.project||'', date: a.date||'',
+      attended: a.attended!==false, late:false, noShow: a.attended===false,
+      rating: a.rating||null, rehireDecision: a.rehire||'to_confirm',
+      clientFeedback:'', supervisorFeedback:'', issueRecorded:false, outcome:''
+    })),
+    commercial: (w && w.commercial && w.commercial.availableFrom!==undefined) ? w.commercial : {
+      postcode: legacyComm.postcode||'', travelRadius: legacyComm.travelRadius||'', dayRate: legacyComm.dayRate||'',
+      availability: legacyComm.availability||'To confirm', availableFrom:'',
+      sectorExperience: legacyComm.sectorExperience||[], preferredLocations:[], transport:'', ownTools:'', notes:''
+    },
+    auditLog: (w && w.auditLog) || []
+  };
+}
+
+function normaliseWorker(raw){
+  const w = legacyMap(raw);
+
+  w.schemaVersion = SCHEMA_VERSION;
+
+  const uuid = w.id || w.identity.workerUUID || uid();
+  w.id = uuid;
+  w.identity.workerUUID = uuid;
+  w.identity.fullName = w.identity.fullName || '';
+  w.identity.status = w.identity.status || 'active';
+
+  w.trainingCertificates = (w.trainingCertificates || []).map(c => ({
+    id: c.id || uid(),
+    name: c.name || '',
+    category: c.category || 'core',
+    issuer: c.issuer || '',
+    certificateNumber: c.certificateNumber || '',
+    issueDate: c.issueDate || '',
+    expiryDate: c.expiryDate || '',
+    status: c.status || 'to_confirm',
+    requirementType: c.requirementType || 'deployment_specific',
+    verificationMethod: c.verificationMethod || '',
+    verifier: c.verifier || '',
+    verificationDate: c.verificationDate || '',
+    evidenceReference: c.evidenceReference || '',
+    notes: c.notes || ''
+  }));
+
+  w.proofOfWork = (w.proofOfWork || []).map(p => ({
+    id: p.id || uid(), project: p.project || '', client: p.client || '', site: p.site || '', trade: p.trade || '',
+    description: p.description || '', dateFrom: p.dateFrom || '', dateTo: p.dateTo || '',
+    supervisor: p.supervisor || '', verified: !!p.verified, verifiedBy: p.verifiedBy || '',
+    evidenceReferences: p.evidenceReferences || [], imagesReferences: p.imagesReferences || [], notes: p.notes || ''
+  }));
+
+  w.assignments = (w.assignments || []).map(a => ({
+    id: a.id || uid(), deploymentId: a.deploymentId || '', client: a.client || '', project: a.project || '', date: a.date || '',
+    attended: a.attended !== false, late: !!a.late, noShow: !!a.noShow,
+    rating: (a.rating === undefined) ? null : a.rating,
+    rehireDecision: a.rehireDecision || 'to_confirm',
+    clientFeedback: a.clientFeedback || '', supervisorFeedback: a.supervisorFeedback || '',
+    issueRecorded: !!a.issueRecorded, outcome: a.outcome || ''
+  }));
+
+  w.auditLog = (w.auditLog || []).map(migrateAuditEntry);
+
+  w.commercial = w.commercial || {};
+  w.commercial.postcode = w.commercial.postcode || '';
+  w.commercial.travelRadius = w.commercial.travelRadius || '';
+  w.commercial.dayRate = w.commercial.dayRate || '';
+  w.commercial.availability = w.commercial.availability || 'To confirm';
+  w.commercial.availableFrom = w.commercial.availableFrom || '';
+  w.commercial.sectorExperience = w.commercial.sectorExperience || [];
+  w.commercial.preferredLocations = w.commercial.preferredLocations || [];
+  w.commercial.transport = w.commercial.transport || '';
+  w.commercial.ownTools = w.commercial.ownTools || '';
+  w.commercial.notes = w.commercial.notes || '';
+
+  return w;
+}
+function migrateCollection(list, normaliseFn){
+  return (list||[]).map(normaliseFn);
+}
+
+/* =========================================================
+   UTILITIES
+   ========================================================= */
+function uid(){
+  if(typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  return Date.now().toString(36) + Math.random().toString(36).slice(2,7) + Math.random().toString(36).slice(2,7);
+}
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function nowLabel(){ return new Date().toLocaleString('en-GB', {day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
+function daysUntil(dateStr){
+  if(!dateStr) return null;
+  const d = new Date(dateStr + 'T00:00:00');
+  const now = new Date(todayStr() + 'T00:00:00');
+  return Math.round((d - now) / 86400000);
+}
+function fmtDate(dateStr){
+  if(!dateStr) return 'Not set';
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
+}
+function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function badge(status, label){ return `<span class="badge ${status}">${esc(label)}</span>`; }
+function workerById(id){ return workers.find(w=>w.id===id); }
+function workerName(w){ return w ? w.identity.fullName : '(removed worker)'; }
+function contractorById(id){ return contractors.find(c=>c.id===id); }
+function contractorName(c){ return c ? c.legalName : '(unknown contractor)'; }
+function projectById(id){ return projects.find(p=>p.id===id); }
+function projectName(p){ return p ? p.name : '(unknown project)'; }
+function siteById(id){ return sites.find(s=>s.id===id); }
+function siteName(s){ return s ? s.name : '(unknown site)'; }
+
+/* =========================================================
+   PASSPORT ID — permanent, sequential, human-facing.
+   ========================================================= */
+let passportCounter = 0;
+function nextPassportId(){
+  passportCounter += 1;
+  return 'PW-UK-' + String(passportCounter).padStart(6,'0');
+}
+function assignPassportIdsIfMissing(){
+  let maxSeen = 0;
+  workers.forEach(w=>{
+    const m = /PW-UK-(\d+)/.exec(w.identity.passportId||'');
+    if(m) maxSeen = Math.max(maxSeen, parseInt(m[1],10));
+  });
+  passportCounter = Math.max(passportCounter, maxSeen);
+  workers.forEach(w=>{
+    if(!w.identity.passportId) w.identity.passportId = nextPassportId();
+  });
+}
+
+/* =========================================================
+   REFERENCE NUMBERS — public-facing sequential IDs for
+   contractors, projects, sites, assignments, requests.
+   ========================================================= */
+let referenceCounters = {contractor:0, project:0, site:0, assignment:0, request:0};
+function nextPublicReference(type){
+  referenceCounters[type] = (referenceCounters[type]||0) + 1;
+  const n = String(referenceCounters[type]).padStart(6,'0');
+  if(type==='contractor') return 'CTR-' + n;
+  if(type==='project') return 'PRJ-' + n;
+  if(type==='site') return 'STE-' + n;
+  if(type==='assignment') return 'ASN-' + new Date().getFullYear() + '-' + n;
+  if(type==='request') return 'REQ-' + new Date().getFullYear() + '-' + n;
+  return n;
+}
+function assignReferencesIfMissing(list, type){
+  // Deterministic: highest existing numeric suffix first, so re-runs never collide.
+  let maxSeen = 0;
+  const prefix = {contractor:'CTR-',project:'PRJ-',site:'STE-',assignment:'ASN-',request:'REQ-'}[type] || '';
+  list.forEach(item=>{
+    if(item.publicReference){
+      const m = /(\d+)$/.exec(item.publicReference);
+      if(m) maxSeen = Math.max(maxSeen, parseInt(m[1],10));
+    }
+  });
+  referenceCounters[type] = Math.max(referenceCounters[type]||0, maxSeen);
+  list.forEach(item=>{
+    if(!item.publicReference) item.publicReference = nextPublicReference(type);
+  });
+}
+
+/* =========================================================
+   EXPIRY ENGINE
+   ========================================================= */
+function expiryBand(dateStr){
+  if(!dateStr) return 'none';
+  const d = daysUntil(dateStr);
+  if(d < 0) return 'expired';
+  if(d <= 30) return 'warn';
+  if(d <= 60) return 'watch';
+  return 'current';
+}
+function expiryBadgeStatus(band){
+  if(band==='expired') return 'danger';
+  if(band==='warn') return 'warn';
+  if(band==='watch') return 'watch';
+  if(band==='current') return 'ok';
+  return 'none';
+}
+
+/* =========================================================
+   DATA MODELS — blank records for new entities.
+   ========================================================= */
+function blankWorker(){
+  const internalUUID = uid();
+  return {
+    schemaVersion: SCHEMA_VERSION,
+    id: internalUUID,
+    identity: {
+      fullName:'', preferredName:'', phone:'', email:'', postcode:'', nationality:'',
+      workerUUID: internalUUID, passportId:null, status:'active'
+    },
+    rightToWork: { status:'not_verified', method:'', checkedDate:'', expiryDate:'', verifier:'', reference:'', evidenceNote:'', evidenceFileReference:'', lastReviewed:'' },
+    cscs: { status:'not_checked', registrationNumber:'', cardType:'', occupation:'', scheme:'', issueDate:'', expiryDate:'', verificationMethod:'', verifier:'', verificationDate:'', evidenceReference:'' },
+    trainingCertificates: [],
+    tradeProfile: { primaryTrade:'', secondaryTrades:[], yearsExperience:'', competenceScore:null, competenceAssessedBy:'', competenceAssessmentDate:'', competenceEvidence:'', notes:'' },
+    proofOfWork: [],
+    assignments: [],
+    commercial: { postcode:'', travelRadius:'', dayRate:'', availability:'To confirm', availableFrom:'', sectorExperience:[], preferredLocations:[], transport:'', ownTools:'', notes:'' },
+    auditLog: []
+  };
+}
+function blankCrew(){ return {id:uid(), name:'', supervisorId:'', memberIds:[], specialism:'', notes:'', deployments:[]}; }
+function blankClient(){ return {id:uid(), name:'', notes:'', preferredWorkerIds:[], excludedWorkerIds:[], standardTrainingRequirements:[], standardCSCSRequired:false, sector:''}; }
+
+/* ---- New 0.2C entity models ---- */
+function blankContractor(){
+  return { id:uid(), publicReference:null, legalName:'', tradingName:'', companyNumber:'', status:'PROSPECT', sector:'',
+    primaryContact:'', email:'', phone:'', billingAddress:'', paymentTerms:'', creditStatus:'',
+    notes:'', preferredWorkerIds:[], excludedWorkerIds:[], standardTrainingRequirements:[], standardCSCSRequired:false,
+    createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() };
+}
+function blankProject(){
+  return { id:uid(), publicReference:null, contractorId:'', name:'', reference:'', status:'ACTIVE',
+    startDate:'', endDate:'', description:'',
+    createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() };
+}
+function blankSite(){
+  return { id:uid(), publicReference:null, projectId:'', contractorId:'', name:'', address:'', postcode:'',
+    siteContact:'', sitePhone:'', workingHours:'', ppeRequirements:'', accessNotes:'', parkingNotes:'',
+    inductionRequirements:'', notes:'', status:'ACTIVE', requirements:[],
+    createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() };
+}
+function blankSiteRequirement(){
+  return { id:uid(), label:'', type:'training', value:'', notes:'' };
+}
+function blankAssignmentEntity(){
+  return { id:uid(), publicReference:null, legacyRecord:false, migrationReviewRequired:false,
+    requestId:null, contractorId:null, projectId:null, siteId:null, crewId:null,
+    workerId:'', trade:'', startDate:'', endDate:'', status:'PROPOSED',
+    workerPayRate:'', clientChargeRate:'', rateUnit:'',
+    legacyProjectLabel:'', legacyClientText:'', legacyDeploymentId:'',
+    date:'', attended:null, late:false, noShow:false, rating:null, rehireDecision:'',
+    disputeNote:'', clientFeedback:'', supervisorFeedback:'', issueRecorded:false, outcome:'',
+    matchId:null, generationId:null, role:'PRIMARY',
+    humanApprovedBy:null, humanApprovedAt:null, offerId:null,
+    preStartConfirmedAt:null, preStartConfirmedBy:null, workerReconfirmationStatus:null,
+    statusHistory:[], finalGateReviews:[],
+    createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() };
+}
+function blankWorkforceRequest(){
+  return { id:uid(), publicReference:null, status:'OPEN', contractorId:'', projectId:'', siteId:'',
+    tradeRequired:'', quantity:1, startDate:'', endDate:'',
+    requiredTraining:[], requiredSectorExperience:[], requiredCSCS:true,
+    notes:'', createdAt:new Date().toISOString(), updatedAt:new Date().toISOString() };
+}
+function blankMatchGeneration(){
+  return { id:uid(), requestId:'', generatedAt:new Date().toISOString(), matchCount:0, acceptedCount:0, rejectedCount:0, notes:'' };
+}
+function blankMatch(){
+  return { id:uid(), generationId:'', requestId:'', workerId:'', status:'PROPOSED',
+    factors:[], score:null, eligible:false, requiresHumanReview:false,
+    createdAt:new Date().toISOString() };
+}
+function blankAssignmentOffer(){
+  return { id:uid(), assignmentId:'', workerId:'', status:'PENDING', sentAt:new Date().toISOString(), respondedAt:null, response:'' };
+}
+function blankReadinessSnapshot(){
+  return { id:uid(), workerId:'', capturedAt:new Date().toISOString(), generalReadiness:null, performanceScore:null, assignmentReadiness:null, notes:'' };
+}
+
+/* ---- Normalisation functions (never overwrite valid data) ---- */
+function normaliseContractor(c){
+  if(!c) return blankContractor();
+  c.id = c.id || uid();
+  c.publicReference = c.publicReference || null;
+  c.legalName = c.legalName || c.name || '';
+  c.tradingName = c.tradingName || '';
+  c.companyNumber = c.companyNumber || '';
+  c.status = c.status || 'PROSPECT';
+  c.sector = c.sector || '';
+  c.primaryContact = c.primaryContact || '';
+  c.email = c.email || '';
+  c.phone = c.phone || '';
+  c.billingAddress = c.billingAddress || '';
+  c.paymentTerms = c.paymentTerms || '';
+  c.creditStatus = c.creditStatus || '';
+  c.notes = c.notes || '';
+  c.preferredWorkerIds = c.preferredWorkerIds || [];
+  c.excludedWorkerIds = c.excludedWorkerIds || [];
+  c.standardTrainingRequirements = c.standardTrainingRequirements || [];
+  c.standardCSCSRequired = c.standardCSCSRequired || false;
+  c.createdAt = c.createdAt || new Date().toISOString();
+  c.updatedAt = new Date().toISOString();
+  // Migration marker — never overwrite if already set
+  if(c._migratedToContractorId === undefined) c._migratedToContractorId = null;
+  return c;
+}
+function normaliseProject(p){
+  if(!p) return blankProject();
+  p.id = p.id || uid();
+  p.publicReference = p.publicReference || null;
+  p.contractorId = p.contractorId || '';
+  p.name = p.name || '';
+  p.reference = p.reference || '';
+  p.status = p.status || 'ACTIVE';
+  p.startDate = p.startDate || '';
+  p.endDate = p.endDate || '';
+  p.description = p.description || '';
+  p.createdAt = p.createdAt || new Date().toISOString();
+  p.updatedAt = new Date().toISOString();
+  return p;
+}
+function normaliseSite(s){
+  if(!s) return blankSite();
+  s.id = s.id || uid();
+  s.publicReference = s.publicReference || null;
+  s.projectId = s.projectId || '';
+  s.contractorId = s.contractorId || '';
+  s.name = s.name || '';
+  s.address = s.address || '';
+  s.postcode = s.postcode || '';
+  s.siteContact = s.siteContact || '';
+  s.sitePhone = s.sitePhone || '';
+  s.workingHours = s.workingHours || '';
+  s.ppeRequirements = s.ppeRequirements || '';
+  s.accessNotes = s.accessNotes || '';
+  s.parkingNotes = s.parkingNotes || '';
+  s.inductionRequirements = s.inductionRequirements || '';
+  s.notes = s.notes || '';
+  s.status = s.status || 'ACTIVE';
+  s.requirements = s.requirements || [];
+  s.createdAt = s.createdAt || new Date().toISOString();
+  s.updatedAt = new Date().toISOString();
+  return s;
+}
+function normaliseAssignmentEntity(a){
+  if(!a) return blankAssignmentEntity();
+  a.id = a.id || uid();
+  a.publicReference = a.publicReference || null;
+  a.legacyRecord = a.legacyRecord || false;
+  a.migrationReviewRequired = a.migrationReviewRequired || false;
+  a.requestId = a.requestId || null;
+  a.contractorId = a.contractorId || null;
+  a.projectId = a.projectId || null;
+  a.siteId = a.siteId || null;
+  a.crewId = a.crewId || null;
+  a.workerId = a.workerId || '';
+  a.trade = a.trade || '';
+  a.startDate = a.startDate || '';
+  a.endDate = a.endDate || '';
+  a.status = a.status || 'PROPOSED';
+  a.workerPayRate = a.workerPayRate || '';
+  a.clientChargeRate = a.clientChargeRate || '';
+  a.rateUnit = a.rateUnit || '';
+  a.legacyProjectLabel = a.legacyProjectLabel || '';
+  a.legacyClientText = a.legacyClientText || '';
+  a.legacyDeploymentId = a.legacyDeploymentId || '';
+  a.date = a.date || '';
+  a.attended = a.attended === undefined ? null : a.attended;
+  a.late = a.late || false;
+  a.noShow = a.noShow || false;
+  a.rating = a.rating === undefined ? null : a.rating;
+  a.rehireDecision = a.rehireDecision || '';
+  a.disputeNote = a.disputeNote || '';
+  a.clientFeedback = a.clientFeedback || '';
+  a.supervisorFeedback = a.supervisorFeedback || '';
+  a.issueRecorded = a.issueRecorded || false;
+  a.outcome = a.outcome || '';
+  a.matchId = a.matchId || null;
+  a.generationId = a.generationId || null;
+  a.role = a.role || 'PRIMARY';
+  a.humanApprovedBy = a.humanApprovedBy || null;
+  a.humanApprovedAt = a.humanApprovedAt || null;
+  a.offerId = a.offerId || null;
+  a.preStartConfirmedAt = a.preStartConfirmedAt || null;
+  a.preStartConfirmedBy = a.preStartConfirmedBy || null;
+  a.workerReconfirmationStatus = a.workerReconfirmationStatus || null;
+  a.statusHistory = a.statusHistory || [];
+  a.finalGateReviews = a.finalGateReviews || [];
+  a.createdAt = a.createdAt || new Date().toISOString();
+  a.updatedAt = new Date().toISOString();
+  return a;
+}
+function validateAssignment(a){
+  const errors = [];
+  if(!a.workerId) errors.push('Worker is required');
+  if(!a.trade) errors.push('Trade is required');
+  if(!a.startDate && !a.date) errors.push('Start date is required');
+  return errors;
+}
+
+function normaliseWorkforceRequest(r){
+  if(!r) return blankWorkforceRequest();
+  r.id = r.id || uid();
+  r.publicReference = r.publicReference || null;
+  r.status = r.status || 'OPEN';
+  r.contractorId = r.contractorId || '';
+  r.projectId = r.projectId || '';
+  r.siteId = r.siteId || '';
+  r.tradeRequired = r.tradeRequired || '';
+  r.quantity = r.quantity || 1;
+  r.startDate = r.startDate || '';
+  r.endDate = r.endDate || '';
+  r.requiredTraining = r.requiredTraining || [];
+  r.requiredSectorExperience = r.requiredSectorExperience || [];
+  r.requiredCSCS = r.requiredCSCS !== undefined ? r.requiredCSCS : true;
+  r.notes = r.notes || '';
+  r.createdAt = r.createdAt || new Date().toISOString();
+  r.updatedAt = new Date().toISOString();
+  return r;
+}
+function normaliseMatchGeneration(m){
+  if(!m) return blankMatchGeneration();
+  m.id = m.id || uid();
+  m.requestId = m.requestId || '';
+  m.generatedAt = m.generatedAt || new Date().toISOString();
+  m.matchCount = m.matchCount || 0;
+  m.acceptedCount = m.acceptedCount || 0;
+  m.rejectedCount = m.rejectedCount || 0;
+  m.notes = m.notes || '';
+  return m;
+}
+function normaliseMatch(m){
+  if(!m) return blankMatch();
+  m.id = m.id || uid();
+  m.generationId = m.generationId || '';
+  m.requestId = m.requestId || '';
+  m.workerId = m.workerId || '';
+  m.status = m.status || 'PROPOSED';
+  m.factors = m.factors || [];
+  m.score = m.score === undefined ? null : m.score;
+  m.eligible = m.eligible || false;
+  m.requiresHumanReview = m.requiresHumanReview || false;
+  m.createdAt = m.createdAt || new Date().toISOString();
+  return m;
+}
+
+function addAudit(w, category, field, oldValue, newValue, opts){
+  opts = opts || {};
+  w.auditLog = w.auditLog || [];
+  w.auditLog.unshift({
+    id: uid(),
+    timestamp: new Date().toISOString(),
+    category: category,
+    field: field || '',
+    oldValue: (oldValue===undefined || oldValue===null || oldValue==='') ? null : oldValue,
+    newValue: (newValue===undefined || newValue===null || newValue==='') ? null : newValue,
+    verifier: opts.verifier || '',
+    evidenceReference: opts.evidenceReference || '',
+    note: opts.note || ''
+  });
+}
+function formatAuditTimestamp(ts){
+  const d = new Date(ts);
+  if(isNaN(d.getTime())) return ts;
+  return d.toLocaleString('en-GB', {day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
+}
+function migrateAuditEntry(a){
+  if(a && a.timestamp !== undefined) return a;
+  return {
+    id: uid(),
+    timestamp: (a && a.date) || nowLabel(),
+    category: (a && a.field) || 'General',
+    field: '',
+    oldValue: null,
+    newValue: (a && a.action) || null,
+    verifier: '',
+    evidenceReference: '',
+    note: (a && a.note) || ''
+  };
+}
+
+/* =========================================================
+   EVIDENCE ENGINE — weighted completeness.
+   ========================================================= */
+function evidenceCompleteness(w){
+  const items = [];
+  items.push({label:'Right to Work evidence', weight:25, met: !!w.rightToWork.evidenceNote});
+  items.push({label:'CSCS Smart Check reference', weight:20, met: !!w.cscs.evidenceReference});
+
+  const certs = w.trainingCertificates || [];
+  if(certs.length){
+    const withEvidence = certs.filter(c=>c.evidenceReference).length;
+    items.push({label:'Training certificate evidence', weight:20, met:false, partial: withEvidence/certs.length});
+  } else {
+    items.push({label:'At least one training certificate on file', weight:20, met:false, partial:0});
+  }
+
+  items.push({label:'Competence assessment', weight:15, met: !!(w.tradeProfile.competenceEvidence || w.tradeProfile.competenceScore!==null)});
+  items.push({label:'Recent proof-of-work record', weight:10, met: (w.proofOfWork||[]).some(p=>p.verified)});
+  items.push({label:'Assignment history', weight:10, met: (w.assignments||[]).length>0});
+
+  const totalWeight = items.reduce((s,i)=>s+i.weight,0);
+  const earned = items.reduce((s,i)=> s + (i.met ? i.weight : (i.partial ? i.weight*i.partial : 0)), 0);
+  const percent = Math.round(earned/totalWeight*100);
+  const missing = items.filter(i=>!i.met && !(i.partial>=0.999)).map(i=>i.label);
+  return {percent, missing};
+}
+function coreTrainingCurrent(w){
+  const required = WORKFORCE_POLICY.coreTrainingRequirements || [];
+  if(required.length===0) return true;
+  return required.every(name=>{
+    const cert = (w.trainingCertificates||[]).find(c=>c.name===name);
+    return !!cert && certificateIsCurrentlyValid(cert);
+  });
+}
+function certificateIsCurrentlyValid(c){
+  return c.status === 'verified' && !!c.evidenceReference && expiryBand(c.expiryDate) !== 'expired';
+}
+
+/* =========================================================
+   PERFORMANCE EVIDENCE ENGINE — weighted trust score.
+   Replaces the old trustScore() function. Every call site
+   that used trustScore() now calls performanceEvidence().
+   ========================================================= */
+const SCORE_WEIGHTS = { competence:0.20, reliability:0.20, clientFeedback:0.15 };
+
+function performanceEvidence(w){
+  const parts = [];
+  const missingComponents = [];
+
+  // Competence (weight 0.20): from competenceScore/20
+  if(w.tradeProfile.competenceScore !== null && w.tradeProfile.competenceScore !== undefined && w.tradeProfile.competenceScore !== ''){
+    parts.push({key:'competence', label:'Competence', weight:SCORE_WEIGHTS.competence, value: Math.max(0,Math.min(20,Number(w.tradeProfile.competenceScore)))/20});
+  } else {
+    missingComponents.push('Competence');
+  }
+
+  // Reliability (weight 0.20): attended rate + rehire rate from assignments
+  const assignments = w.assignments || [];
+  if(assignments.length){
+    const attendedRate = assignments.filter(a=>a.attended && !a.noShow).length / assignments.length;
+    const decided = assignments.filter(a=>a.rehireDecision==='yes'||a.rehireDecision==='no');
+    const rehireRate = decided.length ? decided.filter(a=>a.rehireDecision==='yes').length/decided.length : null;
+    parts.push({key:'reliability', label:'Reliability', weight:SCORE_WEIGHTS.reliability, value: rehireRate===null ? attendedRate : (attendedRate+rehireRate)/2});
+  } else {
+    missingComponents.push('Reliability');
+  }
+
+  // Client feedback (weight 0.15): average rating/5 from rated assignments
+  const rated = assignments.filter(a=>a.rating);
+  if(rated.length){
+    const avg = rated.reduce((s,a)=>s+Number(a.rating),0)/rated.length;
+    parts.push({key:'clientFeedback', label:'Client feedback', weight:SCORE_WEIGHTS.clientFeedback, value: avg/5});
+  } else {
+    missingComponents.push('Client feedback');
+  }
+
+  const totalWeight = parts.reduce((s,p)=>s+p.weight,0);
+  const score = totalWeight>0 ? Math.round(parts.reduce((s,p)=>s+p.value*p.weight,0)/totalWeight*100) : null;
+
+  // Confidence labels
+  let confidence;
+  if(assignments.length >= 10) confidence = 'High confidence';
+  else if(assignments.length >= 3) confidence = 'Building evidence';
+  else confidence = 'Limited evidence';
+
+  return {
+    score,
+    band: score===null ? 'Insufficient data' : scoreBand(score),
+    confidence,
+    parts: parts.map(p=>({label:p.label, pct:Math.round(p.value*100)})),
+    missingComponents
+  };
+}
+function scoreBand(score){
+  if(score>=90) return 'Exceptional';
+  if(score>=80) return 'Strong';
+  if(score>=70) return 'Deployment Ready';
+  if(score>=60) return 'Developing';
+  return 'Hold / Review';
+}
+function scoreBreakdownHtml(sc){
+  if(sc.score===null) return '<p class="hint">Insufficient data. No performance evidence recorded yet.</p>';
+  return `<div class="score-breakdown">${sc.parts.map(p=>`
+    <div>
+      <div class="part"><span>${esc(p.label)}</span><span>${p.pct}%</span></div>
+      <div class="score-bar"><div style="width:${p.pct}%;"></div></div>
+    </div>`).join('')}
+    ${sc.missingComponents && sc.missingComponents.length ? `<p class="hint" style="margin-top:6px;">Not yet scored: ${sc.missingComponents.join(', ')} (no data recorded).</p>` : ''}
+    ${sc.confidence ? `<p class="hint" style="margin-top:4px;">Evidence confidence: ${esc(sc.confidence)}.</p>` : ''}
+  </div>`;
+}
+
+/* =========================================================
+   SPLIT READINESS ENGINE (0.2C)
+   Three functions + a backward-compatible wrapper.
+   ========================================================= */
+
+/* --- General readiness: pure compliance pass/blocked --- */
+function evaluateGeneralReadiness(worker){
+  const blockers = [];
+  const warnings = [];
+  const expiringItems = [];
+  const reviewItems = [];
+
+  // RTW checks
+  const rtwBand = expiryBand(worker.rightToWork.expiryDate);
+  if(worker.rightToWork.status !== 'verified'){
+    blockers.push('Confirm Right to Work');
+  } else if(!worker.rightToWork.evidenceNote){
+    blockers.push('Right to Work verified but missing evidence');
+  } else if(rtwBand==='expired'){
+    blockers.push('Right to Work expired');
+  } else if(rtwBand==='warn'){
+    warnings.push('Right to Work expires within 30 days');
+    expiringItems.push({item:'Right to Work', expiryDate:worker.rightToWork.expiryDate});
+  } else if(rtwBand==='watch'){
+    expiringItems.push({item:'Right to Work', expiryDate:worker.rightToWork.expiryDate});
+  }
+
+  // CSCS checks
+  const cscsBand = expiryBand(worker.cscs.expiryDate);
+  if(worker.cscs.status !== 'valid'){
+    blockers.push('Confirm CSCS');
+  } else if(!worker.cscs.evidenceReference){
+    blockers.push('CSCS valid but missing evidence');
+  } else if(cscsBand==='expired'){
+    blockers.push('CSCS expired');
+  } else if(cscsBand==='warn'){
+    warnings.push('CSCS expires within 30 days');
+    expiringItems.push({item:'CSCS', expiryDate:worker.cscs.expiryDate});
+  } else if(cscsBand==='watch'){
+    expiringItems.push({item:'CSCS', expiryDate:worker.cscs.expiryDate});
+  }
+
+  // Training certificate expiry bands (for valid certs)
+  (worker.trainingCertificates||[]).forEach(c=>{
+    if(!certificateIsCurrentlyValid(c)) return;
+    const band = expiryBand(c.expiryDate);
+    if(band==='warn'){
+      warnings.push(`${c.name} expires within 30 days`);
+      expiringItems.push({item:c.name, expiryDate:c.expiryDate});
+    } else if(band==='watch'){
+      expiringItems.push({item:c.name, expiryDate:c.expiryDate});
+    }
+  });
+
+  // Core training requirements from policy
+  (WORKFORCE_POLICY.coreTrainingRequirements||[]).forEach(name=>{
+    const cert = (worker.trainingCertificates||[]).find(c=>c.name===name);
+    if(!cert){
+      blockers.push(`${name} required by workforce policy but not held`);
+    } else if(!certificateIsCurrentlyValid(cert)){
+      const reason = cert.status!=='verified' ? 'not verified' : (!cert.evidenceReference ? 'missing evidence' : 'expired');
+      blockers.push(`${name} required by workforce policy: ${reason}`);
+    }
+  });
+
+  // Evidence completeness as review item only (not a blocker)
+  const ev = evidenceCompleteness(worker);
+  if(ev.percent < 80) reviewItems.push(`Evidence pack below 80% complete (${ev.percent}%)`);
+
+  // Determine status
+  let status;
+  const neverStarted = worker.rightToWork.status==='not_verified' && worker.cscs.status==='not_checked' && (worker.trainingCertificates||[]).length===0;
+  if(neverStarted) status = 'NOT_VERIFIED';
+  else if(blockers.length > 0) status = 'BLOCKED';
+  else if(warnings.length > 0 || expiringItems.some(e=>expiryBand(e.expiryDate)==='warn')) status = 'EXPIRING_SOON';
+  else status = 'GENERAL_READY';
+
+  return {
+    status,
+    blockers,
+    warnings,
+    expiringItems,
+    reviewItems,
+    evidenceCompleteness: ev.percent,
+    missingEvidence: ev.missing,
+    evaluatedAt: new Date().toISOString(),
+    rulesVersion: READINESS_RULES_VERSION
+  };
+}
+
+/* --- Performance evidence: weighted trust score (wrapper) --- */
+// performanceEvidence() is defined above; this section documents that it
+// is the second pillar of the split readiness engine.
+
+/* --- Assignment readiness: layers on top of general --- */
+function evaluateAssignmentReadiness(worker, assignmentRequirements){
+  const generalReadiness = evaluateGeneralReadiness(worker);
+  const perf = performanceEvidence(worker);
+
+  const passedChecks = [];
+  const failedChecks = [];
+  const warnings = [];
+  const reviewItems = [];
+  const req = assignmentRequirements || {};
+
+  // Gate on general readiness
+  if(generalReadiness.status === 'BLOCKED'){
+    generalReadiness.blockers.forEach(b => failedChecks.push(b));
+  } else if(generalReadiness.status === 'NOT_VERIFIED'){
+    failedChecks.push('Worker not verified — complete RTW and CSCS checks');
+  } else {
+    passedChecks.push('Compliance gates cleared');
+  }
+
+  // Expiry warnings propagate
+  if(generalReadiness.status === 'EXPIRING_SOON'){
+    warnings.push('Some compliance items expiring soon');
+    generalReadiness.expiringItems.forEach(e => warnings.push(`${e.item} due ${fmtDate(e.expiryDate)}`));
+  }
+
+  // Trade match
+  const tradeOk = !req.tradeRequired || worker.tradeProfile.primaryTrade.toLowerCase().includes(req.tradeRequired.toLowerCase());
+  if(req.tradeRequired){
+    tradeOk ? passedChecks.push('Trade match') : failedChecks.push('Trade does not match');
+  }
+
+  // Sector experience
+  if(req.requiredSectorExperience && req.requiredSectorExperience.length){
+    const sectorOk = req.requiredSectorExperience.some(s => (worker.commercial.sectorExperience||[]).includes(s));
+    sectorOk ? passedChecks.push('Sector experience match') : failedChecks.push('No matching sector experience');
+  }
+
+  // Required training
+  if(req.requiredTraining && req.requiredTraining.length){
+    const trainingOk = req.requiredTraining.every(t => {
+      const cert = (worker.trainingCertificates||[]).find(c=>c.name===t);
+      return !!cert && certificateIsCurrentlyValid(cert);
+    });
+    trainingOk ? passedChecks.push('Required training current') : failedChecks.push('Missing or expired required training');
+  }
+
+  // Required CSCS
+  if(req.requiredCSCS){
+    if(worker.cscs.status === 'valid' && certificateIsCurrentlyValid({...worker.cscs, status:'verified', evidenceReference: worker.cscs.evidenceReference || 'x'})){
+      passedChecks.push('CSCS confirmed');
+    } else if(worker.cscs.status === 'valid'){
+      passedChecks.push('CSCS valid');
+    } else {
+      failedChecks.push('CSCS required but not valid');
+    }
+  }
+
+  // Availability
+  const avail = worker.commercial.availability;
+  const availWorkable = avail && avail !== 'Unavailable' && avail !== 'Booked';
+  if(!availWorkable){
+    warnings.push(`Availability not confirmed as workable (${avail||'not set'})`);
+  } else {
+    passedChecks.push('Availability confirmed');
+  }
+
+  // Performance evidence can trigger HUMAN_REVIEW but never BLOCKED
+  const assignments = worker.assignments || [];
+  const isNewWorker = assignments.length === 0;
+  const perfBelowThreshold = perf.score !== null && perf.score < WORKFORCE_POLICY.performanceEvidenceReviewThreshold;
+
+  let requiresHumanReview = false;
+
+  if(isNewWorker){
+    requiresHumanReview = true;
+    reviewItems.push('LIMITED_PERFORMANCE_EVIDENCE — new worker with 0 assignments');
+  } else if(perfBelowThreshold){
+    requiresHumanReview = true;
+    reviewItems.push(`Performance evidence below review threshold (${perf.score}% < ${WORKFORCE_POLICY.performanceEvidenceReviewThreshold}%)`);
+  }
+
+  // General readiness review items propagate
+  generalReadiness.reviewItems.forEach(r => reviewItems.push(r));
+
+  // Determine assignment status
+  let status;
+  const hasBlockers = failedChecks.length > 0;
+
+  if(generalReadiness.status === 'BLOCKED' || generalReadiness.status === 'NOT_VERIFIED'){
+    status = 'BLOCKED';
+  } else if(hasBlockers){
+    status = 'BLOCKED';
+  } else if(generalReadiness.status === 'EXPIRING_SOON'){
+    status = 'EXPIRING_SOON';
+  } else if(requiresHumanReview){
+    status = 'HUMAN_REVIEW';
+  } else if(!availWorkable){
+    status = 'HOLD';
+  } else {
+    status = 'ASSIGNMENT_READY';
+  }
+
+  const eligible = status === 'ASSIGNMENT_READY' || status === 'EXPIRING_SOON';
+  const candidate = !hasBlockers && generalReadiness.status !== 'NOT_VERIFIED';
+
+  return {
+    status,
+    eligible,
+    candidate,
+    requiresHumanReview,
+    passedChecks,
+    failedChecks,
+    warnings,
+    reviewItems,
+    generalReadiness,
+    performanceScore: perf.score,
+    performanceConfidence: perf.confidence
+  };
+}
+
+/* --- Backward-compatible wrapper --- */
+function evaluateWorkerReadiness(worker, deploymentRequirement){
+  const generalReadiness = evaluateGeneralReadiness(worker);
+  const perf = performanceEvidence(worker);
+  const assignmentReadiness = deploymentRequirement
+    ? evaluateAssignmentReadiness(worker, deploymentRequirement)
+    : null;
+
+  // Map to the old four-string vocabulary for existing UI
+  let complianceStatus, passportStatus, deploymentStatus;
+
+  passportStatus = generalReadiness.status === 'NOT_VERIFIED' ? 'NOT VERIFIED'
+    : generalReadiness.status === 'BLOCKED' ? 'BLOCKED'
+    : generalReadiness.status === 'EXPIRING_SOON' ? 'EXPIRING SOON'
+    : 'VERIFIED';
+
+  complianceStatus = generalReadiness.status === 'BLOCKED' ? 'BLOCKED'
+    : generalReadiness.status === 'EXPIRING_SOON' ? 'EXPIRING SOON'
+    : 'VERIFIED';
+
+  if(assignmentReadiness){
+    deploymentStatus = assignmentReadiness.status === 'BLOCKED' ? 'BLOCKED'
+      : assignmentReadiness.status === 'HOLD' ? 'HOLD'
+      : assignmentReadiness.status === 'HUMAN_REVIEW' ? 'HOLD'
+      : assignmentReadiness.status === 'EXPIRING_SOON' ? 'EXPIRING SOON'
+      : 'READY';
+  } else {
+    // Without a specific deployment requirement, use general + performance + availability
+    const avail = worker.commercial.availability;
+    const availWorkable = avail && avail !== 'Unavailable' && avail !== 'Booked' && avail !== 'To confirm';
+    if(generalReadiness.status === 'BLOCKED' || generalReadiness.status === 'NOT_VERIFIED') deploymentStatus = 'BLOCKED';
+    else if(!availWorkable) deploymentStatus = 'HOLD';
+    else if(perf.score !== null && perf.score < WORKFORCE_POLICY.performanceEvidenceReviewThreshold) deploymentStatus = 'HOLD';
+    else if(generalReadiness.status === 'EXPIRING_SOON') deploymentStatus = 'EXPIRING SOON';
+    else deploymentStatus = 'READY';
+  }
+
+  const blockers = generalReadiness.blockers;
+  const warnings = [...generalReadiness.warnings, ...generalReadiness.reviewItems];
+  const expiringItems = generalReadiness.expiringItems;
+
+  const mainBlocker = blockers[0]
+    || (assignmentReadiness && assignmentReadiness.failedChecks[0])
+    || (assignmentReadiness && assignmentReadiness.warnings[0])
+    || warnings[0]
+    || 'None';
+
+  let eligible = deploymentStatus === 'READY' || deploymentStatus === 'EXPIRING SOON';
+  let requestChecks = null;
+  let requiresHumanReview = false;
+  let reviewItems = generalReadiness.reviewItems;
+
+  if(assignmentReadiness){
+    eligible = assignmentReadiness.eligible;
+    requiresHumanReview = assignmentReadiness.requiresHumanReview;
+    reviewItems = [...reviewItems, ...assignmentReadiness.reviewItems];
+    requestChecks = {
+      eligible: assignmentReadiness.eligible,
+      pass: assignmentReadiness.passedChecks,
+      fail: assignmentReadiness.failedChecks
+    };
+  }
+
+  return {
+    complianceStatus,
+    passportStatus,
+    deploymentStatus,
+    score: perf.score,
+    scoreBand: perf.band,
+    scoreParts: perf.parts,
+    blockers,
+    warnings,
+    missingEvidence: generalReadiness.missingEvidence,
+    expiringItems,
+    evidenceCompleteness: generalReadiness.evidenceCompleteness,
+    eligible,
+    candidate: assignmentReadiness ? assignmentReadiness.candidate : eligible,
+    requiresHumanReview,
+    reviewItems,
+    mainBlocker,
+    requestChecks,
+    generalReadiness,
+    assignmentReadiness
+  };
+}
+
+/* =========================================================
+   MATCHING ENGINE
+   ========================================================= */
+function runMatchingEngine(request){
+  const generation = blankMatchGeneration();
+  generation.requestId = request.id;
+
+  const candidates = workers.filter(w => {
+    if(request.tradeRequired){
+      return w.tradeProfile.primaryTrade.toLowerCase().includes(request.tradeRequired.toLowerCase());
+    }
+    return true;
+  });
+
+  const matches = candidates.map(w => {
+    const assignmentReq = {
+      tradeRequired: request.tradeRequired,
+      requiredTraining: request.requiredTraining,
+      requiredSectorExperience: request.requiredSectorExperience,
+      requiredCSCS: request.requiredCSCS
+    };
+    const readiness = evaluateAssignmentReadiness(w, assignmentReq);
+    const perf = performanceEvidence(w);
+
+    const factors = [];
+    readiness.passedChecks.forEach(c => factors.push({factor: c, result: 'PASS'}));
+    readiness.failedChecks.forEach(c => factors.push({factor: c, result: 'FAIL'}));
+    if(readiness.requiresHumanReview) factors.push({factor: 'Performance evidence review', result: 'REVIEW'});
+    readiness.warnings.forEach(c => factors.push({factor: c, result: 'PASS'}));
+
+    return {
+      ...blankMatch(),
+      generationId: generation.id,
+      requestId: request.id,
+      workerId: w.id,
+      status: readiness.eligible ? (readiness.requiresHumanReview ? 'PROPOSED' : 'ACCEPTED') : 'REJECTED',
+      factors,
+      score: perf.score,
+      eligible: readiness.eligible,
+      requiresHumanReview: readiness.requiresHumanReview
+    };
+  });
+
+  generation.matchCount = matches.length;
+  generation.acceptedCount = matches.filter(m => m.status === 'ACCEPTED').length;
+  generation.rejectedCount = matches.filter(m => m.status === 'REJECTED').length;
+
+  return { generation, matches: matches.sort((a,b) => (b.score||0) - (a.score||0)) };
+}
+
+/* =========================================================
+   MIGRATION SYSTEM (Release 0.2A)
+   ========================================================= */
+function migrateClientsToContractors(){
+  let migrated = 0;
+  clients.forEach(cl => {
+    if(cl._migratedToContractorId) return; // already migrated
+    const ctr = blankContractor();
+    ctr.legalName = cl.name || '';
+    ctr.tradingName = cl.name || '';
+    ctr.sector = cl.sector || '';
+    ctr.notes = cl.notes || '';
+    ctr.preferredWorkerIds = cl.preferredWorkerIds || [];
+    ctr.excludedWorkerIds = cl.excludedWorkerIds || [];
+    ctr.standardTrainingRequirements = cl.standardTrainingRequirements || [];
+    ctr.standardCSCSRequired = cl.standardCSCSRequired || false;
+    ctr.status = 'ACTIVE';
+    contractors.push(ctr);
+    cl._migratedToContractorId = ctr.id;
+    migrated++;
+  });
+  return migrated;
+}
+
+function migrateEmbeddedAssignments(){
+  let migrated = 0;
+  workers.forEach(w => {
+    const assignments = w.assignments || [];
+    if(assignments.length === 0) return;
+    assignments.forEach(a => {
+      const entity = blankAssignmentEntity();
+      entity.legacyRecord = true;
+      entity.migrationReviewRequired = true;
+      entity.status = 'LEGACY_RECORDED';
+      entity.workerId = w.id;
+      entity.trade = w.tradeProfile.primaryTrade || '';
+      entity.legacyProjectLabel = a.project || '';
+      entity.legacyClientText = a.client || '';
+      entity.legacyDeploymentId = a.deploymentId || '';
+      entity.date = a.date || '';
+      entity.startDate = a.date || '';
+      entity.attended = a.attended !== false;
+      entity.late = !!a.late;
+      entity.noShow = !!a.noShow;
+      entity.rating = a.rating || null;
+      entity.rehireDecision = a.rehireDecision || '';
+      entity.clientFeedback = a.clientFeedback || '';
+      entity.supervisorFeedback = a.supervisorFeedback || '';
+      entity.issueRecorded = !!a.issueRecorded;
+      entity.outcome = a.outcome || '';
+      // Try to match to existing contractor/project by name
+      const projMatch = (a.project||'').toLowerCase();
+      const matchedProject = projects.find(p => p.name.toLowerCase() === projMatch);
+      if(matchedProject){
+        entity.projectId = matchedProject.id;
+        entity.contractorId = matchedProject.contractorId;
+      }
+      assignmentEntities.push(entity);
+      migrated++;
+    });
+  });
+  return migrated;
+}
+
+function runRelease02aMigration(){
+  // Check if already completed
+  const existing = migrationLog.find(m => m.release === '0.2A' && m.status === 'COMPLETED');
+  if(existing){
+    return { skipped: true, reason: 'Already completed' };
+  }
+
+  const entry = {
+    id: uid(),
+    release: '0.2A',
+    status: 'IN_PROGRESS',
+    startedAt: new Date().toISOString(),
+    completedAt: null,
+    clientsMigrated: 0,
+    assignmentsMigrated: 0,
+    errors: []
+  };
+
+  try {
+    // Backup is implicit — the old client records are preserved with _migratedToContractorId markers
+    entry.clientsMigrated = migrateClientsToContractors();
+    entry.assignmentsMigrated = migrateEmbeddedAssignments();
+
+    // Validation gate
+    const integrityErrors = runDeploymentDomainIntegrityCheck();
+    if(integrityErrors.length > 0){
+      entry.errors = integrityErrors;
+      entry.status = 'COMPLETED_WITH_WARNINGS';
+    } else {
+      entry.status = 'COMPLETED';
+    }
+    entry.completedAt = new Date().toISOString();
+  } catch(e) {
+    entry.status = 'FAILED';
+    entry.errors = [e.message];
+    entry.completedAt = new Date().toISOString();
+  }
+
+  migrationLog.push(entry);
+  return { skipped: false, entry };
+}
+
+function runDeploymentDomainIntegrityCheck(){
+  const errors = [];
+  const workerIds = new Set(workers.map(w=>w.id));
+  const contractorIds = new Set(contractors.map(c=>c.id));
+  const projectIds = new Set(projects.map(p=>p.id));
+  const siteIds = new Set(sites.map(s=>s.id));
+
+  assignmentEntities.forEach(a => {
+    if(!a.workerId) errors.push(`Assignment ${a.publicReference||a.id}: missing workerId`);
+    else if(!workerIds.has(a.workerId)) errors.push(`Assignment ${a.publicReference||a.id}: workerId "${a.workerId}" does not match any worker`);
+    if(a.contractorId && !contractorIds.has(a.contractorId)) errors.push(`Assignment ${a.publicReference||a.id}: contractorId does not match any contractor`);
+    if(a.projectId && !projectIds.has(a.projectId)) errors.push(`Assignment ${a.publicReference||a.id}: projectId does not match any project`);
+    if(a.siteId && !siteIds.has(a.siteId)) errors.push(`Assignment ${a.publicReference||a.id}: siteId does not match any site`);
+  });
+
+  return errors;
+}
+
+/* =========================================================
+   STATE
+   ========================================================= */
+let workers = [];
+let crews = [];
+let clients = [];               // legacy — kept for migration source
+let contractors = [];
+let projects = [];
+let sites = [];
+let assignmentEntities = [];
+let workforceRequests = [];
+let matchGenerations = [];
+let matches = [];
+let assignmentOffers = [];
+let readinessSnapshots = [];
+let migrationLog = [];
+let view = 'dashboard';
+let editingId = null;
+let editingProjectId = null;
+let editingSiteId = null;
+let editingRequestId = null;
+let editingAssignmentId = null;
+let searchQuery = '';
+let filterStatus = 'all';
+let assignmentFilterStatus = 'all';
+let deployResult = null;
+let currentMatchResults = null;
+
+/* =========================================================
+   RENDER ROOT
+   ========================================================= */
+function render(){
+  document.querySelectorAll('#tabs button').forEach(b=>{
+    const map = {workerForm:'workers', crewForm:'crews', contractorForm:'contractors', projectForm:'contractors', siteForm:'contractors',
+      requestForm:'requests', assignmentDetail:'assignments'};
+    b.classList.toggle('active', b.dataset.view === (map[view] || view));
+  });
+  const app = document.getElementById('app');
+  if(view==='dashboard') app.innerHTML = renderDashboard();
+  else if(view==='workers') app.innerHTML = renderWorkersList();
+  else if(view==='workerForm') app.innerHTML = renderWorkerForm();
+  else if(view==='compliance') app.innerHTML = renderComplianceCentre();
+  else if(view==='crews') app.innerHTML = renderCrewsList();
+  else if(view==='crewForm') app.innerHTML = renderCrewForm();
+  else if(view==='contractors') app.innerHTML = renderContractorsList();
+  else if(view==='contractorForm') app.innerHTML = renderContractorForm();
+  else if(view==='requests') app.innerHTML = renderRequestsList();
+  else if(view==='requestForm') app.innerHTML = renderRequestForm();
+  else if(view==='assignments') app.innerHTML = renderAssignmentsList();
+  else if(view==='assignmentDetail') app.innerHTML = renderAssignmentDetail();
+  wireViewEvents();
+}
+
+/* =========================================================
+   COMPLIANCE ACTION CENTRE
+   ========================================================= */
+function buildActionCentre(){
+  const critical = [], dueSoon = [], missingEv = [], devGaps = [];
+  workers.forEach(w=>{
+    const r = evaluateWorkerReadiness(w);
+    r.blockers.forEach(b=>{
+      critical.push({worker:w, issue:b, severity:'CRITICAL', action: actionForBlocker(b)});
+    });
+    r.expiringItems.forEach(e=>{
+      dueSoon.push({worker:w, issue:`${e.item}, due ${fmtDate(e.expiryDate)}`, severity: expiryBand(e.expiryDate)==='warn'?'DUE SOON':'WATCH', action:`Renew ${e.item.toLowerCase()}`});
+    });
+    if(r.missingEvidence.length){
+      missingEv.push({worker:w, issue: r.missingEvidence.join(', '), severity:'MISSING EVIDENCE', action:'Complete evidence pack'});
+    }
+    if(w.tradeProfile.competenceScore===null){
+      devGaps.push({worker:w, issue:'Competence assessment needed', severity:'DEVELOPMENT', action:'Assess and record competence'});
+    }
+    if((w.proofOfWork||[]).length===0){
+      devGaps.push({worker:w, issue:'No proof-of-work record yet', severity:'DEVELOPMENT', action:'Log first verified job'});
+    }
+  });
+  return {critical, dueSoon, missingEv, devGaps};
+}
+function actionForBlocker(b){
+  if(b.includes('Right to Work')) return 'Verify via share code, manual check or Employer Checking Service';
+  if(b.includes('CSCS')) return 'Verify via CSCS Smart Check';
+  if(b.includes('No training certificates')) return 'Add training certificates';
+  if(b.includes('not verified')) return 'Mark verified once evidence is checked, not before';
+  if(b.includes('available')) return 'Confirm availability';
+  if(b.includes('expired')) return 'Renew and re-verify';
+  return 'Review and resolve';
+}
+
+/* =========================================================
+   DASHBOARD
+   ========================================================= */
+function renderDashboard(){
+  const total = workers.length;
+  const verified = workers.filter(w=>evaluateWorkerReadiness(w).passportStatus==='VERIFIED').length;
+  const ready = workers.filter(w=>evaluateWorkerReadiness(w).deploymentStatus==='READY').length;
+  const hold = workers.filter(w=>evaluateWorkerReadiness(w).deploymentStatus==='HOLD').length;
+  const blocked = workers.filter(w=>evaluateWorkerReadiness(w).deploymentStatus==='BLOCKED').length;
+  const expiring30 = workers.filter(w=>evaluateWorkerReadiness(w).expiringItems.some(e=>expiryBand(e.expiryDate)==='warn')).length;
+  const ac = buildActionCentre();
+  const openActions = ac.critical.length + ac.dueSoon.filter(d=>d.severity==='DUE SOON').length;
+
+  if(total===0){
+    return `
+      <h1>Dashboard</h1>
+      <p class="lead">Live readiness across your workforce, from one authoritative engine.</p>
+      <div class="panel empty">
+        <h3>No workers yet</h3>
+        <p>Add your first worker to start building the Workforce Passport.</p>
+        <button class="btn primary" id="emptyAddBtn" style="margin-top:8px;">Add a worker</button>
+      </div>`;
+  }
+
+  const topReady = workers.filter(w=>evaluateWorkerReadiness(w).deploymentStatus==='READY')
+    .sort((a,b)=>(performanceEvidence(b).score||0)-(performanceEvidence(a).score||0)).slice(0,5);
+
+  return `
+    <h1>Dashboard</h1>
+    <p class="lead">Live readiness across your workforce, from one authoritative engine.</p>
+    <div class="stat-row">
+      <div class="stat"><div class="n">${total}</div><div class="l">Total workers</div></div>
+      <div class="stat"><div class="n" style="color:var(--ok)">${verified}</div><div class="l">Passport verified</div></div>
+      <div class="stat"><div class="n" style="color:var(--ok)">${ready}</div><div class="l">Deploy ready</div></div>
+      <div class="stat"><div class="n" style="color:var(--danger)">${blocked}</div><div class="l">Blocked</div></div>
+    </div>
+    <div class="stat-row">
+      <div class="stat"><div class="n" style="color:var(--warn)">${hold}</div><div class="l">On hold</div></div>
+      <div class="stat"><div class="n" style="color:var(--watch)">${expiring30}</div><div class="l">Expiring &lt;30 days</div></div>
+      <div class="stat"><div class="n">${crews.length}</div><div class="l">Active crews</div></div>
+      <div class="stat"><div class="n">${contractors.length}</div><div class="l">Contractors</div></div>
+    </div>
+
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <h2 style="margin-bottom:0;">Compliance Action Centre</h2>
+        <button class="btn small" id="goComplianceBtn">Open full centre</button>
+      </div>
+      <p class="lead" style="margin-bottom:12px;">${openActions} open action${openActions===1?'':'s'} across the workforce.</p>
+      ${renderActionGroup('Critical', ac.critical.slice(0,4), 'danger')}
+      ${renderActionGroup('Due soon', ac.dueSoon.filter(d=>d.severity==='DUE SOON').slice(0,4), 'warn')}
+      ${ac.critical.length===0 && ac.dueSoon.length===0 ? '<p style="color:var(--slate);font-size:13px;margin:0;">Nothing urgent right now.</p>' : ''}
+    </div>
+
+    <div class="panel">
+      <h2>Top ready workers</h2>
+      ${topReady.length===0 ? '<p style="color:var(--slate);font-size:13px;margin:0;">Nobody has cleared Deploy Ready yet.</p>' :
+        topReady.map(w=>`<div class="alert-row"><div><span class="who">${esc(w.identity.fullName)}</span> · <span class="what">${esc(w.tradeProfile.primaryTrade)}</span></div><div>${performanceEvidence(w).score}%</div></div>`).join('')}
+    </div>`;
+}
+function renderActionGroup(title, items, tone){
+  if(items.length===0) return '';
+  return `<div class="action-group"><h3>${title}</h3>
+    ${items.map(i=>`<div class="alert-row"><div><span class="who">${esc(workerName(i.worker))}</span> · <span class="what">${esc(i.issue)}</span><span class="action">${esc(i.action)}</span></div><div>${badge(tone,i.severity)}</div></div>`).join('')}
+  </div>`;
+}
+function renderComplianceCentre(){
+  const ac = buildActionCentre();
+  return `
+    <h1>Compliance Action Centre</h1>
+    <p class="lead">Everything the readiness engine currently flags, in one place.</p>
+    <div class="panel">${renderActionGroup('Critical', ac.critical, 'danger') || '<p style="color:var(--slate);font-size:13px;">No critical issues.</p>'}</div>
+    <div class="panel">${renderActionGroup('Due soon (within 30 days)', ac.dueSoon.filter(d=>d.severity==='DUE SOON'), 'warn') || '<p style="color:var(--slate);font-size:13px;">Nothing due soon.</p>'}</div>
+    <div class="panel">${renderActionGroup('Watch (31-60 days)', ac.dueSoon.filter(d=>d.severity==='WATCH'), 'watch') || '<p style="color:var(--slate);font-size:13px;">Nothing in the watch window.</p>'}</div>
+    <div class="panel">${renderActionGroup('Missing evidence', ac.missingEv, 'none') || '<p style="color:var(--slate);font-size:13px;">No outstanding evidence gaps.</p>'}</div>
+    <div class="panel">${renderActionGroup('Workforce development', ac.devGaps, 'gold') || '<p style="color:var(--slate);font-size:13px;">No open development items.</p>'}</div>`;
+}
+
+/* =========================================================
+   WORKERS LIST
+   ========================================================= */
+function renderWorkersList(){
+  const filtered = workers.filter(w=>{
+    const matchesSearch = !searchQuery || (w.identity.fullName+' '+w.tradeProfile.primaryTrade).toLowerCase().includes(searchQuery.toLowerCase());
+    const r = evaluateWorkerReadiness(w);
+    const matchesFilter = filterStatus==='all' || r.deploymentStatus===filterStatus;
+    return matchesSearch && matchesFilter;
+  });
+  const chips = [['all','All'], ['READY','Ready'], ['EXPIRING SOON','Expiring soon'], ['HOLD','Hold'], ['BLOCKED','Blocked']];
+
+  return `
+    <h1>Workers</h1>
+    <p class="lead">${workers.length} worker${workers.length===1?'':'s'} in the passport register.</p>
+    <div class="toolbar">
+      <input type="text" id="searchInput" placeholder="Search by name or trade" value="${esc(searchQuery)}">
+      ${chips.map(([k,l])=>`<button class="chip ${filterStatus===k?'active':''}" data-filter="${k}">${l}</button>`).join('')}
+      <button class="btn primary" id="addWorkerBtn">Add worker</button>
+    </div>
+    <div class="panel">
+      ${filtered.length===0
+        ? `<div class="empty"><h3>No matches</h3><p>Try a different search or filter.</p></div>`
+        : filtered.map(w=>{
+            const r = evaluateWorkerReadiness(w);
+            const sc = performanceEvidence(w);
+            const statusTone = r.deploymentStatus==='READY'?'ok':r.deploymentStatus==='EXPIRING SOON'?'watch':r.deploymentStatus==='HOLD'?'warn':'danger';
+            return `
+            <div class="row">
+              <div class="row-main">
+                <div class="name">${esc(w.identity.fullName)} <span class="passport-tag">${esc(w.identity.passportId||'Pending')}</span></div>
+                <div class="sub">${esc(w.tradeProfile.primaryTrade)}${w.commercial.postcode?' · '+esc(w.commercial.postcode):''}${r.deploymentStatus!=='READY'?' · '+esc(r.mainBlocker):''}</div>
+              </div>
+              <div class="row-badges">
+                ${badge(expiryBadgeStatus(w.rightToWork.status!=='verified'?'expired':expiryBand(w.rightToWork.expiryDate)), 'RTW')}
+                ${badge(expiryBadgeStatus(w.cscs.status!=='valid'?'expired':expiryBand(w.cscs.expiryDate)), 'CSCS')}
+                ${badge(statusTone, r.deploymentStatus)}
+              </div>
+              <div class="row-score">${sc.score===null?'<span style="color:var(--slate);font-weight:400;">Not yet scored</span>':sc.score+'%<span class="u">performance score</span>'}</div>
+              <button class="btn small" data-edit="${w.id}">Edit</button>
+            </div>`;
+          }).join('')}
+    </div>`;
+}
+
+/* =========================================================
+   WORKER FORM
+   ========================================================= */
+function renderWorkerForm(){
+  const w = editingId ? workerById(editingId) : blankWorker();
+  const r = evaluateWorkerReadiness(w);
+  const sc = performanceEvidence(w);
+  const ev = evidenceCompleteness(w);
+  const statusTone = r.deploymentStatus==='READY'?'ok':r.deploymentStatus==='EXPIRING SOON'?'watch':r.deploymentStatus==='HOLD'?'warn':'danger';
+
+  return `
+    <h1>${editingId ? 'Worker Passport' : 'Add worker'}</h1>
+    <p class="lead">
+      ${editingId ? `<span class="passport-tag">${esc(w.identity.passportId||'Pending')}</span> · Last updated ${w.auditLog&&w.auditLog[0]?esc(formatAuditTimestamp(w.auditLog[0].timestamp)):'not recorded'}` : 'Build a new Workforce Passport.'}
+    </p>
+    ${editingId ? `
+    <div class="panel" style="display:flex;flex-wrap:wrap;gap:18px;align-items:center;">
+      <div><div class="kicker">Passport status</div>${badge(r.passportStatus==='VERIFIED'?'ok':r.passportStatus==='BLOCKED'?'danger':r.passportStatus==='EXPIRING SOON'?'watch':'none', r.passportStatus)}</div>
+      <div><div class="kicker">Deployment status</div>${badge(statusTone, r.deploymentStatus)}</div>
+      <div><div class="kicker">Performance Score</div>${sc.score===null?'Not yet scored':sc.score+'% · '+sc.band}</div>
+      <div><div class="kicker">Evidence completeness</div>${ev.percent}%</div>
+      <div><div class="kicker">Main blocker</div>${esc(r.mainBlocker)}</div>
+    </div>` : ''}
+
+    <form id="workerForm">
+      <div class="panel">
+        <h2>Identity</h2>
+        <div class="field-row">
+          <div class="field"><label>Full name</label><input type="text" id="f_fullName" value="${esc(w.identity.fullName)}" required></div>
+          <div class="field"><label>Preferred name</label><input type="text" id="f_preferredName" value="${esc(w.identity.preferredName)}"></div>
+        </div>
+        <div class="field-row three">
+          <div class="field"><label>Phone</label><input type="tel" id="f_phone" value="${esc(w.identity.phone)}"></div>
+          <div class="field"><label>Email</label><input type="email" id="f_email" value="${esc(w.identity.email)}"></div>
+          <div class="field"><label>Nationality (optional)</label><input type="text" id="f_nationality" value="${esc(w.identity.nationality)}"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Primary trade</label><input type="text" id="f_trade" value="${esc(w.tradeProfile.primaryTrade)}" placeholder="e.g. Painter and decorator" required></div>
+          <div class="field"><label>Years experience</label><input type="text" id="f_yearsExp" value="${esc(w.tradeProfile.yearsExperience)}"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="kicker">Identity &amp; compliance (kept separate from performance history)</div>
+        <h2 style="margin-top:6px;">Right to work</h2>
+        <div class="field-row">
+          <div class="field"><label>Status</label>
+            <select id="f_rtwStatus">
+              <option value="not_verified" ${w.rightToWork.status==='not_verified'?'selected':''}>Not verified yet</option>
+              <option value="verified" ${w.rightToWork.status==='verified'?'selected':''}>Verified</option>
+            </select>
+          </div>
+          <div class="field"><label>Check method</label>
+            <select id="f_rtwMethod">
+              <option value="">Choose one</option>
+              <option value="manual_passport" ${w.rightToWork.method==='manual_passport'?'selected':''}>Manual check: British or Irish passport</option>
+              <option value="share_code" ${w.rightToWork.method==='share_code'?'selected':''}>Online share code</option>
+              <option value="ecs" ${w.rightToWork.method==='ecs'?'selected':''}>Employer Checking Service</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row three">
+          <div class="field"><label>Date checked</label><input type="date" id="f_rtwChecked" value="${w.rightToWork.checkedDate||''}"></div>
+          <div class="field"><label>Expiry (blank if permanent)</label><input type="date" id="f_rtwExpiry" value="${w.rightToWork.expiryDate||''}"></div>
+          <div class="field"><label>Verified by</label><input type="text" id="f_rtwVerifier" value="${esc(w.rightToWork.verifier)}"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Reference</label><input type="text" id="f_rtwReference" value="${esc(w.rightToWork.reference)}" placeholder="Share code, if used"></div>
+          <div class="field"><label>Evidence note (required to mark verified)</label><input type="text" id="f_rtwEvidence" value="${esc(w.rightToWork.evidenceNote)}" placeholder="e.g. passport seen in person 04/09"></div>
+        </div>
+        <p class="hint">No start date should be confirmed until this check is complete and saved.</p>
+
+        <div class="subsection">
+          <h2>CSCS</h2>
+          <div class="field-row">
+            <div class="field"><label>Status</label>
+              <select id="f_cscsStatus">
+                <option value="not_checked" ${w.cscs.status==='not_checked'?'selected':''}>Not checked yet</option>
+                <option value="valid" ${w.cscs.status==='valid'?'selected':''}>Valid</option>
+              </select>
+            </div>
+            <div class="field"><label>Registration number</label><input type="text" id="f_cscsReg" value="${esc(w.cscs.registrationNumber)}"></div>
+          </div>
+          <div class="field-row three">
+            <div class="field"><label>Card type / occupation</label><input type="text" id="f_cscsType" value="${esc(w.cscs.cardType)}"></div>
+            <div class="field"><label>Scheme</label><input type="text" id="f_cscsScheme" value="${esc(w.cscs.scheme)}"></div>
+            <div class="field"><label>Expiry date</label><input type="date" id="f_cscsExpiry" value="${w.cscs.expiryDate||''}"></div>
+          </div>
+          <div class="field"><label>Evidence reference (required to mark valid)</label><input type="text" id="f_cscsEvidence" value="${esc(w.cscs.evidenceReference)}" placeholder="e.g. checked via CSCS Smart Check 04/09/2026"></div>
+          <p class="hint">Confirm via CSCS Smart Check or cscssmartcheck.co.uk. Never rely on the card alone.</p>
+        </div>
+
+        <div class="subsection">
+          <h2>Training certificates</h2>
+          <div id="certRows">${(w.trainingCertificates||[]).map(c=>certRowHtml(c)).join('')}</div>
+          <button type="button" class="btn small" id="addCertBtn">+ Add certification</button>
+        </div>
+
+        ${w.auditLog && w.auditLog.length ? `
+        <div class="subsection">
+          <h2>Verification history</h2>
+          <div>${w.auditLog.map(a=>`<div class="audit-item"><b>${esc(formatAuditTimestamp(a.timestamp))}</b> · ${esc(a.category)}${a.field?' ('+esc(a.field)+')':''}: ${esc(a.newValue===null?'cleared':a.newValue)}${a.oldValue?' (was '+esc(a.oldValue)+')':''}${a.note?'. '+esc(a.note):''}</div>`).join('')}</div>
+        </div>` : ''}
+      </div>
+
+      <div class="panel">
+        <div class="kicker">Availability &amp; commercial</div>
+        <div class="field-row three" style="margin-top:10px;">
+          <div class="field"><label>Postcode</label><input type="text" id="f_postcode" value="${esc(w.commercial.postcode)}" placeholder="e.g. GU1 3AA"></div>
+          <div class="field"><label>Travel radius (miles)</label><input type="number" id="f_radius" value="${esc(w.commercial.travelRadius)}" min="0"></div>
+          <div class="field"><label>Day rate (£)</label><input type="number" id="f_rate" value="${esc(w.commercial.dayRate)}" min="0"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Availability</label>
+            <select id="f_availability">${AVAILABILITY_OPTIONS.map(o=>`<option ${w.commercial.availability===o?'selected':''}>${o}</option>`).join('')}</select>
+          </div>
+          <div class="field"><label>Available from</label><input type="date" id="f_availableFrom" value="${w.commercial.availableFrom||''}"></div>
+        </div>
+        <div class="field">
+          <label>Sector experience</label>
+          <div class="checkgrid">${SECTOR_OPTIONS.map(s=>`<label><input type="checkbox" class="sectorCheck" value="${s}" ${(w.commercial.sectorExperience||[]).includes(s)?'checked':''}> ${s}</label>`).join('')}</div>
+        </div>
+        <div class="field"><label>Own tools / transport</label><input type="text" id="f_transport" value="${esc(w.commercial.transport)}" placeholder="e.g. own van, own tools"></div>
+        <div class="field"><label>Notes</label><input type="text" id="f_commercialNotes" value="${esc(w.commercial.notes)}"></div>
+      </div>
+
+      <div class="panel">
+        <div class="kicker">Performance history: what the Performance Score is built from</div>
+        <h2 style="margin-top:6px;">Competence</h2>
+        <p class="hint" style="margin-top:-4px;margin-bottom:10px;">This is the one score component that's a judgement call. Base it on specific evidence rather than a default number.</p>
+        <div class="field-row">
+          <div class="field"><label>Competence score (0-20)</label><input type="number" id="f_competence" min="0" max="20" value="${w.tradeProfile.competenceScore===null||w.tradeProfile.competenceScore===undefined?'':w.tradeProfile.competenceScore}"></div>
+          <div class="field"><label>Assessed by</label><input type="text" id="f_competenceBy" value="${esc(w.tradeProfile.competenceAssessedBy)}"></div>
+        </div>
+        <div class="field"><label>Evidence / basis for assessment</label><input type="text" id="f_competenceEvidence" value="${esc(w.tradeProfile.competenceEvidence)}" placeholder="e.g. site walk, specific job observed"></div>
+
+        <div class="subsection">
+          <h2>Proof of work</h2>
+          <div id="proofRows">${(w.proofOfWork||[]).map(p=>proofRowHtml(p)).join('')}</div>
+          <button type="button" class="btn small" id="addProofBtn">+ Add proof of work</button>
+        </div>
+
+        <div class="subsection">
+          <h2>Assignment history</h2>
+          <p class="hint" style="margin-top:-4px;margin-bottom:10px;">Log every assignment, not just the good ones.</p>
+          <div id="assignRows">${(w.assignments||[]).map(a=>assignRowHtml(a)).join('')}</div>
+          <button type="button" class="btn small" id="addAssignBtn">+ Add assignment</button>
+        </div>
+
+        <div class="subsection">
+          <h2>Performance score: how it's calculated</h2>
+          ${scoreBreakdownHtml(sc)}
+          <p class="hint" style="margin-top:10px;">Shown openly so the score can be explained and appealed. It isn't a hidden number.</p>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <div>${editingId ? '<button type="button" class="btn danger" id="deleteWorkerBtn">Delete worker</button>' : ''}</div>
+        <div style="display:flex;gap:10px;">
+          <button type="button" class="btn" id="cancelFormBtn">Cancel</button>
+          <button type="submit" class="btn primary">Save passport</button>
+        </div>
+      </div>
+    </form>`;
+}
+
+function certRowHtml(c){
+  c = c || {};
+  return `<div class="sub-row cert-row" data-id="${esc(c.id||'')}" style="grid-template-columns:1.1fr 0.9fr 0.9fr 1fr 1fr auto;">
+    <div><label>Certification</label><select class="cert-name">${CERT_OPTIONS.map(o=>`<option ${c.name===o?'selected':''}>${o}</option>`).join('')}</select></div>
+    <div><label>Expiry date</label><input type="date" class="cert-expiry" value="${c.expiryDate||''}"></div>
+    <div><label>Status</label><select class="cert-status"><option value="to_confirm" ${(!c.status||c.status==='to_confirm')?'selected':''}>To confirm</option><option value="verified" ${c.status==='verified'?'selected':''}>Verified</option></select></div>
+    <div><label>Requirement</label><select class="cert-requirement">
+      <option value="core" ${c.requirementType==='core'?'selected':''}>Core (always required)</option>
+      <option value="deployment_specific" ${(!c.requirementType||c.requirementType==='deployment_specific')?'selected':''}>Deployment-specific</option>
+      <option value="optional" ${c.requirementType==='optional'?'selected':''}>Optional</option>
+    </select></div>
+    <div><label>Evidence ref</label><input type="text" class="cert-evidence" value="${esc(c.evidenceReference||'')}"></div>
+    <button type="button" class="btn small ghost remove-row">Remove</button>
+  </div>`;
+}
+function proofRowHtml(p){
+  p = p || {};
+  return `<div class="sub-row proof-row" data-id="${esc(p.id||'')}" style="grid-template-columns:1fr 1fr 1fr 1fr auto;">
+    <div><label>Project / client</label><input type="text" class="proof-project" value="${esc(p.project||p.client||'')}" placeholder="e.g. Prestige Coast, Guildford"></div>
+    <div><label>Competency / scope</label><input type="text" class="proof-desc" value="${esc(p.description||'')}" placeholder="e.g. External masonry coating"></div>
+    <div><label>Verified by</label><input type="text" class="proof-verifiedby" value="${esc(p.verifiedBy||p.supervisor||'')}" placeholder="Supervisor name"></div>
+    <div><label>Date</label><input type="date" class="proof-date" value="${p.dateFrom||''}"></div>
+    <button type="button" class="btn small ghost remove-row">Remove</button>
+  </div>`;
+}
+function assignRowHtml(a){
+  a = a || {};
+  return `<div class="sub-row assign-row" data-id="${esc(a.id||'')}" style="grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;">
+    <div><label>Date</label><input type="date" class="assign-date" value="${a.date||''}"></div>
+    <div><label>Project / client</label><input type="text" class="assign-project" value="${esc(a.project||'')}"></div>
+    <div><label>Attended</label><select class="assign-attended"><option value="yes" ${a.attended!==false?'selected':''}>Yes</option><option value="no" ${a.attended===false?'selected':''}>No</option></select></div>
+    <div><label>Client rating (1-5)</label><input type="number" class="assign-rating" min="1" max="5" value="${a.rating||''}"></div>
+    <div><label>Would rehire?</label><select class="assign-rehire"><option value="to_confirm" ${(!a.rehireDecision||a.rehireDecision==='to_confirm')?'selected':''}>To confirm</option><option value="yes" ${a.rehireDecision==='yes'?'selected':''}>Yes</option><option value="no" ${a.rehireDecision==='no'?'selected':''}>No</option></select></div>
+    <button type="button" class="btn small ghost remove-row">Remove</button>
+  </div>`;
+}
+
+/* =========================================================
+   CREWS
+   ========================================================= */
+function renderCrewsList(){
+  return `
+    <h1>Crews</h1>
+    <p class="lead">${crews.length} crew${crews.length===1?'':'s'} with a working history together.</p>
+    <div class="toolbar"><button class="btn primary" id="addCrewBtn">Add crew</button></div>
+    <div class="panel">
+      ${crews.length===0
+        ? `<div class="empty"><h3>No crews yet</h3><p>A crew is a group of workers with a track record of working well together. Add one once you've seen it happen.</p></div>`
+        : crews.map(c=>{
+            const rebook = c.deployments.length ? Math.round(c.deployments.filter(d=>d.workedWell).length / c.deployments.length * 100) : null;
+            const confStatus = c.deployments.length===0 ? 'NEW CREW' : c.deployments.length<3 ? 'LIMITED EVIDENCE' : 'PROVEN CREW';
+            return `<div class="row">
+              <div class="row-main"><div class="name">${esc(c.name)}</div><div class="sub">${c.memberIds.length} members${c.specialism?' · '+esc(c.specialism):''}</div></div>
+              <div class="row-badges">${badge(confStatus==='PROVEN CREW'?'ok':confStatus==='LIMITED EVIDENCE'?'watch':'none', confStatus)}</div>
+              <div class="row-score">${rebook===null?'<span style="color:var(--slate);font-weight:400;">New</span>':rebook+'%'}<span class="u">worked well</span></div>
+              <button class="btn small" data-edit-crew="${c.id}">Edit</button>
+            </div>`;
+          }).join('')}
+    </div>`;
+}
+function renderCrewForm(){
+  const c = editingId ? crews.find(x=>x.id===editingId) : blankCrew();
+  const workerOptions = workers.map(w=>`<option value="${w.id}" ${c.memberIds.includes(w.id)?'selected':''}>${esc(w.identity.fullName)} · ${esc(w.tradeProfile.primaryTrade)}</option>`).join('');
+  const supervisorOptions = workers.map(w=>`<option value="${w.id}" ${c.supervisorId===w.id?'selected':''}>${esc(w.identity.fullName)}</option>`).join('');
+  return `
+    <h1>${editingId?'Edit crew':'Add crew'}</h1>
+    <p class="lead">Track who works well together: Verified Crew Intelligence.</p>
+    <form id="crewForm">
+      <div class="panel">
+        <div class="field"><label>Crew name</label><input type="text" id="cr_name" value="${esc(c.name)}" placeholder="e.g. Painting crew A" required></div>
+        <div class="field"><label>Specialism</label><input type="text" id="cr_specialism" value="${esc(c.specialism)}" placeholder="e.g. Education / occupied housing"></div>
+        <div class="field"><label>Supervisor</label><select id="cr_supervisor"><option value="">None set</option>${supervisorOptions}</select></div>
+        <div class="field"><label>Members</label>
+          ${workers.length===0 ? '<p class="hint">Add workers first, then come back to build a crew from them.</p>' : `<select id="cr_members" multiple size="6">${workerOptions}</select><p class="hint">Ctrl/Cmd-click to select more than one.</p>`}
+        </div>
+        <div class="field"><label>Notes</label><textarea id="cr_notes">${esc(c.notes)}</textarea></div>
+      </div>
+      <div class="panel">
+        <h2>Deployment history</h2>
+        <p class="hint" style="margin-top:-4px;margin-bottom:10px;">Log each time this crew went out together.</p>
+        <div id="deployRows">${(c.deployments||[]).map(d=>crewDeployRowHtml(d)).join('')}</div>
+        <button type="button" class="btn small" id="addDeployBtn">+ Add deployment</button>
+      </div>
+      <div class="form-actions">
+        <div>${editingId?'<button type="button" class="btn danger" id="deleteCrewBtn">Delete crew</button>':''}</div>
+        <div style="display:flex;gap:10px;">
+          <button type="button" class="btn" id="cancelCrewBtn">Cancel</button>
+          <button type="submit" class="btn primary">Save crew</button>
+        </div>
+      </div>
+    </form>`;
+}
+function crewDeployRowHtml(d){
+  d = d || {};
+  return `<div class="sub-row deploy-row" style="grid-template-columns:1fr 1fr 1fr 1fr auto;">
+    <div><label>Date</label><input type="date" class="cd-date" value="${d.date||''}"></div>
+    <div><label>Client</label><input type="text" class="cd-client" value="${esc(d.client||'')}"></div>
+    <div><label>Project</label><input type="text" class="cd-project" value="${esc(d.project||'')}"></div>
+    <div><label>Worked well?</label><select class="cd-worked"><option value="yes" ${d.workedWell!==false?'selected':''}>Yes</option><option value="no" ${d.workedWell===false?'selected':''}>No</option></select></div>
+    <button type="button" class="btn small ghost remove-row">Remove</button>
+  </div>`;
+}
+
+/* =========================================================
+   CONTRACTORS (replaces Clients)
+   ========================================================= */
+function renderContractorsList(){
+  return `
+    <h1>Contractors</h1>
+    <p class="lead">${contractors.length} contractor${contractors.length===1?'':'s'} on file. This is your Contractor Memory.</p>
+    <div class="toolbar"><button class="btn primary" id="addContractorBtn">Add contractor</button></div>
+    <div class="panel">
+      ${contractors.length===0
+        ? `<div class="empty"><h3>No contractors yet</h3><p>Add a contractor once you have preferences worth remembering.</p></div>`
+        : contractors.map(ctr=>{
+            const projectCount = projects.filter(p=>p.contractorId===ctr.id).length;
+            const statusTone = ctr.status==='ACTIVE'?'ok':ctr.status==='DORMANT'?'none':'watch';
+            return `<div class="row">
+              <div class="row-main">
+                <div class="name">${esc(ctr.legalName)} <span class="ref-tag">${esc(ctr.publicReference||'Pending')}</span></div>
+                <div class="sub">${ctr.sector?esc(ctr.sector)+' · ':''}${projectCount} project${projectCount===1?'':'s'}${ctr.preferredWorkerIds.length?' · '+ctr.preferredWorkerIds.length+' preferred worker'+(ctr.preferredWorkerIds.length===1?'':'s'):''}</div>
+              </div>
+              <div class="row-badges">${badge(statusTone, ctr.status)}</div>
+              <button class="btn small" data-edit-contractor="${ctr.id}">Edit</button>
+            </div>`;
+          }).join('')}
+    </div>`;
+}
+
+function renderContractorForm(){
+  const ctr = editingId ? contractors.find(x=>x.id===editingId) : blankContractor();
+  const workerOpts = (ids)=> workers.length===0 ? '<p class="hint">Add workers first.</p>' : workers.map(w=>`<option value="${w.id}" ${ids.includes(w.id)?'selected':''}>${esc(w.identity.fullName)} · ${esc(w.tradeProfile.primaryTrade)}</option>`).join('');
+  const contractorProjects = projects.filter(p=>p.contractorId===ctr.id);
+
+  return `
+    <h1>${editingId?'Edit contractor':'Add contractor'}</h1>
+    <p class="lead">${editingId?`<span class="ref-tag">${esc(ctr.publicReference||'Pending')}</span>`:'Add a new contractor to your register.'}</p>
+    <form id="contractorForm">
+      <div class="panel">
+        <h2>Contractor details</h2>
+        <div class="field-row">
+          <div class="field"><label>Legal name</label><input type="text" id="ctr_legalName" value="${esc(ctr.legalName)}" required></div>
+          <div class="field"><label>Trading name</label><input type="text" id="ctr_tradingName" value="${esc(ctr.tradingName)}"></div>
+        </div>
+        <div class="field-row three">
+          <div class="field"><label>Company number</label><input type="text" id="ctr_companyNumber" value="${esc(ctr.companyNumber)}"></div>
+          <div class="field"><label>Sector</label><input type="text" id="ctr_sector" value="${esc(ctr.sector)}" placeholder="e.g. Housing / residential"></div>
+          <div class="field"><label>Status</label>
+            <select id="ctr_status">
+              <option value="PROSPECT" ${ctr.status==='PROSPECT'?'selected':''}>Prospect</option>
+              <option value="ACTIVE" ${ctr.status==='ACTIVE'?'selected':''}>Active</option>
+              <option value="DORMANT" ${ctr.status==='DORMANT'?'selected':''}>Dormant</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row three">
+          <div class="field"><label>Primary contact</label><input type="text" id="ctr_primaryContact" value="${esc(ctr.primaryContact)}"></div>
+          <div class="field"><label>Email</label><input type="email" id="ctr_email" value="${esc(ctr.email)}"></div>
+          <div class="field"><label>Phone</label><input type="tel" id="ctr_phone" value="${esc(ctr.phone)}"></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Billing address</label><input type="text" id="ctr_billingAddress" value="${esc(ctr.billingAddress)}"></div>
+          <div class="field"><label>Payment terms</label><input type="text" id="ctr_paymentTerms" value="${esc(ctr.paymentTerms)}" placeholder="e.g. Net 30"></div>
+        </div>
+        <div class="field"><label>Credit status</label><input type="text" id="ctr_creditStatus" value="${esc(ctr.creditStatus)}" placeholder="e.g. Good, On hold"></div>
+        <div class="field"><label>Notes</label><textarea id="ctr_notes" placeholder="PPE expectations, documentation requirements, usual hours...">${esc(ctr.notes)}</textarea></div>
+      </div>
+
+      <div class="panel">
+        <h2>Worker preferences</h2>
+        <div class="field"><label>Preferred workers</label><select id="ctr_preferred" multiple size="5">${workerOpts(ctr.preferredWorkerIds||[])}</select><p class="hint">Ctrl/Cmd-click to select more than one.</p></div>
+        <div class="field"><label>Do not send back</label><select id="ctr_excluded" multiple size="5">${workerOpts(ctr.excludedWorkerIds||[])}</select></div>
+      </div>
+
+      <div class="panel">
+        <h2>Standard requirements</h2>
+        <div class="field"><label>Standard training requirements</label>
+          <div class="checkgrid">${CERT_OPTIONS.map(c=>`<label><input type="checkbox" class="ctrStdTraining" value="${c}" ${(ctr.standardTrainingRequirements||[]).includes(c)?'checked':''}> ${c}</label>`).join('')}</div>
+        </div>
+        <div class="field"><label><input type="checkbox" id="ctr_stdCSCS" ${ctr.standardCSCSRequired?'checked':''}> CSCS always required for this contractor</label></div>
+      </div>
+
+      <div class="panel">
+        <h2>Projects</h2>
+        ${contractorProjects.length===0 ? '<p style="color:var(--slate);font-size:13px;">No projects yet for this contractor.</p>' :
+          contractorProjects.map(p=>{
+            const siteCount = sites.filter(s=>s.projectId===p.id).length;
+            const projTone = p.status==='ACTIVE'?'ok':p.status==='COMPLETED'?'gold':'none';
+            return `<div class="row">
+              <div class="row-main"><div class="name">${esc(p.name)} <span class="ref-tag">${esc(p.publicReference||'Pending')}</span></div><div class="sub">${siteCount} site${siteCount===1?'':'s'}${p.startDate?' · starts '+esc(fmtDate(p.startDate)):''}</div></div>
+              <div class="row-badges">${badge(projTone, p.status)}</div>
+              <button type="button" class="btn small" data-edit-project="${p.id}">Edit</button>
+            </div>`;
+          }).join('')}
+        <button type="button" class="btn small" id="addProjectBtn" style="margin-top:12px;">+ Add project</button>
+      </div>
+
+      <div class="form-actions">
+        <div>${editingId?'<button type="button" class="btn danger" id="deleteContractorBtn">Delete contractor</button>':''}</div>
+        <div style="display:flex;gap:10px;">
+          <button type="button" class="btn" id="cancelContractorBtn">Cancel</button>
+          <button type="submit" class="btn primary">Save contractor</button>
+        </div>
+      </div>
+    </form>`;
+}
+
+function renderProjectForm(){
+  const p = editingProjectId ? projects.find(x=>x.id===editingProjectId) : blankProject();
+  const contractorId = editingId || p.contractorId;
+  const ctr = contractorById(contractorId);
+  const projectSites = sites.filter(s=>s.projectId===p.id);
+
+  return `
+    <div class="breadcrumb"><a id="bcContractors">Contractors</a><span class="sep">/</span><a id="bcContractor">${esc(ctr?ctr.legalName:'Contractor')}</a><span class="sep">/</span><span class="current">${editingProjectId?'Edit project':'Add project'}</span></div>
+    <h1>${editingProjectId?'Edit project':'Add project'}</h1>
+    <p class="lead">${editingProjectId?`<span class="ref-tag">${esc(p.publicReference||'Pending')}</span>`:''}</p>
+    <form id="projectForm">
+      <div class="panel">
+        <div class="field"><label>Project name</label><input type="text" id="prj_name" value="${esc(p.name)}" required></div>
+        <div class="field-row">
+          <div class="field"><label>Reference</label><input type="text" id="prj_reference" value="${esc(p.reference)}" placeholder="Client's own reference"></div>
+          <div class="field"><label>Status</label>
+            <select id="prj_status">
+              <option value="ACTIVE" ${p.status==='ACTIVE'?'selected':''}>Active</option>
+              <option value="COMPLETED" ${p.status==='COMPLETED'?'selected':''}>Completed</option>
+              <option value="ON_HOLD" ${p.status==='ON_HOLD'?'selected':''}>On hold</option>
+              <option value="CANCELLED" ${p.status==='CANCELLED'?'selected':''}>Cancelled</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Start date</label><input type="date" id="prj_start" value="${p.startDate||''}"></div>
+          <div class="field"><label>End date</label><input type="date" id="prj_end" value="${p.endDate||''}"></div>
+        </div>
+        <div class="field"><label>Description</label><textarea id="prj_description">${esc(p.description)}</textarea></div>
+      </div>
+
+      ${editingProjectId ? `
+      <div class="panel">
+        <h2>Sites</h2>
+        ${projectSites.length===0 ? '<p style="color:var(--slate);font-size:13px;">No sites yet for this project.</p>' :
+          projectSites.map(s=>{
+            const siteTone = s.status==='ACTIVE'?'ok':'none';
+            return `<div class="row">
+              <div class="row-main"><div class="name">${esc(s.name)} <span class="ref-tag">${esc(s.publicReference||'Pending')}</span></div><div class="sub">${s.address?esc(s.address)+' · ':''}${s.postcode?esc(s.postcode):''}</div></div>
+              <div class="row-badges">${badge(siteTone, s.status)}</div>
+              <button type="button" class="btn small" data-edit-site="${s.id}">Edit</button>
+            </div>`;
+          }).join('')}
+        <button type="button" class="btn small" id="addSiteBtn" style="margin-top:12px;">+ Add site</button>
+      </div>` : ''}
+
+      <div class="form-actions">
+        <div></div>
+        <div style="display:flex;gap:10px;">
+          <button type="button" class="btn" id="cancelProjectBtn">Back to contractor</button>
+          <button type="submit" class="btn primary">Save project</button>
+        </div>
+      </div>
+    </form>`;
+}
+
+function renderSiteForm(){
+  const s = editingSiteId ? sites.find(x=>x.id===editingSiteId) : blankSite();
+  const projectId = editingProjectId || s.projectId;
+  const proj = projectById(projectId);
+  const ctr = proj ? contractorById(proj.contractorId) : null;
+  if(proj) s.contractorId = proj.contractorId;
+
+  return `
+    <div class="breadcrumb"><a id="bcContractors2">Contractors</a><span class="sep">/</span><a id="bcContractor2">${esc(ctr?ctr.legalName:'Contractor')}</a><span class="sep">/</span><a id="bcProject">${esc(proj?proj.name:'Project')}</a><span class="sep">/</span><span class="current">${editingSiteId?'Edit site':'Add site'}</span></div>
+    <h1>${editingSiteId?'Edit site':'Add site'}</h1>
+    <p class="lead">${editingSiteId?`<span class="ref-tag">${esc(s.publicReference||'Pending')}</span>`:''}</p>
+    <form id="siteForm">
+      <div class="panel">
+        <div class="field"><label>Site name</label><input type="text" id="ste_name" value="${esc(s.name)}" required></div>
+        <div class="field-row">
+          <div class="field"><label>Address</label><input type="text" id="ste_address" value="${esc(s.address)}"></div>
+          <div class="field"><label>Postcode</label><input type="text" id="ste_postcode" value="${esc(s.postcode)}"></div>
+        </div>
+        <div class="field-row three">
+          <div class="field"><label>Site contact</label><input type="text" id="ste_contact" value="${esc(s.siteContact)}"></div>
+          <div class="field"><label>Site phone</label><input type="tel" id="ste_phone" value="${esc(s.sitePhone)}"></div>
+          <div class="field"><label>Working hours</label><input type="text" id="ste_hours" value="${esc(s.workingHours)}" placeholder="e.g. 07:30-17:00"></div>
+        </div>
+        <div class="field"><label>PPE requirements</label><input type="text" id="ste_ppe" value="${esc(s.ppeRequirements)}" placeholder="e.g. Full PPE, safety boots"></div>
+        <div class="field"><label>Access notes</label><textarea id="ste_access">${esc(s.accessNotes)}</textarea></div>
+        <div class="field"><label>Parking notes</label><input type="text" id="ste_parking" value="${esc(s.parkingNotes)}"></div>
+        <div class="field"><label>Induction requirements</label><input type="text" id="ste_induction" value="${esc(s.inductionRequirements)}" placeholder="e.g. Online induction required before arrival"></div>
+        <div class="field"><label>Status</label>
+          <select id="ste_status">
+            <option value="ACTIVE" ${s.status==='ACTIVE'?'selected':''}>Active</option>
+            <option value="CLOSED" ${s.status==='CLOSED'?'selected':''}>Closed</option>
+          </select>
+        </div>
+        <div class="field"><label>Notes</label><textarea id="ste_notes">${esc(s.notes)}</textarea></div>
+      </div>
+      <div class="form-actions">
+        <div></div>
+        <div style="display:flex;gap:10px;">
+          <button type="button" class="btn" id="cancelSiteBtn">Back to project</button>
+          <button type="submit" class="btn primary">Save site</button>
+        </div>
+      </div>
+    </form>`;
+}
+
+/* =========================================================
+   REQUESTS (replaces Deploy)
+   ========================================================= */
+function renderRequestsList(){
+  return `
+    <h1>Workforce Requests</h1>
+    <p class="lead">${workforceRequests.length} request${workforceRequests.length===1?'':'s'} — match workers to deployment needs.</p>
+    <div class="toolbar"><button class="btn primary" id="addRequestBtn">Create request</button></div>
+    <div class="panel">
+      ${workforceRequests.length===0
+        ? `<div class="empty"><h3>No requests yet</h3><p>Create a workforce request to find matching workers.</p></div>`
+        : workforceRequests.map(r=>{
+            const ctr = contractorById(r.contractorId);
+            const proj = projectById(r.projectId);
+            const statusTone = r.status==='OPEN'?'ok':r.status==='FULFILLED'?'gold':r.status==='CANCELLED'?'none':'watch';
+            return `<div class="row">
+              <div class="row-main">
+                <div class="name">${esc(r.tradeRequired||'Any trade')} · ${r.quantity} needed <span class="ref-tag">${esc(r.publicReference||'Pending')}</span></div>
+                <div class="sub">${ctr?esc(ctr.legalName):'No contractor'}${proj?' · '+esc(proj.name):''} · ${esc(r.status)}</div>
+              </div>
+              <div class="row-badges">${badge(statusTone, r.status)}</div>
+              <button class="btn small" data-edit-request="${r.id}">Edit</button>
+              ${r.status==='OPEN' ? `<button class="btn small primary" data-find-matches="${r.id}">Find matches</button>` : ''}
+            </div>`;
+          }).join('')}
+    </div>`;
+}
+
+function renderRequestForm(){
+  const r = editingRequestId ? workforceRequests.find(x=>x.id===editingRequestId) : blankWorkforceRequest();
+  const contractorOptions = contractors.map(c=>`<option value="${c.id}" ${r.contractorId===c.id?'selected':''}>${esc(c.legalName)}</option>`).join('');
+  const projectOptions = projects.filter(p=>!r.contractorId || p.contractorId===r.contractorId).map(p=>`<option value="${p.id}" ${r.projectId===p.id?'selected':''}>${esc(p.name)}</option>`).join('');
+  const siteOptions = sites.filter(s=>!r.projectId || s.projectId===r.projectId).map(s=>`<option value="${s.id}" ${r.siteId===s.id?'selected':''}>${esc(s.name)}</option>`).join('');
+
+  return `
+    <h1>${editingRequestId?'Edit request':'Create request'}</h1>
+    <p class="lead">${editingRequestId?`<span class="ref-tag">${esc(r.publicReference||'Pending')}</span>`:'Create a workforce request to match against your worker register.'}</p>
+    <form id="requestForm">
+      <div class="panel">
+        <div class="field-row three">
+          <div class="field"><label>Contractor</label><select id="req_contractor"><option value="">Choose one</option>${contractorOptions}</select></div>
+          <div class="field"><label>Project</label><select id="req_project"><option value="">Choose one</option>${projectOptions}</select></div>
+          <div class="field"><label>Site</label><select id="req_site"><option value="">Choose one</option>${siteOptions}</select></div>
+        </div>
+        <div class="field-row three">
+          <div class="field"><label>Trade required</label><input type="text" id="req_trade" value="${esc(r.tradeRequired)}" placeholder="e.g. Painter"></div>
+          <div class="field"><label>Quantity</label><input type="number" id="req_quantity" value="${r.quantity}" min="1"></div>
+          <div class="field"><label>Status</label>
+            <select id="req_status">
+              <option value="OPEN" ${r.status==='OPEN'?'selected':''}>Open</option>
+              <option value="FULFILLED" ${r.status==='FULFILLED'?'selected':''}>Fulfilled</option>
+              <option value="CANCELLED" ${r.status==='CANCELLED'?'selected':''}>Cancelled</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Start date</label><input type="date" id="req_start" value="${r.startDate||''}"></div>
+          <div class="field"><label>End date</label><input type="date" id="req_end" value="${r.endDate||''}"></div>
+        </div>
+        <div class="field"><label>Required training</label>
+          <div class="checkgrid">${CERT_OPTIONS.map(c=>`<label><input type="checkbox" class="reqTraining" value="${c}" ${(r.requiredTraining||[]).includes(c)?'checked':''}> ${c}</label>`).join('')}</div>
+        </div>
+        <div class="field"><label>Required sector experience</label>
+          <div class="checkgrid">${SECTOR_OPTIONS.map(s=>`<label><input type="checkbox" class="reqSector" value="${s}" ${(r.requiredSectorExperience||[]).includes(s)?'checked':''}> ${s}</label>`).join('')}</div>
+        </div>
+        <div class="field"><label><input type="checkbox" id="req_cscs" ${r.requiredCSCS?'checked':''}> CSCS required</label></div>
+        <div class="field"><label>Notes</label><textarea id="req_notes">${esc(r.notes)}</textarea></div>
+      </div>
+      <div class="form-actions">
+        <div>${editingRequestId?'<button type="button" class="btn danger" id="deleteRequestBtn">Delete request</button>':''}</div>
+        <div style="display:flex;gap:10px;">
+          <button type="button" class="btn" id="cancelRequestBtn">Cancel</button>
+          <button type="submit" class="btn primary">Save request</button>
+        </div>
+      </div>
+    </form>
+    ${currentMatchResults ? renderMatchResults(currentMatchResults) : ''}`;
+}
+
+function renderMatchResults(results){
+  const { generation, matches, request } = results;
+  const accepted = matches.filter(m=>m.status==='ACCEPTED');
+  const proposed = matches.filter(m=>m.status==='PROPOSED');
+  const rejected = matches.filter(m=>m.status==='REJECTED');
+
+  return `
+    <div class="panel">
+      <h2>Match results</h2>
+      <div class="search-summary">
+        <span class="big">${accepted.length + proposed.length}</span>
+        <span class="small">eligible match${(accepted.length+proposed.length)===1?'':'es'} of ${request.quantity} needed</span>
+      </div>
+      <p class="hint" style="margin-bottom:14px;">${accepted.length} accepted · ${proposed.length} proposed (human review) · ${rejected.length} rejected</p>
+
+      ${matches.length===0
+        ? `<div class="empty"><h3>No matches</h3><p>Nobody in the register matches this trade.</p></div>`
+        : matches.map(m=>{
+            const w = workerById(m.workerId);
+            if(!w) return '';
+            const sc = performanceEvidence(w);
+            const tone = m.status==='ACCEPTED'?'ok':m.status==='PROPOSED'?'review':'none';
+            const factorsHtml = (m.factors||[]).map(f=>`<span class="factor ${f.result.toLowerCase()}">${esc(f.factor)}</span>`).join('');
+            return `<div class="row">
+              <div class="row-main">
+                <div class="name">${esc(w.identity.fullName)} <span class="passport-tag">${esc(w.identity.passportId||'Pending')}</span></div>
+                <div class="sub">${esc(w.tradeProfile.primaryTrade)}${w.commercial.postcode?' · '+esc(w.commercial.postcode):''}</div>
+                <div class="match-factors">${factorsHtml}</div>
+              </div>
+              <div class="row-badges">${badge(tone, m.status)}</div>
+              <div class="row-score">${m.score===null?'—':m.score+'%'}<span class="u">score</span></div>
+              ${m.eligible ? `<button class="btn small primary" data-create-assignment="${w.id}" data-request="${request.id}" data-match="${m.id}">Create assignment</button>` : ''}
+            </div>`;
+          }).join('')}
+    </div>`;
+}
+
+/* =========================================================
+   ASSIGNMENTS (new)
+   ========================================================= */
+function renderAssignmentsList(){
+  const filtered = assignmentEntities.filter(a=>{
+    if(assignmentFilterStatus==='all') return true;
+    return a.status===assignmentFilterStatus;
+  });
+  const chips = [['all','All'], ['PROPOSED','Proposed'], ['CONFIRMED','Confirmed'], ['COMPLETED','Completed'], ['LEGACY_RECORDED','Legacy']];
+
+  return `
+    <h1>Assignments</h1>
+    <p class="lead">${assignmentEntities.length} assignment${assignmentEntities.length===1?'':'s'} in the register.</p>
+    <div class="toolbar">
+      ${chips.map(([k,l])=>`<button class="chip ${assignmentFilterStatus===k?'active':''}" data-assign-filter="${k}">${l}</button>`).join('')}
+    </div>
+    <div class="panel">
+      ${filtered.length===0
+        ? `<div class="empty"><h3>No assignments</h3><p>Assignments are created from workforce requests or migrated from worker history.</p></div>`
+        : filtered.map(a=>{
+            const w = workerById(a.workerId);
+            const ctr = a.contractorId ? contractorById(a.contractorId) : null;
+            const proj = a.projectId ? projectById(a.projectId) : null;
+            const statusTone = a.status==='CONFIRMED'?'ok':a.status==='COMPLETED'?'gold':a.status==='LEGACY_RECORDED'?'watch':'none';
+            const label = a.legacyRecord ? (a.legacyProjectLabel||a.legacyClientText||'Legacy') : (proj?proj.name:(ctr?ctr.legalName:''));
+            return `<div class="row">
+              <div class="row-main">
+                <div class="name">${esc(w?w.identity.fullName:'(unknown worker)')} <span class="ref-tag">${esc(a.publicReference||'Pending')}</span></div>
+                <div class="sub">${esc(a.trade||'')} · ${esc(label)}${a.date?' · '+esc(fmtDate(a.date)):''}${a.startDate?' · '+esc(fmtDate(a.startDate)):''}</div>
+              </div>
+              <div class="row-badges">${badge(statusTone, a.status)}</div>
+              <button class="btn small" data-view-assignment="${a.id}">View</button>
+            </div>`;
+          }).join('')}
+    </div>`;
+}
+
+function renderAssignmentDetail(){
+  const a = assignmentEntities.find(x=>x.id===editingAssignmentId);
+  if(!a) return '<div class="empty"><h3>Assignment not found</h3></div>';
+  const w = workerById(a.workerId);
+  const ctr = a.contractorId ? contractorById(a.contractorId) : null;
+  const proj = a.projectId ? projectById(a.projectId) : null;
+  const ste = a.siteId ? siteById(a.siteId) : null;
+  const statusTone = a.status==='CONFIRMED'?'ok':a.status==='COMPLETED'?'gold':a.status==='LEGACY_RECORDED'?'watch':a.status==='HUMAN_REVIEW'?'review':'none';
+
+  const steps = ['PROPOSED','CONFIRMED','COMPLETED'];
+  const currentStepIdx = a.status==='LEGACY_RECORDED' ? -1 : steps.indexOf(a.status);
+
+  return `
+    <div class="breadcrumb"><a id="bcAssignments">Assignments</a><span class="sep">/</span><span class="current">${esc(a.publicReference||'Assignment')}</span></div>
+    <h1>Assignment Detail</h1>
+    <p class="lead"><span class="ref-tag">${esc(a.publicReference||'Pending')}</span></p>
+
+    ${a.legacyRecord ? `<div class="conflict-note"><b>Legacy record</b> — migrated from worker assignment history. Review and link to contractor/project/site as needed.</div>` : ''}
+
+    <div class="panel" style="display:flex;flex-wrap:wrap;gap:18px;align-items:center;">
+      <div><div class="kicker">Status</div>${badge(statusTone, a.status)}</div>
+      <div><div class="kicker">Worker</div>${esc(w?w.identity.fullName:'(unknown)')}</div>
+      <div><div class="kicker">Trade</div>${esc(a.trade||'Not set')}</div>
+      <div><div class="kicker">Role</div>${esc(a.role)}</div>
+    </div>
+
+    ${a.status!=='LEGACY_RECORDED' ? `
+    <div class="panel">
+      <h2>Status timeline</h2>
+      <div class="stepper">
+        ${steps.map((s,i)=>{
+          const cls = i < currentStepIdx ? 'done' : i === currentStepIdx ? 'current' : '';
+          return `<div class="step ${cls}"><div class="dot">${i+1}</div>${s}</div>`;
+        }).join('')}
+      </div>
+    </div>` : ''}
+
+    <div class="panel">
+      <h2>Details</h2>
+      <div class="row"><div class="row-main"><div class="name">Contractor</div></div><div>${esc(ctr?ctr.legalName:(a.legacyClientText||'Not linked'))}</div></div>
+      <div class="row"><div class="row-main"><div class="name">Project</div></div><div>${esc(proj?proj.name:(a.legacyProjectLabel||'Not linked'))}</div></div>
+      <div class="row"><div class="row-main"><div class="name">Site</div></div><div>${esc(ste?ste.name:'Not linked')}</div></div>
+      <div class="row"><div class="row-main"><div class="name">Start date</div></div><div>${esc(fmtDate(a.startDate||a.date))}</div></div>
+      <div class="row"><div class="row-main"><div class="name">End date</div></div><div>${esc(fmtDate(a.endDate))}</div></div>
+      <div class="row"><div class="row-main"><div class="name">Worker pay rate</div></div><div>${esc(a.workerPayRate||'Not set')}</div></div>
+      <div class="row"><div class="row-main"><div class="name">Client charge rate</div></div><div>${esc(a.clientChargeRate||'Not set')}</div></div>
+    </div>
+
+    ${a.statusHistory && a.statusHistory.length ? `
+    <div class="panel">
+      <h2>Status history</h2>
+      <div class="timeline">
+        ${a.statusHistory.map(h=>`<div class="tl-item"><span class="tl-date">${esc(formatAuditTimestamp(h.timestamp))}</span><br><span class="tl-label">${esc(h.status)}</span>${h.note?' · '+esc(h.note):''}${h.by?' · by '+esc(h.by):''}</div>`).join('')}
+      </div>
+    </div>` : ''}
+
+    ${(a.clientFeedback || a.supervisorFeedback || a.rating || a.rehireDecision) ? `
+    <div class="panel">
+      <h2>Outcome</h2>
+      ${a.attended!==null ? `<div class="row"><div class="row-main"><div class="name">Attended</div></div><div>${a.attended?'Yes':'No'}</div></div>` : ''}
+      ${a.rating ? `<div class="row"><div class="row-main"><div class="name">Rating</div></div><div>${a.rating}/5</div></div>` : ''}
+      ${a.rehireDecision ? `<div class="row"><div class="row-main"><div class="name">Rehire decision</div></div><div>${esc(a.rehireDecision)}</div></div>` : ''}
+      ${a.clientFeedback ? `<div class="row"><div class="row-main"><div class="name">Client feedback</div></div><div>${esc(a.clientFeedback)}</div></div>` : ''}
+      ${a.supervisorFeedback ? `<div class="row"><div class="row-main"><div class="name">Supervisor feedback</div></div><div>${esc(a.supervisorFeedback)}</div></div>` : ''}
+    </div>` : ''}
+
+    <div class="form-actions">
+      <div></div>
+      <div style="display:flex;gap:10px;">
+        <button type="button" class="btn" id="backToAssignmentsBtn">Back to assignments</button>
+        ${a.status==='PROPOSED' ? '<button type="button" class="btn primary" id="confirmAssignmentBtn">Confirm assignment</button>' : ''}
+        ${a.status==='CONFIRMED' ? '<button type="button" class="btn primary" id="completeAssignmentBtn">Mark completed</button>' : ''}
+      </div>
+    </div>`;
+}
+
+/* =========================================================
+   EVENT HANDLERS
+   ========================================================= */
+function wireRemoveButtons(){
+  document.querySelectorAll('.remove-row').forEach(btn=>{ btn.onclick = ()=> btn.closest('.sub-row').remove(); });
+}
+
+function wireViewEvents(){
+  if(view==='dashboard'){
+    const b = document.getElementById('emptyAddBtn');
+    if(b) b.onclick = ()=>{ editingId=null; view='workerForm'; render(); };
+    const gc = document.getElementById('goComplianceBtn');
+    if(gc) gc.onclick = ()=>{ view='compliance'; render(); };
+  }
+
+  if(view==='workers'){
+    document.getElementById('searchInput').oninput = (e)=>{
+      searchQuery = e.target.value; render();
+      const el = document.getElementById('searchInput'); el.focus(); el.setSelectionRange(el.value.length, el.value.length);
+    };
+    document.querySelectorAll('[data-filter]').forEach(c=> c.onclick = ()=>{ filterStatus = c.dataset.filter; render(); });
+    document.getElementById('addWorkerBtn').onclick = ()=>{ editingId=null; view='workerForm'; render(); };
+    document.querySelectorAll('[data-edit]').forEach(btn=> btn.onclick = ()=>{ editingId = btn.dataset.edit; view='workerForm'; render(); });
+  }
+
+  if(view==='workerForm'){
+    document.getElementById('addCertBtn').onclick = ()=>{ document.getElementById('certRows').insertAdjacentHTML('beforeend', certRowHtml(null)); wireRemoveButtons(); };
+    document.getElementById('addProofBtn').onclick = ()=>{ document.getElementById('proofRows').insertAdjacentHTML('beforeend', proofRowHtml(null)); wireRemoveButtons(); };
+    document.getElementById('addAssignBtn').onclick = ()=>{ document.getElementById('assignRows').insertAdjacentHTML('beforeend', assignRowHtml(null)); wireRemoveButtons(); };
+    wireRemoveButtons();
+    document.getElementById('cancelFormBtn').onclick = ()=>{ view='workers'; render(); };
+    const delBtn = document.getElementById('deleteWorkerBtn');
+    if(delBtn) delBtn.onclick = async ()=>{
+      if(confirm('Delete this worker? This cannot be undone.')){
+        workers = workers.filter(w=>w.id!==editingId);
+        await persistWorkers(); editingId=null; view='workers'; render();
+        showToast('Worker deleted.');
+      }
+    };
+    document.getElementById('workerForm').onsubmit = async (e)=>{
+      e.preventDefault();
+      const fullName = document.getElementById('f_fullName').value.trim();
+      const trade = document.getElementById('f_trade').value.trim();
+      if(!fullName || !trade){ showToast('Full name and primary trade are required.', true); return; }
+
+      const rtwStatusVal = document.getElementById('f_rtwStatus').value;
+      const rtwEvidence = document.getElementById('f_rtwEvidence').value.trim();
+      if(rtwStatusVal==='verified' && !rtwEvidence){ showToast('Add evidence before marking Right to Work as verified.', true); return; }
+      const cscsStatusVal = document.getElementById('f_cscsStatus').value;
+      const cscsEvidence = document.getElementById('f_cscsEvidence').value.trim();
+      if(cscsStatusVal==='valid' && !cscsEvidence){ showToast('Add evidence before marking CSCS as valid.', true); return; }
+
+      const certs = Array.from(document.querySelectorAll('#certRows .cert-row')).map(row=>({
+        id: row.dataset.id || uid(), name: row.querySelector('.cert-name').value, category:'core', issuer:'', certificateNumber:'',
+        issueDate:'', expiryDate: row.querySelector('.cert-expiry').value, status: row.querySelector('.cert-status').value,
+        requirementType: row.querySelector('.cert-requirement').value,
+        verificationMethod:'', verifier:'', verificationDate:'', evidenceReference: row.querySelector('.cert-evidence').value.trim(), notes:''
+      }));
+      const proofOfWork = Array.from(document.querySelectorAll('#proofRows .proof-row')).map(row=>({
+        id: row.dataset.id || uid(), project: row.querySelector('.proof-project').value.trim(), client:'', site:'', trade:'',
+        description: row.querySelector('.proof-desc').value.trim(), dateFrom: row.querySelector('.proof-date').value, dateTo:'',
+        supervisor: row.querySelector('.proof-verifiedby').value.trim(), verified: !!row.querySelector('.proof-verifiedby').value.trim(),
+        verifiedBy: row.querySelector('.proof-verifiedby').value.trim(), evidenceReferences:[], imagesReferences:[], notes:''
+      })).filter(p=>p.project || p.description);
+      const assignments = Array.from(document.querySelectorAll('#assignRows .assign-row')).map(row=>({
+        id: row.dataset.id || uid(), deploymentId:'', client:'', project: row.querySelector('.assign-project').value.trim(), date: row.querySelector('.assign-date').value,
+        attended: row.querySelector('.assign-attended').value === 'yes', late:false, noShow: row.querySelector('.assign-attended').value==='no',
+        rating: row.querySelector('.assign-rating').value ? Number(row.querySelector('.assign-rating').value) : null,
+        rehireDecision: row.querySelector('.assign-rehire').value, clientFeedback:'', supervisorFeedback:'', issueRecorded:false, outcome:''
+      })).filter(a=>a.date || a.project);
+      const sectorExperience = Array.from(document.querySelectorAll('.sectorCheck:checked')).map(c=>c.value);
+      const competenceRaw = document.getElementById('f_competence').value;
+      const competenceScoreVal = competenceRaw==='' ? null : Math.max(0,Math.min(20,Number(competenceRaw)));
+      const competenceAssessedByVal = document.getElementById('f_competenceBy').value.trim();
+      const competenceEvidenceVal = document.getElementById('f_competenceEvidence').value.trim();
+      const availabilityVal = document.getElementById('f_availability').value;
+
+      const prev = editingId ? workerById(editingId) : null;
+
+      const rtwAnyChanged = !prev || prev.rightToWork.status!==rtwStatusVal ||
+        prev.rightToWork.expiryDate!==document.getElementById('f_rtwExpiry').value ||
+        prev.rightToWork.evidenceNote!==rtwEvidence ||
+        prev.rightToWork.method!==document.getElementById('f_rtwMethod').value ||
+        prev.rightToWork.checkedDate!==document.getElementById('f_rtwChecked').value ||
+        prev.rightToWork.verifier!==document.getElementById('f_rtwVerifier').value.trim() ||
+        prev.rightToWork.reference!==document.getElementById('f_rtwReference').value.trim();
+      const rtwVerificationEventChanged = !prev || prev.rightToWork.status!==rtwStatusVal ||
+        prev.rightToWork.expiryDate!==document.getElementById('f_rtwExpiry').value ||
+        prev.rightToWork.evidenceNote!==rtwEvidence ||
+        prev.rightToWork.method!==document.getElementById('f_rtwMethod').value ||
+        prev.rightToWork.checkedDate!==document.getElementById('f_rtwChecked').value ||
+        prev.rightToWork.verifier!==document.getElementById('f_rtwVerifier').value.trim();
+      const cscsAnyChanged = !prev || prev.cscs.status!==cscsStatusVal ||
+        prev.cscs.expiryDate!==document.getElementById('f_cscsExpiry').value ||
+        prev.cscs.evidenceReference!==cscsEvidence ||
+        prev.cscs.registrationNumber!==document.getElementById('f_cscsReg').value.trim() ||
+        prev.cscs.cardType!==document.getElementById('f_cscsType').value.trim() ||
+        prev.cscs.scheme!==document.getElementById('f_cscsScheme').value.trim();
+      const cscsVerificationEventChanged = !prev || prev.cscs.status!==cscsStatusVal ||
+        prev.cscs.expiryDate!==document.getElementById('f_cscsExpiry').value ||
+        prev.cscs.evidenceReference!==cscsEvidence;
+      const competenceChanged = prev
+        ? (prev.tradeProfile.competenceScore!==competenceScoreVal || prev.tradeProfile.competenceAssessedBy!==competenceAssessedByVal || prev.tradeProfile.competenceEvidence!==competenceEvidenceVal)
+        : (competenceScoreVal!==null || competenceEvidenceVal!=='');
+      const availabilityChanged = prev ? prev.commercial.availability!==availabilityVal : false;
+
+      const prevCerts = prev ? (prev.trainingCertificates||[]) : [];
+      const prevCertsById = new Map(prevCerts.map(c=>[c.id,c]));
+      const newCertIds = new Set(certs.map(c=>c.id));
+      const certsAdded = certs.filter(c=>!prevCertsById.has(c.id));
+      const certsRemoved = prevCerts.filter(c=>!newCertIds.has(c.id));
+      const certsNewlyVerified = certs.filter(c=>{ const old = prevCertsById.get(c.id); return old && old.status!=='verified' && c.status==='verified'; });
+      const certsExpiryChanged = certs.filter(c=>{ const old = prevCertsById.get(c.id); return old && old.expiryDate!==c.expiryDate; });
+
+      const prevProof = prev ? (prev.proofOfWork||[]) : [];
+      const prevProofById = new Map(prevProof.map(p=>[p.id,p]));
+      const proofAdded = proofOfWork.filter(p=>!prevProofById.has(p.id));
+      const proofNewlyVerified = proofOfWork.filter(p=>{ const old = prevProofById.get(p.id); return old && !old.verified && p.verified; });
+
+      const prevAssign = prev ? (prev.assignments||[]) : [];
+      const prevAssignById = new Map(prevAssign.map(a=>[a.id,a]));
+      const assignAdded = assignments.filter(a=>!prevAssignById.has(a.id));
+      const assignRatingChanged = assignments.filter(a=>{ const old = prevAssignById.get(a.id); return old && old.rating!==a.rating; });
+      const assignOutcomeChanged = assignments.filter(a=>{ const old = prevAssignById.get(a.id); return old && old.rehireDecision!==a.rehireDecision; });
+
+      const internalUUID = prev ? prev.id : uid();
+
+      const worker = {
+        schemaVersion: SCHEMA_VERSION,
+        id: internalUUID,
+        identity: {
+          fullName, preferredName: document.getElementById('f_preferredName').value.trim(),
+          phone: document.getElementById('f_phone').value.trim(), email: document.getElementById('f_email').value.trim(),
+          postcode: document.getElementById('f_postcode').value.trim(), nationality: document.getElementById('f_nationality').value.trim(),
+          workerUUID: internalUUID, passportId: prev ? prev.identity.passportId : nextPassportId(), status:'active'
+        },
+        rightToWork: {
+          status:rtwStatusVal, method:document.getElementById('f_rtwMethod').value, checkedDate:document.getElementById('f_rtwChecked').value,
+          expiryDate:document.getElementById('f_rtwExpiry').value, verifier:document.getElementById('f_rtwVerifier').value.trim(),
+          reference:document.getElementById('f_rtwReference').value.trim(), evidenceNote:rtwEvidence, evidenceFileReference: prev ? prev.rightToWork.evidenceFileReference : '',
+          lastReviewed: rtwVerificationEventChanged ? todayStr() : (prev ? prev.rightToWork.lastReviewed : '')
+        },
+        cscs: {
+          status:cscsStatusVal, registrationNumber:document.getElementById('f_cscsReg').value.trim(), cardType:document.getElementById('f_cscsType').value.trim(),
+          occupation: prev ? prev.cscs.occupation : '', scheme:document.getElementById('f_cscsScheme').value.trim(), issueDate: prev ? prev.cscs.issueDate : '',
+          expiryDate:document.getElementById('f_cscsExpiry').value,
+          verificationMethod: prev ? prev.cscs.verificationMethod : '', verifier: prev ? prev.cscs.verifier : '',
+          verificationDate: cscsVerificationEventChanged ? todayStr() : (prev ? prev.cscs.verificationDate : ''),
+          evidenceReference:cscsEvidence
+        },
+        trainingCertificates: certs,
+        tradeProfile: {
+          primaryTrade: trade, secondaryTrades: prev ? prev.tradeProfile.secondaryTrades : [], yearsExperience: document.getElementById('f_yearsExp').value.trim(),
+          competenceScore: competenceScoreVal,
+          competenceAssessedBy: competenceAssessedByVal,
+          competenceAssessmentDate: competenceChanged ? ((competenceScoreVal!==null || competenceEvidenceVal) ? todayStr() : '') : (prev ? prev.tradeProfile.competenceAssessmentDate : ''),
+          competenceEvidence: competenceEvidenceVal,
+          notes: prev ? prev.tradeProfile.notes : ''
+        },
+        proofOfWork, assignments,
+        commercial: {
+          postcode: document.getElementById('f_postcode').value.trim(), travelRadius: document.getElementById('f_radius').value,
+          dayRate: document.getElementById('f_rate').value, availability: availabilityVal,
+          availableFrom: document.getElementById('f_availableFrom').value, sectorExperience,
+          preferredLocations: prev ? prev.commercial.preferredLocations : [], transport: document.getElementById('f_transport').value.trim(),
+          ownTools: prev ? prev.commercial.ownTools : '', notes: document.getElementById('f_commercialNotes').value.trim()
+        },
+        auditLog: prev ? (prev.auditLog||[]) : []
+      };
+
+      if(prev){
+        if(rtwAnyChanged){
+          if(prev.rightToWork.status!==rtwStatusVal) addAudit(worker,'Right to work','status', prev.rightToWork.status, rtwStatusVal);
+          if(prev.rightToWork.expiryDate!==worker.rightToWork.expiryDate) addAudit(worker,'Right to work','expiry', prev.rightToWork.expiryDate, worker.rightToWork.expiryDate);
+          if(prev.rightToWork.evidenceNote!==rtwEvidence) addAudit(worker,'Right to work','evidence', prev.rightToWork.evidenceNote, rtwEvidence, {evidenceReference: rtwEvidence});
+        }
+        if(cscsAnyChanged){
+          if(prev.cscs.status!==cscsStatusVal) addAudit(worker,'CSCS','status', prev.cscs.status, cscsStatusVal);
+          if(prev.cscs.expiryDate!==worker.cscs.expiryDate) addAudit(worker,'CSCS','expiry', prev.cscs.expiryDate, worker.cscs.expiryDate);
+          if(prev.cscs.evidenceReference!==cscsEvidence) addAudit(worker,'CSCS','evidence', prev.cscs.evidenceReference, cscsEvidence, {evidenceReference: cscsEvidence});
+        }
+        certsAdded.forEach(c=>addAudit(worker,'Certificate','added', null, c.name));
+        certsRemoved.forEach(c=>addAudit(worker,'Certificate','removed', c.name, null));
+        certsNewlyVerified.forEach(c=>addAudit(worker,'Certificate','verified', null, c.name, {evidenceReference: c.evidenceReference}));
+        certsExpiryChanged.forEach(c=>{ const old = prevCertsById.get(c.id); addAudit(worker,'Certificate','expiry changed', old?old.expiryDate:null, c.expiryDate, {note: c.name}); });
+        if(competenceChanged) addAudit(worker,'Competence','assessment', prev.tradeProfile.competenceScore, competenceScoreVal, {verifier: competenceAssessedByVal});
+        if(availabilityChanged) addAudit(worker,'Availability','availability', prev.commercial.availability, availabilityVal);
+        proofAdded.forEach(p=>addAudit(worker,'Proof of work','added', null, p.project||p.description||'(untitled)'));
+        proofNewlyVerified.forEach(p=>addAudit(worker,'Proof of work','verified', null, p.project||p.description||'(untitled)', {verifier: p.verifiedBy}));
+        assignAdded.forEach(a=>addAudit(worker,'Assignment','added', null, a.project||a.date||'(untitled)'));
+        assignRatingChanged.forEach(a=>{ const old = prevAssignById.get(a.id); addAudit(worker,'Assignment','rating', old?old.rating:null, a.rating, {note: a.project||a.date}); });
+        assignOutcomeChanged.forEach(a=>{ const old = prevAssignById.get(a.id); addAudit(worker,'Assignment','rehire decision', old?old.rehireDecision:null, a.rehireDecision, {note: a.project||a.date}); });
+      } else {
+        if(rtwStatusVal==='verified') addAudit(worker,'Right to work','status', null, 'verified', {evidenceReference: rtwEvidence});
+        if(cscsStatusVal==='valid') addAudit(worker,'CSCS','status', null, 'valid', {evidenceReference: cscsEvidence});
+        certs.filter(c=>c.status==='verified').forEach(c=>addAudit(worker,'Certificate','verified', null, c.name, {evidenceReference: c.evidenceReference}));
+        if(competenceScoreVal!==null || competenceEvidenceVal) addAudit(worker,'Competence','assessment', null, competenceScoreVal, {verifier: competenceAssessedByVal});
+      }
+
+      if(editingId){ workers = workers.map(w=>w.id===editingId?worker:w); }
+      else { workers.push(worker); await persistMeta(); }
+      await persistWorkers();
+      editingId=null; view='workers'; render();
+      showToast('Passport saved.');
+    };
+  }
+
+  if(view==='crews'){
+    document.getElementById('addCrewBtn').onclick = ()=>{ editingId=null; view='crewForm'; render(); };
+    document.querySelectorAll('[data-edit-crew]').forEach(btn=> btn.onclick = ()=>{ editingId=btn.dataset.editCrew; view='crewForm'; render(); });
+  }
+  if(view==='crewForm'){
+    document.getElementById('addDeployBtn').onclick = ()=>{ document.getElementById('deployRows').insertAdjacentHTML('beforeend', crewDeployRowHtml(null)); wireRemoveButtons(); };
+    wireRemoveButtons();
+    document.getElementById('cancelCrewBtn').onclick = ()=>{ view='crews'; render(); };
+    const delBtn = document.getElementById('deleteCrewBtn');
+    if(delBtn) delBtn.onclick = async ()=>{
+      if(confirm('Delete this crew? This cannot be undone.')){
+        crews = crews.filter(c=>c.id!==editingId); await persistCrews();
+        editingId=null; view='crews'; render(); showToast('Crew deleted.');
+      }
+    };
+    document.getElementById('crewForm').onsubmit = async (e)=>{
+      e.preventDefault();
+      const name = document.getElementById('cr_name').value.trim();
+      if(!name){ showToast('Crew name is required.', true); return; }
+      const memberSelect = document.getElementById('cr_members');
+      const memberIds = memberSelect ? Array.from(memberSelect.selectedOptions).map(o=>o.value) : [];
+      const deployments = Array.from(document.querySelectorAll('#deployRows .deploy-row')).map(row=>({
+        date: row.querySelector('.cd-date').value, client: row.querySelector('.cd-client').value.trim(),
+        project: row.querySelector('.cd-project').value.trim(), workedWell: row.querySelector('.cd-worked').value === 'yes'
+      })).filter(d=>d.date || d.client || d.project);
+      const crew = {
+        id: editingId || uid(), name, specialism: document.getElementById('cr_specialism').value.trim(),
+        supervisorId: document.getElementById('cr_supervisor').value, memberIds,
+        notes: document.getElementById('cr_notes').value.trim(), deployments
+      };
+      if(editingId){ crews = crews.map(c=>c.id===editingId?crew:c); } else { crews.push(crew); }
+      await persistCrews(); editingId=null; view='crews'; render(); showToast('Crew saved.');
+    };
+  }
+
+  if(view==='contractors'){
+    document.getElementById('addContractorBtn').onclick = ()=>{ editingId=null; view='contractorForm'; render(); };
+    document.querySelectorAll('[data-edit-contractor]').forEach(btn=> btn.onclick = ()=>{ editingId=btn.dataset.editContractor; view='contractorForm'; render(); });
+  }
+  if(view==='contractorForm'){
+    document.getElementById('cancelContractorBtn').onclick = ()=>{ editingId=null; view='contractors'; render(); };
+    const delBtn = document.getElementById('deleteContractorBtn');
+    if(delBtn) delBtn.onclick = async ()=>{
+      if(confirm('Delete this contractor? Projects and sites will remain but be unlinked. This cannot be undone.')){
+        contractors = contractors.filter(c=>c.id!==editingId); await persistContractors();
+        editingId=null; view='contractors'; render(); showToast('Contractor deleted.');
+      }
+    };
+    const addProj = document.getElementById('addProjectBtn');
+    if(addProj) addProj.onclick = ()=>{ editingProjectId=null; view='projectForm'; render(); };
+    document.querySelectorAll('[data-edit-project]').forEach(btn=> btn.onclick = ()=>{ editingProjectId=btn.dataset.editProject; view='projectForm'; render(); });
+    document.getElementById('contractorForm').onsubmit = async (e)=>{
+      e.preventDefault();
+      const legalName = document.getElementById('ctr_legalName').value.trim();
+      if(!legalName){ showToast('Legal name is required.', true); return; }
+      const prefSelect = document.getElementById('ctr_preferred');
+      const exclSelect = document.getElementById('ctr_excluded');
+      const stdTraining = Array.from(document.querySelectorAll('.ctrStdTraining:checked')).map(c=>c.value);
+      const contractor = {
+        ...normaliseContractor(editingId ? contractors.find(c=>c.id===editingId) : blankContractor()),
+        legalName,
+        tradingName: document.getElementById('ctr_tradingName').value.trim(),
+        companyNumber: document.getElementById('ctr_companyNumber').value.trim(),
+        status: document.getElementById('ctr_status').value,
+        sector: document.getElementById('ctr_sector').value.trim(),
+        primaryContact: document.getElementById('ctr_primaryContact').value.trim(),
+        email: document.getElementById('ctr_email').value.trim(),
+        phone: document.getElementById('ctr_phone').value.trim(),
+        billingAddress: document.getElementById('ctr_billingAddress').value.trim(),
+        paymentTerms: document.getElementById('ctr_paymentTerms').value.trim(),
+        creditStatus: document.getElementById('ctr_creditStatus').value.trim(),
+        notes: document.getElementById('ctr_notes').value.trim(),
+        preferredWorkerIds: prefSelect ? Array.from(prefSelect.selectedOptions).map(o=>o.value) : [],
+        excludedWorkerIds: exclSelect ? Array.from(exclSelect.selectedOptions).map(o=>o.value) : [],
+        standardTrainingRequirements: stdTraining,
+        standardCSCSRequired: document.getElementById('ctr_stdCSCS').checked
+      };
+      if(editingId){ contractors = contractors.map(c=>c.id===editingId?contractor:c); } else { contractors.push(contractor); }
+      await persistContractors(); editingId=null; view='contractors'; render(); showToast('Contractor saved.');
+    };
+  }
+
+  if(view==='projectForm'){
+    const bc1 = document.getElementById('bcContractors');
+    if(bc1) bc1.onclick = ()=>{ editingId=null; editingProjectId=null; view='contractors'; render(); };
+    const bc2 = document.getElementById('bcContractor');
+    if(bc2) bc2.onclick = ()=>{ editingProjectId=null; view='contractorForm'; render(); };
+    document.getElementById('cancelProjectBtn').onclick = ()=>{ editingProjectId=null; view='contractorForm'; render(); };
+    const addSite = document.getElementById('addSiteBtn');
+    if(addSite) addSite.onclick = ()=>{ editingSiteId=null; view='siteForm'; render(); };
+    document.querySelectorAll('[data-edit-site]').forEach(btn=> btn.onclick = ()=>{ editingSiteId=btn.dataset.editSite; view='siteForm'; render(); });
+    document.getElementById('projectForm').onsubmit = async (e)=>{
+      e.preventDefault();
+      const name = document.getElementById('prj_name').value.trim();
+      if(!name){ showToast('Project name is required.', true); return; }
+      const contractorId = editingId || (editingProjectId ? (projects.find(p=>p.id===editingProjectId)||{}).contractorId : '');
+      const proj = {
+        ...normaliseProject(editingProjectId ? projects.find(p=>p.id===editingProjectId) : blankProject()),
+        contractorId,
+        name,
+        reference: document.getElementById('prj_reference').value.trim(),
+        status: document.getElementById('prj_status').value,
+        startDate: document.getElementById('prj_start').value,
+        endDate: document.getElementById('prj_end').value,
+        description: document.getElementById('prj_description').value.trim()
+      };
+      if(editingProjectId){ projects = projects.map(p=>p.id===editingProjectId?proj:p); } else { projects.push(proj); }
+      await persistProjects(); editingProjectId=null; view='contractorForm'; render(); showToast('Project saved.');
+    };
+  }
+
+  if(view==='siteForm'){
+    const bc1 = document.getElementById('bcContractors2');
+    if(bc1) bc1.onclick = ()=>{ editingId=null; editingProjectId=null; editingSiteId=null; view='contractors'; render(); };
+    const bc2 = document.getElementById('bcContractor2');
+    if(bc2) bc2.onclick = ()=>{ editingProjectId=null; editingSiteId=null; view='contractorForm'; render(); };
+    const bc3 = document.getElementById('bcProject');
+    if(bc3) bc3.onclick = ()=>{ editingSiteId=null; view='projectForm'; render(); };
+    document.getElementById('cancelSiteBtn').onclick = ()=>{ editingSiteId=null; view='projectForm'; render(); };
+    document.getElementById('siteForm').onsubmit = async (e)=>{
+      e.preventDefault();
+      const name = document.getElementById('ste_name').value.trim();
+      if(!name){ showToast('Site name is required.', true); return; }
+      const projectId = editingProjectId || (editingSiteId ? (sites.find(s=>s.id===editingSiteId)||{}).projectId : '');
+      const proj = projectById(projectId);
+      const ste = {
+        ...normaliseSite(editingSiteId ? sites.find(s=>s.id===editingSiteId) : blankSite()),
+        projectId,
+        contractorId: proj ? proj.contractorId : '',
+        name,
+        address: document.getElementById('ste_address').value.trim(),
+        postcode: document.getElementById('ste_postcode').value.trim(),
+        siteContact: document.getElementById('ste_contact').value.trim(),
+        sitePhone: document.getElementById('ste_phone').value.trim(),
+        workingHours: document.getElementById('ste_hours').value.trim(),
+        ppeRequirements: document.getElementById('ste_ppe').value.trim(),
+        accessNotes: document.getElementById('ste_access').value.trim(),
+        parkingNotes: document.getElementById('ste_parking').value.trim(),
+        inductionRequirements: document.getElementById('ste_induction').value.trim(),
+        status: document.getElementById('ste_status').value,
+        notes: document.getElementById('ste_notes').value.trim()
+      };
+      if(editingSiteId){ sites = sites.map(s=>s.id===editingSiteId?ste:s); } else { sites.push(ste); }
+      await persistSites(); editingSiteId=null; view='projectForm'; render(); showToast('Site saved.');
+    };
+  }
+
+  if(view==='requests'){
+    document.getElementById('addRequestBtn').onclick = ()=>{ editingRequestId=null; currentMatchResults=null; view='requestForm'; render(); };
+    document.querySelectorAll('[data-edit-request]').forEach(btn=> btn.onclick = ()=>{ editingRequestId=btn.dataset.editRequest; currentMatchResults=null; view='requestForm'; render(); });
+    document.querySelectorAll('[data-find-matches]').forEach(btn=> btn.onclick = async ()=>{
+      const req = workforceRequests.find(r=>r.id===btn.dataset.findMatches);
+      if(!req) return;
+      const results = runMatchingEngine(req);
+      matchGenerations.push(results.generation);
+      matches.push(...results.matches);
+      await persistMatchGenerations(); await persistMatches();
+      editingRequestId = req.id;
+      currentMatchResults = { ...results, request: req };
+      view='requestForm'; render();
+      showToast(`${results.matches.length} matches generated.`);
+    });
+  }
+  if(view==='requestForm'){
+    document.getElementById('cancelRequestBtn').onclick = ()=>{ editingRequestId=null; currentMatchResults=null; view='requests'; render(); };
+    const delBtn = document.getElementById('deleteRequestBtn');
+    if(delBtn) delBtn.onclick = async ()=>{
+      if(confirm('Delete this request? This cannot be undone.')){
+        workforceRequests = workforceRequests.filter(r=>r.id!==editingRequestId); await persistWorkforceRequests();
+        editingRequestId=null; view='requests'; render(); showToast('Request deleted.');
+      }
+    };
+    document.getElementById('requestForm').onsubmit = async (e)=>{
+      e.preventDefault();
+      const tradeRequired = document.getElementById('req_trade').value.trim();
+      const contractorId = document.getElementById('req_contractor').value;
+      if(!contractorId){ showToast('Please select a contractor.', true); return; }
+      const req = {
+        ...normaliseWorkforceRequest(editingRequestId ? workforceRequests.find(r=>r.id===editingRequestId) : blankWorkforceRequest()),
+        contractorId,
+        projectId: document.getElementById('req_project').value,
+        siteId: document.getElementById('req_site').value,
+        tradeRequired,
+        quantity: Number(document.getElementById('req_quantity').value) || 1,
+        status: document.getElementById('req_status').value,
+        startDate: document.getElementById('req_start').value,
+        endDate: document.getElementById('req_end').value,
+        requiredTraining: Array.from(document.querySelectorAll('.reqTraining:checked')).map(c=>c.value),
+        requiredSectorExperience: Array.from(document.querySelectorAll('.reqSector:checked')).map(c=>c.value),
+        requiredCSCS: document.getElementById('req_cscs').checked,
+        notes: document.getElementById('req_notes').value.trim()
+      };
+      if(editingRequestId){ workforceRequests = workforceRequests.map(r=>r.id===editingRequestId?req:r); } else { workforceRequests.push(req); }
+      await persistWorkforceRequests(); view='requests'; render(); showToast('Request saved.');
+    };
+    // Create assignment from match
+    document.querySelectorAll('[data-create-assignment]').forEach(btn=> btn.onclick = async ()=>{
+      const workerId = btn.dataset.createAssignment;
+      const requestId = btn.dataset.request;
+      const matchId = btn.dataset.match;
+      const req = workforceRequests.find(r=>r.id===requestId);
+      const w = workerById(workerId);
+      if(!req || !w) return;
+      const a = blankAssignmentEntity();
+      a.workerId = workerId;
+      a.trade = w.tradeProfile.primaryTrade || req.tradeRequired || '';
+      a.requestId = requestId;
+      a.contractorId = req.contractorId || null;
+      a.projectId = req.projectId || null;
+      a.siteId = req.siteId || null;
+      a.startDate = req.startDate || '';
+      a.endDate = req.endDate || '';
+      a.status = 'PROPOSED';
+      a.matchId = matchId;
+      a.generationId = currentMatchResults ? currentMatchResults.generation.id : null;
+      a.statusHistory = [{ id:uid(), timestamp:new Date().toISOString(), status:'PROPOSED', note:'Created from match', by:'' }];
+      assignmentEntities.push(a);
+      await persistAssignmentEntities();
+      editingAssignmentId = a.id;
+      view='assignmentDetail'; render();
+      showToast('Assignment created.');
+    });
+  }
+
+  if(view==='assignments'){
+    document.querySelectorAll('[data-assign-filter]').forEach(c=> c.onclick = ()=>{ assignmentFilterStatus = c.dataset.assignFilter; render(); });
+    document.querySelectorAll('[data-view-assignment]').forEach(btn=> btn.onclick = ()=>{ editingAssignmentId=btn.dataset.viewAssignment; view='assignmentDetail'; render(); });
+  }
+  if(view==='assignmentDetail'){
+    const bc = document.getElementById('bcAssignments');
+    if(bc) bc.onclick = ()=>{ editingAssignmentId=null; view='assignments'; render(); };
+    document.getElementById('backToAssignmentsBtn').onclick = ()=>{ editingAssignmentId=null; view='assignments'; render(); };
+    const confirmBtn = document.getElementById('confirmAssignmentBtn');
+    if(confirmBtn) confirmBtn.onclick = async ()=>{
+      const a = assignmentEntities.find(x=>x.id===editingAssignmentId);
+      if(!a) return;
+      a.status = 'CONFIRMED';
+      a.statusHistory = a.statusHistory || [];
+      a.statusHistory.push({ id:uid(), timestamp:new Date().toISOString(), status:'CONFIRMED', note:'Confirmed', by:'' });
+      a.updatedAt = new Date().toISOString();
+      await persistAssignmentEntities(); render();
+      showToast('Assignment confirmed.');
+    };
+    const completeBtn = document.getElementById('completeAssignmentBtn');
+    if(completeBtn) completeBtn.onclick = async ()=>{
+      const a = assignmentEntities.find(x=>x.id===editingAssignmentId);
+      if(!a) return;
+      a.status = 'COMPLETED';
+      a.statusHistory = a.statusHistory || [];
+      a.statusHistory.push({ id:uid(), timestamp:new Date().toISOString(), status:'COMPLETED', note:'Completed', by:'' });
+      a.updatedAt = new Date().toISOString();
+      await persistAssignmentEntities(); render();
+      showToast('Assignment marked completed.');
+    };
+  }
+}
+
+/* =========================================================
+   PERSISTENCE
+   ========================================================= */
+async function persistWorkers(){ await Storage.set(W_KEY, {schemaVersion:SCHEMA_VERSION, data:workers}); }
+async function persistCrews(){ await Storage.set(C_KEY, {schemaVersion:SCHEMA_VERSION, data:crews}); }
+async function persistClients(){ await Storage.set(CL_KEY, {schemaVersion:SCHEMA_VERSION, data:clients}); }
+async function persistMeta(){ await Storage.set(META_KEY, {schemaVersion:SCHEMA_VERSION, passportCounter, referenceCounters}); }
+async function persistContractors(){ await Storage.set(CTR_KEY, {schemaVersion:SCHEMA_VERSION, data:contractors}); }
+async function persistProjects(){ await Storage.set(PRJ_KEY, {schemaVersion:SCHEMA_VERSION, data:projects}); }
+async function persistSites(){ await Storage.set(STE_KEY, {schemaVersion:SCHEMA_VERSION, data:sites}); }
+async function persistAssignmentEntities(){ await Storage.set(ASN_KEY, {schemaVersion:SCHEMA_VERSION, data:assignmentEntities}); }
+async function persistWorkforceRequests(){ await Storage.set(WFR_KEY, {schemaVersion:SCHEMA_VERSION, data:workforceRequests}); }
+async function persistMatchGenerations(){ await Storage.set(MG_KEY, {schemaVersion:SCHEMA_VERSION, data:matchGenerations}); }
+async function persistMatches(){ await Storage.set(MATCH_KEY, {schemaVersion:SCHEMA_VERSION, data:matches}); }
+async function persistMigrationLog(){ await Storage.set(MIGRATIONS_KEY, {schemaVersion:SCHEMA_VERSION, data:migrationLog}); }
+
+async function persistAll(){
+  await persistWorkers();
+  await persistCrews();
+  await persistClients();
+  await persistMeta();
+  await persistContractors();
+  await persistProjects();
+  await persistSites();
+  await persistAssignmentEntities();
+  await persistWorkforceRequests();
+  await persistMatchGenerations();
+  await persistMatches();
+  await persistMigrationLog();
+}
+
+let fallbackSnapshotInProgress = false;
+async function loadAll(){
+  Storage.onChange((backend)=>{
+    document.getElementById('storageTag').textContent = 'Verified Workforce Operating System · ' + (backend==='supabase' ? 'Supabase' : backend==='indexeddb' ? 'IndexedDB' : 'local storage fallback');
+    showToast('Storage switched to local storage fallback after an IndexedDB error. Re-saving everything now.', true);
+    if(fallbackSnapshotInProgress) return;
+    fallbackSnapshotInProgress = true;
+    persistAll().catch(()=>{}).finally(()=>{ fallbackSnapshotInProgress = false; });
+  });
+  const backend = await Storage.init();
+  document.getElementById('storageTag').textContent = 'Verified Workforce Operating System · ' + (backend==='supabase' ? 'Supabase' : backend==='indexeddb' ? 'IndexedDB' : 'local storage fallback');
+
+  const wRaw = await Storage.get(W_KEY);
+  const cRaw = await Storage.get(C_KEY);
+  const clRaw = await Storage.get(CL_KEY);
+  const metaRaw = await Storage.get(META_KEY);
+  const ctrRaw = await Storage.get(CTR_KEY);
+  const prjRaw = await Storage.get(PRJ_KEY);
+  const steRaw = await Storage.get(STE_KEY);
+  const asnRaw = await Storage.get(ASN_KEY);
+  const wfrRaw = await Storage.get(WFR_KEY);
+  const mgRaw = await Storage.get(MG_KEY);
+  const matchRaw = await Storage.get(MATCH_KEY);
+  const migRaw = await Storage.get(MIGRATIONS_KEY);
+
+  workers = migrateCollection(wRaw ? wRaw.data : [], normaliseWorker);
+  crews = (cRaw ? cRaw.data : []) || [];
+  clients = (clRaw ? clRaw.data : []) || [];
+  passportCounter = (metaRaw && metaRaw.passportCounter) || 0;
+  referenceCounters = (metaRaw && metaRaw.referenceCounters) || {contractor:0, project:0, site:0, assignment:0, request:0};
+
+  contractors = migrateCollection(ctrRaw ? ctrRaw.data : [], normaliseContractor);
+  projects = migrateCollection(prjRaw ? prjRaw.data : [], normaliseProject);
+  sites = migrateCollection(steRaw ? steRaw.data : [], normaliseSite);
+  assignmentEntities = migrateCollection(asnRaw ? asnRaw.data : [], normaliseAssignmentEntity);
+  workforceRequests = migrateCollection(wfrRaw ? wfrRaw.data : [], normaliseWorkforceRequest);
+  matchGenerations = migrateCollection(mgRaw ? mgRaw.data : [], normaliseMatchGeneration);
+  matches = migrateCollection(matchRaw ? matchRaw.data : [], normaliseMatch);
+  migrationLog = (migRaw ? migRaw.data : []) || [];
+
+  // Run Release 0.2A migration (idempotent)
+  if(clients.length > 0 || workers.some(w=>(w.assignments||[]).length > 0)){
+    const migResult = runRelease02aMigration();
+    if(!migResult.skipped){
+      console.log('Release 0.2A migration:', migResult.entry);
+      await persistMigrationLog();
+    }
+  }
+
+  assignPassportIdsIfMissing();
+  assignReferencesIfMissing(contractors, 'contractor');
+  assignReferencesIfMissing(projects, 'project');
+  assignReferencesIfMissing(sites, 'site');
+  assignReferencesIfMissing(assignmentEntities, 'assignment');
+  assignReferencesIfMissing(workforceRequests, 'request');
+
+  await persistAll();
+  runSilentIntegrityWarning();
+}
+
+function runSilentIntegrityWarning(){
+  const issues = runIntegrityCheck();
+  if(issues.length){
+    console.log(`PRJGENUI integrity check: ${issues.length} issue(s) found.`);
+    console.table(issues);
+    showToast(`${issues.length} integrity issue(s) detected. See the browser console.`, true);
+  }
+  return issues;
+}
+
+function showToast(msg, isDanger){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isDanger ? ' danger' : '');
+  setTimeout(()=>{ t.className = 'toast'; }, 2800);
+}
+
+/* =========================================================
+   EASBERG PILOT INITIALISATION
+   ========================================================= */
+const EASBERG_PILOT_NAMES = ['Christian','Marisa','Bene','Jepherson','Henry','Lucas'];
+async function initialiseEasbergPilot(){
+  const existingContractor = contractors.find(c=>c.legalName==='Easberg Ltd');
+  const existingNames = new Set(workers.map(w=>w.identity.fullName));
+  const namesToAdd = EASBERG_PILOT_NAMES.filter(n=>!existingNames.has(n));
+
+  if(existingContractor && namesToAdd.length===0){
+    showToast('Easberg pilot already initialised. Nothing to add.');
+    return;
+  }
+  const parts = [];
+  if(!existingContractor) parts.push('add Easberg Ltd as a contractor');
+  if(namesToAdd.length) parts.push(`add ${namesToAdd.length} worker shell${namesToAdd.length===1?'':'s'} (${namesToAdd.join(', ')})`);
+  if(!confirm(`This will ${parts.join(' and ')}, all marked Not Verified / To Confirm. No compliance data will be invented. You'll fill each in as it's confirmed. Continue?`)) return;
+
+  if(!existingContractor){
+    const ctr = blankContractor();
+    ctr.legalName = 'Easberg Ltd';
+    ctr.tradingName = 'Easberg Ltd';
+    ctr.sector = 'Housing / residential';
+    ctr.status = 'ACTIVE';
+    contractors.push(ctr);
+    await persistContractors();
+  }
+  namesToAdd.forEach(name=>{
+    const w = blankWorker();
+    w.identity.fullName = name;
+    w.identity.passportId = nextPassportId();
+    w.commercial.availability = 'To confirm';
+    workers.push(w);
+  });
+  if(namesToAdd.length){ await persistWorkers(); await persistMeta(); }
+  view = 'workers'; render();
+  showToast(`Easberg pilot ready. ${namesToAdd.length} shell${namesToAdd.length===1?'':'s'} added. Primary trade left blank on purpose; fill it in when confirmed.`);
+  runSilentIntegrityWarning();
+}
+
+/* =========================================================
+   INTEGRITY CHECK
+   ========================================================= */
+function runIntegrityCheck(){
+  const issues = [];
+  const seenPassportIds = new Map();
+  const seenIds = new Map();
+  const seenWorkerUUIDs = new Map();
+
+  workers.forEach(w=>{
+    const name = w.identity.fullName || '(unnamed)';
+    const r = evaluateWorkerReadiness(w);
+
+    if(r.eligible && r.deploymentStatus==='HOLD') issues.push(`${name}: marked eligible while deploymentStatus is HOLD`);
+    if(r.eligible && r.deploymentStatus==='BLOCKED') issues.push(`${name}: marked eligible while deploymentStatus is BLOCKED`);
+    if(r.deploymentStatus==='READY' && r.blockers.length>0) issues.push(`${name}: marked READY but has compliance blockers (${r.blockers.join('; ')})`);
+
+    if(w.rightToWork.status==='verified' && !w.rightToWork.evidenceNote) issues.push(`${name}: Right to Work verified with no evidence recorded`);
+    if(w.cscs.status==='valid' && !w.cscs.evidenceReference) issues.push(`${name}: CSCS valid with no evidence reference`);
+    (w.trainingCertificates||[]).forEach(c=>{
+      if(c.status==='verified' && !c.evidenceReference) issues.push(`${name}: certificate "${c.name}" verified with no evidence reference`);
+    });
+
+    const certIds = (w.trainingCertificates||[]).map(c=>c.id);
+    if(new Set(certIds).size !== certIds.length) issues.push(`${name}: duplicate certificate IDs on this worker`);
+    const proofIds = (w.proofOfWork||[]).map(p=>p.id);
+    if(new Set(proofIds).size !== proofIds.length) issues.push(`${name}: duplicate proof-of-work IDs on this worker`);
+    const assignIds = (w.assignments||[]).map(a=>a.id);
+    if(new Set(assignIds).size !== assignIds.length) issues.push(`${name}: duplicate assignment IDs on this worker`);
+
+    if(!w.id) issues.push(`${name}: missing internal worker UUID (w.id)`);
+    else if(seenIds.has(w.id)) issues.push(`Duplicate worker UUID "${w.id}" (w.id) shared by ${name} and ${seenIds.get(w.id)}`);
+    else seenIds.set(w.id, name);
+
+    if(!w.identity.workerUUID) issues.push(`${name}: missing identity.workerUUID`);
+    else if(seenWorkerUUIDs.has(w.identity.workerUUID)) issues.push(`Duplicate identity.workerUUID "${w.identity.workerUUID}" shared by ${name} and ${seenWorkerUUIDs.get(w.identity.workerUUID)}`);
+    else seenWorkerUUIDs.set(w.identity.workerUUID, name);
+
+    if(w.id && w.identity.workerUUID && w.id !== w.identity.workerUUID) issues.push(`${name}: w.id and identity.workerUUID do not match; they should always be the same internal UUID`);
+
+    const pid = w.identity.passportId;
+    if(!pid || !/^PW-UK-\d{6}$/.test(pid)) issues.push(`${name}: missing or malformed Passport ID ("${pid}")`);
+    else if(seenPassportIds.has(pid)) issues.push(`Duplicate Passport ID "${pid}" shared by ${name} and ${seenPassportIds.get(pid)}`);
+    else seenPassportIds.set(pid, name);
+  });
+
+  const workerIds = new Set(workers.map(w=>w.id));
+  crews.forEach(c=>{
+    (c.memberIds||[]).forEach(id=>{ if(!workerIds.has(id)) issues.push(`Crew "${c.name}": member reference "${id}" does not match any existing worker`); });
+    if(c.supervisorId && !workerIds.has(c.supervisorId)) issues.push(`Crew "${c.name}": supervisor reference "${c.supervisorId}" does not match any existing worker`);
+  });
+
+  // Contractor integrity checks
+  const contractorIds = new Set(contractors.map(c=>c.id));
+  contractors.forEach(ctr=>{
+    if(!ctr.publicReference || !/^CTR-\d{6}$/.test(ctr.publicReference)) issues.push(`Contractor "${ctr.legalName}": missing or malformed reference ("${ctr.publicReference}")`);
+    (ctr.preferredWorkerIds||[]).forEach(id=>{ if(!workerIds.has(id)) issues.push(`Contractor "${ctr.legalName}": preferred-worker reference "${id}" does not match any existing worker`); });
+    (ctr.excludedWorkerIds||[]).forEach(id=>{ if(!workerIds.has(id)) issues.push(`Contractor "${ctr.legalName}": excluded-worker reference "${id}" does not match any existing worker`); });
+  });
+
+  // Project integrity checks
+  const projectIds = new Set(projects.map(p=>p.id));
+  projects.forEach(p=>{
+    if(!p.publicReference || !/^PRJ-\d{6}$/.test(p.publicReference)) issues.push(`Project "${p.name}": missing or malformed reference ("${p.publicReference}")`);
+    if(p.contractorId && !contractorIds.has(p.contractorId)) issues.push(`Project "${p.name}": contractorId "${p.contractorId}" does not match any existing contractor`);
+  });
+
+  // Site integrity checks
+  sites.forEach(s=>{
+    if(!s.publicReference || !/^STE-\d{6}$/.test(s.publicReference)) issues.push(`Site "${s.name}": missing or malformed reference ("${s.publicReference}")`);
+    if(s.projectId && !projectIds.has(s.projectId)) issues.push(`Site "${s.name}": projectId "${s.projectId}" does not match any existing project`);
+  });
+
+  // Assignment entity integrity checks
+  assignmentEntities.forEach(a=>{
+    if(!a.publicReference || !/^ASN-\d{4}-\d{6}$/.test(a.publicReference)) issues.push(`Assignment: missing or malformed reference ("${a.publicReference}")`);
+    if(a.workerId && !workerIds.has(a.workerId)) issues.push(`Assignment ${a.publicReference||a.id}: workerId does not match any existing worker`);
+    if(a.contractorId && !contractorIds.has(a.contractorId)) issues.push(`Assignment ${a.publicReference||a.id}: contractorId does not match any existing contractor`);
+    if(a.projectId && !projectIds.has(a.projectId)) issues.push(`Assignment ${a.publicReference||a.id}: projectId does not match any existing project`);
+  });
+
+  // Match integrity checks
+  const requestIds = new Set(workforceRequests.map(r=>r.id));
+  matches.forEach(m=>{
+    if(m.workerId && !workerIds.has(m.workerId)) issues.push(`Match: workerId "${m.workerId}" does not match any existing worker`);
+    if(m.requestId && !requestIds.has(m.requestId)) issues.push(`Match: requestId "${m.requestId}" does not match any existing request`);
+  });
+
+  let maxAssignedPassportNumber = 0;
+  workers.forEach(w=>{
+    const m = /PW-UK-(\d+)/.exec(w.identity.passportId||'');
+    if(m) maxAssignedPassportNumber = Math.max(maxAssignedPassportNumber, parseInt(m[1],10));
+  });
+  if(passportCounter < maxAssignedPassportNumber) issues.push(`Passport counter (${passportCounter}) is behind the highest assigned Passport ID (${maxAssignedPassportNumber}), so future IDs could collide`);
+
+  return issues;
+}
+function showIntegrityCheckResult(){
+  const issues = runIntegrityCheck();
+  console.log(`PRJGENUI integrity check: ${issues.length} issue(s) found.`);
+  if(issues.length){ console.table(issues); showToast(`${issues.length} integrity issue(s) found. See the browser console.`, true); }
+  else showToast('Integrity check passed. No issues found.');
+  return issues;
+}
+window.PRJGENUI_integrityCheck = runIntegrityCheck;
+
+/* =========================================================
+   EXPORT / IMPORT
+   ========================================================= */
+function exportData(){
+  const payload = {
+    exportedAt: new Date().toISOString(), schemaVersion: SCHEMA_VERSION,
+    workers, crews, clients, passportCounter,
+    contractors, projects, sites, assignmentEntities,
+    workforceRequests, matchGenerations, matches, assignmentOffers,
+    readinessSnapshots, migrationLog, referenceCounters
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `prjgenui-backup-${todayStr()}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('Backup downloaded.');
+}
+async function handleImportFile(file){
+  if(!file) return;
+  try{
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if(!data || !Array.isArray(data.workers)){
+      showToast("That file doesn't look like a PRJGENUI backup.", true); return;
+    }
+    const summary = `${(data.workers||[]).length} workers, ${(data.contractors||[]).length} contractors, ${(data.workforceRequests||[]).length} requests`;
+    if(!confirm(`Import this backup (${summary})? This replaces all current data and cannot be undone.`)) return;
+    workers = migrateCollection(data.workers, normaliseWorker);
+    crews = data.crews || [];
+    clients = data.clients || [];
+    contractors = migrateCollection(data.contractors, normaliseContractor);
+    projects = migrateCollection(data.projects, normaliseProject);
+    sites = migrateCollection(data.sites, normaliseSite);
+    assignmentEntities = migrateCollection(data.assignmentEntities, normaliseAssignmentEntity);
+    workforceRequests = migrateCollection(data.workforceRequests, normaliseWorkforceRequest);
+    matchGenerations = migrateCollection(data.matchGenerations, normaliseMatchGeneration);
+    matches = migrateCollection(data.matches, normaliseMatch);
+    assignmentOffers = data.assignmentOffers || [];
+    readinessSnapshots = data.readinessSnapshots || [];
+    migrationLog = data.migrationLog || [];
+    passportCounter = data.passportCounter || 0;
+    referenceCounters = data.referenceCounters || {contractor:0, project:0, site:0, assignment:0, request:0};
+
+    // Run migration if old clients exist and haven't been migrated
+    if(clients.length > 0 && clients.some(c=>!c._migratedToContractorId)){
+      runRelease02aMigration();
+    }
+
+    assignPassportIdsIfMissing();
+    assignReferencesIfMissing(contractors, 'contractor');
+    assignReferencesIfMissing(projects, 'project');
+    assignReferencesIfMissing(sites, 'site');
+    assignReferencesIfMissing(assignmentEntities, 'assignment');
+    assignReferencesIfMissing(workforceRequests, 'request');
+
+    await persistAll();
+    editingId = null; view = 'dashboard'; render();
+    showToast('Backup imported (migrated to current schema if needed).');
+    runSilentIntegrityWarning();
+  }catch(e){
+    showToast('Could not read that file. Is it a valid backup?', true);
+  }
+}
+
+/* =========================================================
+   NAV + RESET + INIT
+   ========================================================= */
+document.getElementById('tabs').addEventListener('click', (e)=>{
+  const btn = e.target.closest('button[data-view]');
+  if(!btn) return;
+  view = btn.dataset.view; editingId = null; editingProjectId = null; editingSiteId = null;
+  editingRequestId = null; editingAssignmentId = null; currentMatchResults = null;
+  render();
+});
+document.getElementById('initEasbergBtn').onclick = initialiseEasbergPilot;
+document.getElementById('integrityCheckBtn').onclick = showIntegrityCheckResult;
+document.getElementById('exportBtn').onclick = exportData;
+document.getElementById('importBtn').onclick = ()=> document.getElementById('importFile').click();
+document.getElementById('importFile').onchange = (e)=>{
+  const file = e.target.files[0]; handleImportFile(file); e.target.value = '';
+};
+document.getElementById('resetBtn').onclick = async ()=>{
+  if(confirm('Clear all workforce, crew, contractor, project, site, assignment and request data from this tool? This cannot be undone. Export a backup first if you want to keep a copy.')){
+    workers = []; crews = []; clients = []; contractors = []; projects = []; sites = [];
+    assignmentEntities = []; workforceRequests = []; matchGenerations = []; matches = [];
+    assignmentOffers = []; readinessSnapshots = []; migrationLog = [];
+    passportCounter = 0;
+    referenceCounters = {contractor:0, project:0, site:0, assignment:0, request:0};
+    await persistAll();
+    view='dashboard'; render(); showToast('All data cleared.');
+  }
+};
+
+(async function init(){
+  await loadAll();
+  render();
+})();
+</script>
+</body>
+</html>
