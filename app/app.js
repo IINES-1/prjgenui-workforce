@@ -53,6 +53,18 @@
     proposed: 'Proposed', confirmed: 'Confirmed', completed: 'Completed',
     cancelled: 'Cancelled', legacy_recorded: 'Legacy'
   };
+  var BLOCKER_ACTIONS = {
+    rtw_missing: 'Verify via share code, manual check or Employer Checking Service',
+    rtw_not_pass: 'Verify via share code, manual check or Employer Checking Service',
+    rtw_followup_overdue: 'Verify via share code, manual check or Employer Checking Service',
+    worker_not_verified: 'Mark verified once evidence is checked, not before',
+    cscs_expired: 'Verify via CSCS Smart Check',
+    cscs_missing: 'Verify via CSCS Smart Check'
+  };
+  var ITEM_TABLE_LABELS = {
+    qualifications: 'qualification', training_certificates: 'training certificate',
+    rtw_checks: 'Right to Work follow-up'
+  };
   var ASSIGN_BADGE = {
     proposed: 'pending', confirmed: 'pass', completed: 'verified',
     cancelled: 'fail', legacy_recorded: 'pending'
@@ -144,6 +156,11 @@
     assignmentsPanel: document.getElementById('assignments-panel'),
     assignmentRows: document.getElementById('assignment-rows'),
     assignmentStatus: document.getElementById('assignment-status'),
+    actionCentre: document.getElementById('action-centre'),
+    acSummary: document.getElementById('ac-summary'),
+    acGroups: document.getElementById('ac-groups'),
+    acStatus: document.getElementById('ac-status'),
+    recomputeBtn: document.getElementById('recompute-btn'),
     outcomeForm: document.getElementById('outcome-form'),
     outcomeTitle: document.getElementById('outcome-title'),
     outcomeStatus: document.getElementById('outcome-status'),
@@ -1217,6 +1234,215 @@
     });
   });
 
+  function blockerAction(code, reason) {
+    if (BLOCKER_ACTIONS[code]) return BLOCKER_ACTIONS[code];
+    var text = (reason || '') + ' ' + code;
+    if (/right to work/i.test(text)) return BLOCKER_ACTIONS.rtw_missing;
+    if (/cscs/i.test(text)) return BLOCKER_ACTIONS.cscs_missing;
+    if (/training/i.test(text)) return 'Add training certificates';
+    if (/expired/i.test(text)) return 'Renew and re-verify';
+    if (/not verified/i.test(text)) return BLOCKER_ACTIONS.worker_not_verified;
+    if (/available/i.test(text)) return 'Confirm availability';
+    return 'Review the reason and record what is needed';
+  }
+
+  function loadActionCentre() {
+    var workersQ = sb.from('workers')
+      .select('id, passport_no, full_name, status')
+      .neq('status', 'archived')
+      .order('full_name')
+      .limit(200);
+    var evalsQ = sb.from('readiness_evaluations')
+      .select('worker_id, outcome, blockers, created_at')
+      .order('created_at', { ascending: false })
+      .limit(500);
+    var schedQ = sb.from('expiry_schedule')
+      .select('worker_id, item_table, item_id, expiry_date, band')
+      .limit(1000);
+    var rtwQ = sb.from('rtw_checks')
+      .select('worker_id, result')
+      .limit(1000);
+    var qualQ = sb.from('qualifications')
+      .select('worker_id, kind')
+      .limit(1000);
+    var trainQ = sb.from('training_certificates')
+      .select('worker_id, training_type')
+      .limit(1000);
+    var histQ = sb.from('work_history')
+      .select('worker_id')
+      .limit(1000);
+
+    Promise.all([workersQ, evalsQ, schedQ, rtwQ, qualQ, trainQ, histQ])
+      .then(function (rs) {
+        if (rs.some(function (r) { return r.error; })) {
+          showActionStatus(els.acStatus, false,
+            'The action centre could not load. Try again.');
+          return;
+        }
+        var workers = rs[0].data || [];
+        var evals = rs[1].data || [];
+        var sched = rs[2].data || [];
+        var rtws = rs[3].data || [];
+        var quals = rs[4].data || [];
+        var trains = rs[5].data || [];
+        var history = rs[6].data || [];
+
+        var byId = {};
+        workers.forEach(function (w) { byId[w.id] = w; });
+
+        // Latest evaluation per worker.
+        var latestEval = {};
+        evals.forEach(function (e) {
+          if (!latestEval[e.worker_id]) latestEval[e.worker_id] = e;
+        });
+
+        var rtwByWorker = {};
+        rtws.forEach(function (r) {
+          rtwByWorker[r.worker_id] = rtwByWorker[r.worker_id] || [];
+          rtwByWorker[r.worker_id].push(r.result);
+        });
+        var qualByWorker = {};
+        quals.forEach(function (q) {
+          qualByWorker[q.worker_id] = true;
+        });
+        var trainByWorker = {};
+        trains.forEach(function (t) {
+          trainByWorker[t.worker_id] = true;
+        });
+        var histByWorker = {};
+        history.forEach(function (h) { histByWorker[h.worker_id] = true; });
+
+        // Evidence labels for schedule rows.
+        var critical = [];
+        var dueSoon = [];
+        var watch = [];
+        var missingEv = [];
+        var devGaps = [];
+
+        workers.forEach(function (w) {
+          var ev = latestEval[w.id];
+          if (w.status === 'blocked') {
+            critical.push({
+              worker: w, text: 'Worker record is blocked',
+              action: 'Review the reason and record what is needed'
+            });
+          } else if (ev && ev.outcome === 'blocked') {
+            (ev.blockers || []).forEach(function (b) {
+              critical.push({
+                worker: w, text: b.reason || b.code,
+                action: blockerAction(b.code, b.reason)
+              });
+            });
+          }
+          if (!rtwByWorker[w.id]) {
+            missingEv.push({
+              worker: w, text: 'Right to Work check not recorded',
+              action: 'Complete evidence pack'
+            });
+          } else if (rtwByWorker[w.id].indexOf('pass') === -1) {
+            missingEv.push({
+              worker: w, text: 'No passing Right to Work check on record',
+              action: 'Complete evidence pack'
+            });
+          }
+          if (!qualByWorker[w.id]) {
+            missingEv.push({
+              worker: w, text: 'No qualification recorded',
+              action: 'Complete evidence pack'
+            });
+          }
+          if (!trainByWorker[w.id]) {
+            devGaps.push({
+              worker: w, text: 'No training certificates yet',
+              action: 'Add training certificates'
+            });
+          }
+          if (!histByWorker[w.id]) {
+            devGaps.push({
+              worker: w, text: 'No work history yet',
+              action: 'Log first verified job'
+            });
+          }
+        });
+
+        sched.forEach(function (s) {
+          if (!byId[s.worker_id]) return;
+          var label = ITEM_TABLE_LABELS[s.item_table] || s.item_table;
+          var text = label.charAt(0).toUpperCase() + label.slice(1) +
+            ', due ' + fmtDate(s.expiry_date);
+          var item = { worker: byId[s.worker_id], text: text,
+            action: 'Renew ' + label };
+          if (s.band === 'expired') {
+            critical.push({ worker: byId[s.worker_id],
+              text: text + ' (expired)',
+              action: 'Renew and re-verify' });
+          } else if (s.band === 'due_soon') {
+            dueSoon.push(item);
+          } else if (s.band === 'watch') {
+            watch.push(item);
+          }
+        });
+
+        renderActionCentre(critical, dueSoon, watch, missingEv, devGaps);
+      });
+  }
+
+  function renderActionCentre(critical, dueSoon, watch, missingEv, devGaps) {
+    var open = critical.length +
+      dueSoon.length + watch.length + missingEv.length + devGaps.length;
+    els.acSummary.textContent = open + ' open action' +
+      (open === 1 ? '' : 's') + ' across the workforce.';
+    els.acGroups.innerHTML = '';
+
+    function group(title, items, cls) {
+      if (!items.length) return;
+      var div = document.createElement('div');
+      div.className = 'ac-group';
+      var h = document.createElement('h3');
+      h.textContent = title + ' (' + items.length + ')';
+      if (cls) h.className = cls;
+      div.appendChild(h);
+      items.forEach(function (i) {
+        var p = document.createElement('p');
+        p.className = 'profile-line';
+        p.innerHTML = (i.worker.passport_no ? i.worker.passport_no + ' · ' : '') +
+          (i.worker.full_name || 'Worker') + ' — ' +
+          badge(cls || 'pending', i.text) + ' <span class="ac-action">' +
+          i.action + '</span>';
+        div.appendChild(p);
+      });
+      els.acGroups.appendChild(div);
+    }
+
+    group('Critical', critical, 'fail');
+    group('Due soon (30 days)', dueSoon, 'pending');
+    group('Watch (31–60 days)', watch, 'pending_review');
+    group('Missing evidence', missingEv, 'pending');
+    group('Workforce development', devGaps, 'pending');
+  }
+
+  els.recomputeBtn.addEventListener('click', function () {
+    sb.rpc('recompute_expiry_schedule')
+      .then(function (res) {
+        var d = res.data || {};
+        if (!d.ok) {
+          showActionStatus(els.acStatus, false,
+            d.error === 'not_permitted'
+              ? 'Your role cannot recompute the schedule.'
+              : 'The schedule could not be recomputed. Try again.');
+          return;
+        }
+        showActionStatus(els.acStatus, true,
+          'Schedule recomputed: ' + d.expired + ' expired, ' +
+          d.due_soon + ' due soon, ' + d.watch + ' on watch.');
+        loadActionCentre();
+      })
+      .catch(function () {
+        showActionStatus(els.acStatus, false,
+          'The schedule could not be recomputed. Try again.');
+      });
+  });
+
   function loadProfile(user) {
     els.noProfile.hidden = true;
     els.profileLine.textContent = 'Loading your profile…';
@@ -1275,6 +1501,13 @@
         els.contractorDetails.hidden = !canManageRequests;
         els.assignmentsPanel.hidden = !canSeeRequests;
         els.outcomeForm.hidden = true;
+        var canManageSchedule = roles.indexOf('owner') !== -1 ||
+          roles.indexOf('compliance') !== -1;
+        var canSeeCentre = canManageSchedule || roles.indexOf('operations') !== -1 ||
+          roles.indexOf('auditor') !== -1;
+        els.actionCentre.hidden = !canSeeCentre;
+        els.recomputeBtn.hidden = !canManageSchedule;
+        if (canSeeCentre) loadActionCentre();
         if (canSeeRequests) {
           loadRequests();
           if (canManageRequests) loadContractors();

@@ -131,6 +131,18 @@
         </div>
       </div>
 
+      <!-- Compliance Action Centre: Owner and Compliance recompute;
+           Operations and Auditor read -->
+      <div id="action-centre" class="card" hidden>
+        <div class="row-between">
+          <h2>Compliance Action Centre</h2>
+          <button id="recompute-btn" class="btn small" type="button" hidden>Recompute schedule</button>
+        </div>
+        <p id="ac-summary" class="profile-line"></p>
+        <div id="ac-groups"></div>
+        <p id="ac-status" class="error" hidden></p>
+      </div>
+
       <!-- Workers: Owner, Operations, Compliance (and Auditor read-only lists) -->
       <div id="workers-panel" class="card" hidden>
         <h2>Workers</h2>
