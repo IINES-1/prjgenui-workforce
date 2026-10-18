@@ -1,0 +1,189 @@
+/* PRJGENUI Workforce — team platform styles (Stage 0 slice 2).
+   Matches the public site: Archivo headings, IBM Plex Sans body,
+   light paper, sage and honey accents. */
+
+:root {
+  --ink: #1f2b24;
+  --ink-soft: #4c5a51;
+  --paper: #faf9f5;
+  --card: #ffffff;
+  --sage: #e7ede4;
+  --sage-deep: #3f5c4b;
+  --line: #d9ded4;
+  --honey: #b97d24;
+  --danger: #a03c2f;
+  --radius: 10px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+h1, h2, .brand {
+  font-family: 'Archivo', system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+h1 { font-size: 1.55rem; margin: 0 0 0.4rem; }
+h2 { font-size: 1.15rem; margin: 0 0 0.5rem; }
+
+.wrap {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+.topbar {
+  background: var(--sage-deep);
+  color: #f3f6f1;
+  padding: 0.9rem 0;
+}
+.topbar .wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+.brand { font-size: 1.05rem; }
+.brand-sub { font-size: 0.85rem; opacity: 0.8; }
+
+main.wrap { padding: 2.25rem 1.25rem 3rem; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.5rem 1.35rem;
+  margin-bottom: 1.25rem;
+}
+
+.login-card { max-width: 430px; margin: 2rem auto 0; }
+
+.lede { color: var(--ink-soft); margin: 0 0 1.1rem; }
+
+label {
+  display: block;
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin: 0.85rem 0 0.25rem;
+}
+
+input, select {
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  font: inherit;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+input:focus, select:focus {
+  outline: 2px solid var(--sage-deep);
+  outline-offset: 1px;
+}
+
+.btn {
+  display: inline-block;
+  font: inherit;
+  font-weight: 500;
+  color: #fff;
+  background: var(--sage-deep);
+  border: none;
+  border-radius: 6px;
+  padding: 0.55rem 1.15rem;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+.btn:hover { background: #35503f; }
+.btn.ghost {
+  color: var(--sage-deep);
+  background: transparent;
+  border: 1px solid var(--sage-deep);
+}
+.btn.small { margin-top: 0; padding: 0.3rem 0.7rem; font-size: 0.85rem; }
+.btn.danger { background: var(--danger); }
+.btn.danger:hover { background: #87301f; }
+
+.error { color: var(--danger); font-size: 0.9rem; margin: 0.75rem 0 0; }
+.ok { color: var(--sage-deep); }
+
+.footnote {
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  margin: 1rem 0 0;
+}
+
+.linklike {
+  font: inherit;
+  font-size: inherit;
+  color: var(--ink);
+  background: none;
+  border: none;
+  padding: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.row-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.profile-line { color: var(--ink-soft); margin: 0; }
+
+.note {
+  background: var(--sage);
+  border-color: #cfd9cd;
+}
+
+.fields {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+.field { min-width: 150px; }
+.field.grow { flex: 1; }
+.field label { margin-top: 0; }
+.fields .btn { margin-top: 0; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.25rem;
+  font-size: 0.92rem;
+}
+th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--ink-soft);
+  border-bottom: 1px solid var(--line);
+  padding: 0.4rem 0.5rem 0.4rem 0;
+}
+td {
+  border-bottom: 1px solid var(--line);
+  padding: 0.5rem 0.5rem 0.5rem 0;
+}
+td.right { text-align: right; padding-right: 0; }
+
+.foot {
+  background: var(--sage-deep);
+  color: #eef2ec;
+  font-size: 0.8rem;
+  padding: 1rem 0;
+}
+
+@media (max-width: 560px) {
+  .fields { flex-direction: column; align-items: stretch; }
+  .fields .btn { align-self: flex-start; }
+  .row-between { flex-direction: column; align-items: flex-start; }
+}

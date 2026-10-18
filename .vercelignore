@@ -11,3 +11,4 @@ docs/
 *.py
 *.sql
 SUPABASE_SETUP.md
+app/README.md

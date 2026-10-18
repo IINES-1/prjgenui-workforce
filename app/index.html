@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PRJGENUI Workforce — Team sign-in</title>
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="/secrets.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <span class="brand">PRJGENUI Workforce</span>
+      <span class="brand-sub">Team platform</span>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- Shown when there is no sign-in session -->
+    <section id="login-view" hidden>
+      <div class="card login-card">
+        <h1>Sign in</h1>
+        <p class="lede">For the PRJGENUI team, contractors and registered workers.</p>
+        <form id="login-form" novalidate>
+          <label for="email">Email</label>
+          <input type="email" id="email" autocomplete="username" required>
+          <label for="password">Password</label>
+          <input type="password" id="password" autocomplete="current-password" required>
+          <button type="submit" class="btn" id="login-btn">Sign in</button>
+          <p id="login-error" class="error" hidden></p>
+        </form>
+        <p class="footnote"><button type="button" class="linklike" id="forgot">Forgot
+          your password?</button> — we will email you a link to set a new one.</p>
+        <p class="footnote">Access is by invitation only. If you cannot sign in,
+          write to hello@prjgenuiworkforce.co.uk.</p>
+      </div>
+    </section>
+
+    <!-- Shown once signed in -->
+    <section id="app-view" hidden>
+      <div class="card">
+        <div class="row-between">
+          <h1 id="greeting">Welcome</h1>
+          <button id="signout" class="btn ghost" type="button">Sign out</button>
+        </div>
+        <p id="profile-line" class="profile-line">Loading your profile…</p>
+      </div>
+
+      <!-- A working sign-in with no role assigned: nothing to show, by design -->
+      <div id="no-profile" class="card note" hidden>
+        <h2>Your account is not linked yet</h2>
+        <p>Your sign-in works, but no role has been assigned to it. Ask the
+          platform owner to complete your access, then sign in again.</p>
+      </div>
+
+      <!-- Invitations: Owner and Operations only -->
+      <div id="invitations" class="card" hidden>
+        <h2>Invitations</h2>
+        <p class="lede">Create an invitation by email and role. Each one
+          expires after seven days if unused.</p>
+        <form id="invite-form" novalidate>
+          <div class="fields">
+            <div class="field grow">
+              <label for="invite-email">Email</label>
+              <input type="email" id="invite-email" autocomplete="off" required>
+            </div>
+            <div class="field">
+              <label for="invite-role">Role</label>
+              <select id="invite-role" required>
+                <option value="owner">Owner</option>
+                <option value="operations" selected>Operations</option>
+                <option value="compliance">Compliance</option>
+                <option value="contractor">Contractor</option>
+                <option value="worker">Worker</option>
+                <option value="supplier">Supplier</option>
+                <option value="auditor">Auditor</option>
+              </select>
+            </div>
+            <button type="submit" class="btn" id="invite-btn">Invite</button>
+          </div>
+          <p id="invite-status" class="error" hidden></p>
+        </form>
+        <table id="invite-table">
+          <thead>
+            <tr><th>Email</th><th>Role</th><th>Expires</th><th>Status</th><th></th></tr>
+          </thead>
+          <tbody id="invite-rows"></tbody>
+        </table>
+        <p class="footnote">Invitation emails are sent automatically once the
+          invitation flow is connected in the next build step.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap">
+      <span>PRJGENUI Workforce — internal platform. Not for public distribution.</span>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
