@@ -256,6 +256,85 @@
         </div>
       </div>
 
+      <!-- Requests: Owner and Operations manage; Compliance and Auditor read -->
+      <div id="requests-panel" class="card" hidden>
+        <h2>Workforce requests</h2>
+        <details id="contractor-details">
+          <summary>Add a contractor</summary>
+          <form id="contractor-form" class="fields" novalidate>
+            <div class="field">
+              <label for="co-name">Company name</label>
+              <input id="co-name" autocomplete="off" placeholder="e.g. Southwark Builds Ltd" required>
+            </div>
+            <div class="field">
+              <label for="co-contact">Contact name</label>
+              <input id="co-contact" autocomplete="off">
+            </div>
+            <div class="field">
+              <label for="co-phone">Phone</label>
+              <input id="co-phone" autocomplete="off">
+            </div>
+            <div class="field">
+              <label for="co-email">Email</label>
+              <input type="email" id="co-email" autocomplete="off">
+            </div>
+            <button class="btn ghost" type="submit" id="contractor-btn">Add contractor</button>
+          </form>
+          <p id="contractor-status" class="error" hidden></p>
+        </details>
+        <form id="request-form" novalidate>
+          <div class="fields">
+            <div class="field">
+              <label for="rq-contractor">Contractor</label>
+              <select id="rq-contractor"><option value="">Choose…</option></select>
+            </div>
+            <div class="field">
+              <label for="rq-trade">Trade</label>
+              <input id="rq-trade" autocomplete="off" placeholder="e.g. painter and decorator" required>
+            </div>
+            <div class="field">
+              <label for="rq-number">Workers needed</label>
+              <input type="number" id="rq-number" min="1" value="1" required>
+            </div>
+            <div class="field">
+              <label for="rq-start">Start date</label>
+              <input type="date" id="rq-start">
+            </div>
+            <div class="field">
+              <label for="rq-duration">Duration</label>
+              <input id="rq-duration" autocomplete="off" placeholder="e.g. 2 weeks">
+            </div>
+            <button class="btn" type="submit" id="request-btn">Create request</button>
+          </div>
+          <div class="checks" id="rq-requirements">
+            <label class="check"><input type="checkbox" value="cscs"> CSCS card</label>
+            <label class="check"><input type="checkbox" value="asbestos_awareness"> Asbestos awareness</label>
+            <label class="check"><input type="checkbox" value="working_at_height"> Working at height</label>
+            <label class="check"><input type="checkbox" value="manual_handling"> Manual handling</label>
+            <label class="check"><input type="checkbox" value="ipaf"> IPAF</label>
+            <label class="check"><input type="checkbox" value="pasma"> PASMA</label>
+          </div>
+          <div class="fields">
+            <label class="check"><input type="checkbox" id="rq-urgent"> Urgent</label>
+          </div>
+          <p id="request-status" class="error" hidden></p>
+        </form>
+        <table>
+          <thead><tr><th>Ref</th><th>Trade</th><th>Needed</th><th>Start</th><th>Status</th><th></th></tr></thead>
+          <tbody id="request-rows"></tbody>
+        </table>
+      </div>
+
+      <!-- Matches: the latest generation for a request -->
+      <div id="matches-view" class="card" hidden>
+        <div class="row-between">
+          <h2 id="matches-title">Matches</h2>
+          <button id="matches-close" class="btn ghost" type="button">Close</button>
+        </div>
+        <p id="matches-summary" class="profile-line"></p>
+        <div id="matches-rows"></div>
+      </div>
+
       <!-- Invitations: Owner and Operations only -->
       <div id="invitations" class="card" hidden>
         <h2>Invitations</h2>

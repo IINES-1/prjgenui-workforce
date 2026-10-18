@@ -34,6 +34,21 @@
     cscs: 'CSCS card', nvq: 'NVQ', city_guilds: 'City & Guilds',
     ipaf: 'IPAF', pasma: 'PASMA'
   };
+  var FACTOR_LABELS = {
+    worker_verified: 'Worker record', rtw_current: 'Right to Work',
+    trade_match: 'Trade', working_at_height: 'Working at height',
+    manual_handling: 'Manual handling'
+  };
+  function factorLabel(code) {
+    return FACTOR_LABELS[code] || QUAL_KINDS[code] ||
+      (code || '').replace(/_/g, ' ').replace(/\b\w/g, function (c) {
+        return c.toUpperCase();
+      });
+  }
+  var REQUEST_STATUS = {
+    open: 'Open', matched: 'Matched', offered: 'Offered',
+    filled: 'Filled', closed: 'Closed'
+  };
 
   var els = {
     loginView: document.getElementById('login-view'),
@@ -104,6 +119,19 @@
     wdQuals: document.getElementById('wd-quals'),
     qualForm: document.getElementById('qual-form'),
     qualStatus: document.getElementById('qual-status'),
+    requestsPanel: document.getElementById('requests-panel'),
+    requestForm: document.getElementById('request-form'),
+    requestStatus: document.getElementById('request-status'),
+    requestRows: document.getElementById('request-rows'),
+    contractorForm: document.getElementById('contractor-form'),
+    contractorStatus: document.getElementById('contractor-status'),
+    contractorDetails: document.getElementById('contractor-details'),
+    rqContractor: document.getElementById('rq-contractor'),
+    matchesView: document.getElementById('matches-view'),
+    matchesTitle: document.getElementById('matches-title'),
+    matchesSummary: document.getElementById('matches-summary'),
+    matchesRows: document.getElementById('matches-rows'),
+    matchesClose: document.getElementById('matches-close'),
     signout: document.getElementById('signout')
   };
 
@@ -380,6 +408,7 @@
   var canWriteWorkers = false;
   var canRecordEvidence = false;
   var canRunReadiness = false;
+  var canManageRequests = false;
 
   var NEXT_STATUS = { draft: 'in_review', in_review: 'verified' };
 
@@ -739,6 +768,236 @@
     });
   });
 
+  function loadContractors() {
+    return sb.from('contractors')
+      .select('id, legal_name')
+      .order('legal_name')
+      .limit(100)
+      .then(function (res) {
+        var sel = els.rqContractor;
+        var keep = sel.value;
+        sel.innerHTML = '<option value="">Choose…</option>';
+        (res.data || []).forEach(function (c) {
+          var o = document.createElement('option');
+          o.value = c.id;
+          o.textContent = c.legal_name;
+          sel.appendChild(o);
+        });
+        if (keep && Array.prototype.some.call(sel.options, function (o) {
+          return o.value === keep;
+        })) sel.value = keep;
+      });
+  }
+
+  els.contractorForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    els.contractorStatus.hidden = true;
+    var name = document.getElementById('co-name').value.trim();
+    if (!name) {
+      showActionStatus(els.contractorStatus, false, 'Enter the company name.');
+      return;
+    }
+    sb.from('contractors').insert({
+      legal_name: name,
+      contact_name: document.getElementById('co-contact').value.trim() || null,
+      phone: document.getElementById('co-phone').value.trim() || null,
+      email: document.getElementById('co-email').value.trim() || null
+    }).then(function (res) {
+      if (res.error) {
+        showActionStatus(els.contractorStatus, false, friendlyDbError(res.error));
+        return;
+      }
+      els.contractorStatus.hidden = true;
+      document.getElementById('co-name').value = '';
+      document.getElementById('co-contact').value = '';
+      document.getElementById('co-phone').value = '';
+      document.getElementById('co-email').value = '';
+      loadContractors().then(function () {
+        var opts = els.rqContractor.options;
+        for (var i = 0; i < opts.length; i++) {
+          if (opts[i].textContent === name) {
+            els.rqContractor.value = opts[i].value;
+            break;
+          }
+        }
+      });
+    });
+  });
+
+  function loadRequests() {
+    sb.from('workforce_requests')
+      .select('id, public_reference, trade, number_needed, start_date, urgent, status')
+      .order('created_at', { ascending: false })
+      .limit(50)
+      .then(function (res) {
+        els.requestRows.innerHTML = '';
+        (res.data || []).forEach(function (r) {
+          var tr = document.createElement('tr');
+          [r.public_reference || '—', r.trade, r.number_needed,
+            fmtDate(r.start_date)].forEach(function (t) {
+            var td = document.createElement('td');
+            td.textContent = t;
+            tr.appendChild(td);
+          });
+          var tdS = document.createElement('td');
+          tdS.innerHTML = (r.urgent ? '<span class="badge bad">Urgent</span> ' : '') +
+            badge(r.status === 'open' ? 'pending' : 'pass',
+              REQUEST_STATUS[r.status] || r.status);
+          tr.appendChild(tdS);
+          var td = document.createElement('td');
+          td.className = 'right';
+          if (canManageRequests) {
+            var run = document.createElement('button');
+            run.type = 'button';
+            run.className = 'btn small';
+            run.textContent = 'Run matching';
+            run.addEventListener('click', function () { runMatching(r); });
+            td.appendChild(run);
+            td.appendChild(document.createTextNode(' '));
+          }
+          var view = document.createElement('button');
+          view.type = 'button';
+          view.className = 'btn small ghost';
+          view.textContent = 'View matches';
+          view.addEventListener('click', function () { loadMatches(r); });
+          td.appendChild(view);
+          tr.appendChild(td);
+          els.requestRows.appendChild(tr);
+        });
+      });
+  }
+
+  function runMatching(r) {
+    sb.rpc('generate_matches', { p_request_id: r.id })
+      .then(function (res) {
+        var d = res.data || {};
+        if (!d.ok) {
+          showActionStatus(els.requestStatus, false, {
+            not_signed_in: 'Your sign-in has expired — sign in again.',
+            not_permitted: 'Your role cannot run matching.',
+            request_not_found: 'That request no longer exists.',
+            request_not_open: 'Matching has run for this request; it is ' +
+              (REQUEST_STATUS[r.status] || r.status) + '.'
+          }[d.error] || 'Matching could not run. Try again.');
+          return;
+        }
+        showActionStatus(els.requestStatus, true,
+          d.put_forward > 0
+            ? d.put_forward + ' worker' + (d.put_forward === 1 ? '' : 's') +
+              ' put forward; ' + d.held + ' held back.'
+            : 'No worker currently meets every requirement.');
+        loadRequests();
+        loadMatches(r);
+      })
+      .catch(function () {
+        showActionStatus(els.requestStatus, false,
+          'Matching could not run right now. Try again.');
+      });
+  }
+
+  function loadMatches(r) {
+    els.matchesView.hidden = false;
+    els.matchesTitle.textContent = 'Matches — ' +
+      (r.public_reference || r.trade);
+    sb.from('match_generations')
+      .select('id, rules_version, created_at')
+      .eq('request_id', r.id).order('created_at', { ascending: false }).limit(1)
+      .then(function (res) {
+        var gen = (res.data || [])[0];
+        if (!gen) {
+          els.matchesSummary.textContent = 'No matching run yet for this request.';
+          els.matchesRows.innerHTML = '';
+          return;
+        }
+        els.matchesSummary.textContent = 'Generated ' + fmtDate(gen.created_at) +
+          ' (rules ' + gen.rules_version + ')';
+        return sb.from('matches')
+          .select('rank, factors, workers(full_name, passport_no, trade)')
+          .eq('generation_id', gen.id)
+          .order('rank', { ascending: false, nullsFirst: false })
+          .order('workers(full_name)', { ascending: true });
+      })
+      .then(function (res) {
+        if (!res) return;
+        var rows = (res.data || []);
+        els.matchesRows.innerHTML = '';
+        rows.forEach(function (m) {
+          var w = m.workers || {};
+          var div = document.createElement('div');
+          div.className = 'match';
+          var head = document.createElement('p');
+          head.className = 'profile-line';
+          head.innerHTML = (w.passport_no ? w.passport_no + ' · ' : '') +
+            (w.full_name || 'Worker') +
+            (m.rank
+              ? ' ' + badge('pass', 'Put forward #' + m.rank)
+              : ' ' + badge('fail', 'Held back'));
+          div.appendChild(head);
+          var tbl = document.createElement('table');
+          tbl.innerHTML = '<thead><tr><th>Factor</th><th>Result</th><th>Reason</th></tr></thead><tbody>' +
+            (m.factors || []).map(function (f) {
+              return '<tr><td>' + factorLabel(f.code) + '</td><td>' +
+                badge(f.result === 'pass' ? 'verified' :
+                  f.result === 'review' ? 'pending_review' : 'fail',
+                  f.result === 'pass' ? 'Pass' :
+                  f.result === 'review' ? 'Review' : 'Fail') +
+                '</td><td>' + (f.reason || '—') + '</td></tr>';
+            }).join('') + '</tbody>';
+          div.appendChild(tbl);
+          els.matchesRows.appendChild(div);
+        });
+        els.matchesView.scrollIntoView({ behavior: 'smooth' });
+      });
+  }
+
+  els.requestForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    els.requestStatus.hidden = true;
+    var trade = document.getElementById('rq-trade').value.trim();
+    var number = parseInt(document.getElementById('rq-number').value, 10);
+    var contractorId = els.rqContractor.value;
+    if (!contractorId) {
+      showActionStatus(els.requestStatus, false,
+        'Choose the contractor making the request (add one first if needed).');
+      return;
+    }
+    if (!trade || !number || number < 1) {
+      showActionStatus(els.requestStatus, false,
+        'Enter the trade and the number of workers needed.');
+      return;
+    }
+    var reqs = Array.prototype.map.call(
+      document.querySelectorAll('#rq-requirements input:checked'),
+      function (c) { return c.value; });
+    sb.from('workforce_requests').insert({
+      contractor_id: contractorId,
+      trade: trade,
+      number_needed: number,
+      start_date: document.getElementById('rq-start').value || null,
+      duration: document.getElementById('rq-duration').value.trim() || null,
+      urgent: document.getElementById('rq-urgent').checked,
+      essential_requirements: reqs
+    }).then(function (res) {
+      if (res.error) {
+        showActionStatus(els.requestStatus, false, friendlyDbError(res.error));
+        return;
+      }
+      els.requestStatus.hidden = true;
+      document.getElementById('rq-trade').value = '';
+      document.getElementById('rq-start').value = '';
+      document.getElementById('rq-duration').value = '';
+      document.getElementById('rq-urgent').checked = false;
+      Array.prototype.forEach.call(
+        document.querySelectorAll('#rq-requirements input'),
+        function (c) { c.checked = false; });
+      loadRequests();
+    });
+  });
+
+  els.matchesClose.addEventListener('click', function () {
+    els.matchesView.hidden = true;
+  });
+
   function loadProfile(user) {
     els.noProfile.hidden = true;
     els.profileLine.textContent = 'Loading your profile…';
@@ -781,6 +1040,8 @@
           roles.indexOf('compliance') !== -1;
         canRunReadiness = roles.indexOf('owner') !== -1 ||
           roles.indexOf('compliance') !== -1;
+        canManageRequests = roles.indexOf('owner') !== -1 ||
+          roles.indexOf('operations') !== -1;
         var canSeeWorkers = canRecordEvidence || roles.indexOf('auditor') !== -1;
         els.workersPanel.hidden = !canSeeWorkers;
         els.addWorkerForm.hidden = !canWriteWorkers;
@@ -788,6 +1049,17 @@
         els.rtwForm.hidden = !canRecordEvidence;
         els.qualForm.hidden = !canRecordEvidence;
         els.wdReadinessActions.hidden = !canRunReadiness;
+        var canSeeRequests = canManageRequests || roles.indexOf('compliance') !== -1 ||
+          roles.indexOf('auditor') !== -1;
+        els.requestsPanel.hidden = !canSeeRequests;
+        els.requestForm.hidden = !canManageRequests;
+        els.contractorDetails.hidden = !canManageRequests;
+        if (canSeeRequests) {
+          loadRequests();
+          if (canManageRequests) loadContractors();
+        } else {
+          els.matchesView.hidden = true;
+        }
         if (canSeeWorkers) {
           loadWorkers();
         } else {
