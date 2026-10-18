@@ -14,13 +14,25 @@
 
   var els = {
     loginView: document.getElementById('login-view'),
+    redeemView: document.getElementById('redeem-view'),
     appView: document.getElementById('app-view'),
     loginForm: document.getElementById('login-form'),
     loginError: document.getElementById('login-error'),
     forgot: document.getElementById('forgot'),
+    showRedeem: document.getElementById('show-redeem'),
+    backToLogin: document.getElementById('back-to-login'),
+    redeemForm: document.getElementById('redeem-form'),
+    redeemInfo: document.getElementById('redeem-info'),
+    redeemEmail: document.getElementById('redeem-email'),
+    redeemPassword: document.getElementById('redeem-password'),
+    redeemToken: document.getElementById('redeem-token'),
+    redeemStatus: document.getElementById('redeem-status'),
     greeting: document.getElementById('greeting'),
     profileLine: document.getElementById('profile-line'),
     noProfile: document.getElementById('no-profile'),
+    finishForm: document.getElementById('finish-form'),
+    finishToken: document.getElementById('finish-token'),
+    finishStatus: document.getElementById('finish-status'),
     invitations: document.getElementById('invitations'),
     inviteForm: document.getElementById('invite-form'),
     inviteEmail: document.getElementById('invite-email'),
@@ -44,6 +56,7 @@
 
   function showLogin(message) {
     els.appView.hidden = true;
+    els.redeemView.hidden = true;
     els.loginView.hidden = false;
     if (message) {
       els.loginError.hidden = false;
@@ -53,15 +66,25 @@
     }
   }
 
+  function showRedeem() {
+    els.appView.hidden = true;
+    els.loginView.hidden = true;
+    els.redeemView.hidden = false;
+    els.redeemStatus.hidden = true;
+  }
+
   function render(session) {
     if (session) {
       els.loginView.hidden = true;
+      els.redeemView.hidden = true;
       els.appView.hidden = false;
       els.loginError.hidden = true;
       loadProfile(session.user);
     } else {
       profile = null;
-      showLogin();
+      // Leave the redeem view alone: an invitee may be mid-flow when
+      // the initial (signed-out) session event arrives.
+      if (els.redeemView.hidden) showLogin();
     }
   }
 
@@ -69,6 +92,34 @@
     return roles.map(function (r) {
       return ROLE_LABELS[r] || r;
     }).join(', ');
+  }
+
+  function completeInvitation(token, statusEl, after) {
+    sb.rpc('complete_invitation', { p_token: token })
+      .then(function (res) {
+        var r = res.data || {};
+        if (!r.ok) {
+          statusEl.hidden = false;
+          statusEl.className = 'error';
+          statusEl.textContent = {
+            not_found: 'That invitation code is not recognised.',
+            already_used: 'That invitation has already been used.',
+            expired: 'That invitation has expired. Ask for a new one.',
+            email_mismatch: 'This invitation was issued to a different email address.',
+            already_linked: 'Your account is already linked.'
+          }[r.error] || 'The invitation could not be completed. Try again or ask for a new one.';
+          return;
+        }
+        statusEl.hidden = false;
+        statusEl.className = 'ok';
+        statusEl.textContent = 'Your access is set up.';
+        if (after) after();
+      })
+      .catch(function () {
+        statusEl.hidden = false;
+        statusEl.className = 'error';
+        statusEl.textContent = 'The invitation could not be completed right now. Try again.';
+      });
   }
 
   function loadProfile(user) {
@@ -85,6 +136,15 @@
           els.profileLine.textContent = user.email;
           els.noProfile.hidden = false;
           els.invitations.hidden = true;
+          // A just-confirmed invitee: finish their setup automatically.
+          var stashed = null;
+          try { stashed = sessionStorage.getItem('prjgenui_invite'); } catch (e) {}
+          if (stashed) {
+            try { sessionStorage.removeItem('prjgenui_invite'); } catch (e) {}
+            completeInvitation(stashed, els.finishStatus, function () {
+              loadProfile(user);
+            });
+          }
           return;
         }
         profile = res.data;
@@ -111,7 +171,7 @@
 
   function loadInvitations() {
     sb.from('invitations')
-      .select('id, email, role, expires_at, used_at')
+      .select('id, email, role, token, expires_at, used_at')
       .order('created_at', { ascending: false })
       .limit(50)
       .then(function (res) {
@@ -132,12 +192,28 @@
           var td = document.createElement('td');
           td.className = 'right';
           if (!inv.used_at) {
-            var btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'btn small danger';
-            btn.textContent = 'Revoke';
-            btn.addEventListener('click', function () { revoke(inv.id); });
-            td.appendChild(btn);
+            var copy = document.createElement('button');
+            copy.type = 'button';
+            copy.className = 'btn small';
+            copy.textContent = 'Copy link';
+            copy.addEventListener('click', function () {
+              var link = location.origin + '/app/#invite=' + inv.token;
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(link).then(function () {
+                  copy.textContent = 'Copied';
+                  setTimeout(function () { copy.textContent = 'Copy link'; }, 2000);
+                });
+              } else {
+                window.prompt('Copy this link and send it to ' + inv.email + ':', link);
+              }
+            });
+            td.appendChild(copy);
+            var revoke = document.createElement('button');
+            revoke.type = 'button';
+            revoke.className = 'btn small danger';
+            revoke.textContent = 'Revoke';
+            revoke.addEventListener('click', function () { revokeInvitation(inv.id); });
+            td.appendChild(revoke);
           }
           tr.appendChild(td);
           els.inviteRows.appendChild(tr);
@@ -145,7 +221,7 @@
       });
   }
 
-  function revoke(id) {
+  function revokeInvitation(id) {
     sb.from('invitations').delete().eq('id', id)
       .then(function () { loadInvitations(); });
   }
@@ -218,9 +294,115 @@
       });
   });
 
+  els.showRedeem.addEventListener('click', function () {
+    showRedeem();
+  });
+  els.backToLogin.addEventListener('click', function () {
+    showLogin();
+  });
+
+  els.redeemForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    els.redeemStatus.hidden = true;
+    var email = els.redeemEmail.value.trim();
+    var password = els.redeemPassword.value;
+    var token = els.redeemToken.value.trim();
+    if (!email || !password || !token) {
+      els.redeemStatus.hidden = false;
+      els.redeemStatus.className = 'error';
+      els.redeemStatus.textContent =
+        'Enter your email, a password and the invitation code.';
+      return;
+    }
+    if (password.length < 8) {
+      els.redeemStatus.hidden = false;
+      els.redeemStatus.className = 'error';
+      els.redeemStatus.textContent = 'Choose a password of at least 8 characters.';
+      return;
+    }
+    sb.auth.signUp({ email: email, password: password })
+      .then(function (res) {
+        if (res.error) {
+          els.redeemStatus.hidden = false;
+          els.redeemStatus.className = 'error';
+          els.redeemStatus.textContent =
+            res.error.message &&
+            res.error.message.indexOf('already registered') !== -1
+              ? 'An account already exists for this email. Sign in with your ' +
+                'password instead, then finish setup with the code.'
+              : 'The account could not be created. ' +
+                'Check the email address and try again.';
+          return;
+        }
+        try { sessionStorage.setItem('prjgenui_invite', token); } catch (e) {}
+        els.redeemStatus.hidden = false;
+        els.redeemStatus.className = 'ok';
+        if (res.data && res.data.session) {
+          els.redeemStatus.textContent = 'Account created — finishing setup…';
+        } else {
+          els.redeemStatus.textContent =
+            'Account created. Check your email to confirm your address, ' +
+            'then sign in here — your access will finish setting up on its own.';
+        }
+      })
+      .catch(function () {
+        els.redeemStatus.hidden = false;
+        els.redeemStatus.className = 'error';
+        els.redeemStatus.textContent =
+          'The account could not be created right now. Try again in a moment.';
+      });
+  });
+
+  els.finishForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    els.finishStatus.hidden = true;
+    var token = els.finishToken.value.trim();
+    if (!token) {
+      els.finishStatus.hidden = false;
+      els.finishStatus.textContent = 'Enter your invitation code.';
+      return;
+    }
+    completeInvitation(token, els.finishStatus, function () {
+      sb.auth.getSession().then(function (res) {
+        if (res.data && res.data.session) loadProfile(res.data.session.user);
+      });
+    });
+  });
+
   els.signout.addEventListener('click', function () {
     sb.auth.signOut();
   });
+
+  // Opening an invitation link: /app/#invite=<token>
+  (function () {
+    var m = (location.hash + '&' + location.search)
+      .match(/invite=([0-9a-f-]{36})/i);
+    if (!m) return;
+    var token = m[1];
+    showRedeem();
+    sb.rpc('check_invitation', { p_token: token })
+      .then(function (res) {
+        var r = (res.data || [])[0];
+        if (!r || !r.found) {
+          els.redeemInfo.textContent =
+            'This invitation link is not recognised. Ask for a new one.';
+          els.redeemToken.value = token;
+          return;
+        }
+        if (!r.usable) {
+          els.redeemInfo.textContent =
+            'This invitation has expired or was already used. Ask for a new one.';
+          els.redeemToken.value = token;
+          return;
+        }
+        els.redeemInfo.textContent = 'You have been invited as ' +
+          (ROLE_LABELS[r.role] || r.role) + ' for ' + r.email +
+          '. Set a password to create your account.';
+        els.redeemEmail.value = r.email;
+        els.redeemToken.value = token;
+        els.redeemPassword.focus();
+      });
+  })();
 
   sb.auth.getSession().then(function (res) { render(res.data.session); });
   sb.auth.onAuthStateChange(function (_event, session) { render(session); });

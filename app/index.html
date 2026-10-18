@@ -38,6 +38,33 @@
           your password?</button> — we will email you a link to set a new one.</p>
         <p class="footnote">Access is by invitation only. If you cannot sign in,
           write to hello@prjgenuiworkforce.co.uk.</p>
+        <p class="footnote"><button type="button" class="linklike" id="show-redeem">Have
+          an invitation code?</button></p>
+      </div>
+    </section>
+
+    <!-- Invitation redemption: shown via an invitation link or the code button -->
+    <section id="redeem-view" hidden>
+      <div class="card login-card">
+        <h1>Set up your access</h1>
+        <p id="redeem-info" class="lede">Enter your invitation details and
+          choose a password.</p>
+        <form id="redeem-form" novalidate>
+          <label for="redeem-email">Email</label>
+          <input type="email" id="redeem-email" autocomplete="username" required>
+          <label for="redeem-password">Choose a password</label>
+          <input type="password" id="redeem-password" autocomplete="new-password"
+                 minlength="8" required>
+          <label for="redeem-token">Invitation code</label>
+          <input type="text" id="redeem-token" autocomplete="off" required>
+          <button type="submit" class="btn" id="redeem-btn">Create my account</button>
+          <p id="redeem-status" class="error" hidden></p>
+        </form>
+        <p class="footnote">You will receive an email to confirm your address.
+          After confirming, sign in here and your access finishes setting up
+          on its own.</p>
+        <p class="footnote"><button type="button" class="linklike" id="back-to-login">Back
+          to sign in</button></p>
       </div>
     </section>
 
@@ -54,8 +81,18 @@
       <!-- A working sign-in with no role assigned: nothing to show, by design -->
       <div id="no-profile" class="card note" hidden>
         <h2>Your account is not linked yet</h2>
-        <p>Your sign-in works, but no role has been assigned to it. Ask the
-          platform owner to complete your access, then sign in again.</p>
+        <p>Your sign-in works, but no role has been assigned to it. If you
+          have an invitation code, enter it below to finish setting up.</p>
+        <form id="finish-form" novalidate>
+          <div class="fields">
+            <div class="field grow">
+              <label for="finish-token">Invitation code</label>
+              <input type="text" id="finish-token" autocomplete="off" required>
+            </div>
+            <button type="submit" class="btn" id="finish-btn">Finish setup</button>
+          </div>
+          <p id="finish-status" class="error" hidden></p>
+        </form>
       </div>
 
       <!-- Invitations: Owner and Operations only -->

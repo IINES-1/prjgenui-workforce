@@ -16,21 +16,33 @@ invitations. Served from this folder, currently at
   instead — the code needs no change.
 - The whole app stays noindex (page meta plus the sitewide header).
 
-## What slice 2 includes
+## What slices 2 and 2b include
 
 - Email and password sign-in (Supabase Auth)
 - Profile display: name, roles
 - Default deny in practice: a working sign-in with no profile row sees
   nothing but a "not linked yet" note
-- Invitations (Owner and Operations): create, list, revoke; each expires
-  after seven days
+- Invitations (Owner and Operations): create, list, copy link, revoke;
+  each expires after seven days
+- Invitation redemption: the invited person opens the link
+  (`/app/#invite=<code>` or `?invite=<code>`), sees who they were invited
+  as, sets a password, confirms their email, and on first sign-in their
+  profile is linked with the invited role (automatically in the same
+  browser, or via the "finish setup" code box)
+
+## How invitations are sent today
+
+Supabase's hosted auth creates accounts but does not send our invitation
+emails, so for now the Owner/Operations person copies the link from the
+invitations panel and sends it to the invitee themselves (any channel).
+Automated sending from hello@prjgenuiworkforce.co.uk (Zoho SMTP) is a
+later task.
 
 ## Deliberately not in this slice
 
-- Invitation redemption emails (the link that lets an invited person set
-  their own password). Next step: a small server function, then optionally
-  Zoho SMTP so mail comes from hello@prjgenuiworkforce.co.uk.
 - Worker, readiness, request and assignment screens (slice 3+).
+- Automated invitation emails, password-reset link branding, Site URL
+  configuration in Supabase auth settings.
 
 ## Local preview
 
