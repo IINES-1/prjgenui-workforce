@@ -154,14 +154,29 @@ def main():
     cur.execute("select count(*) from workers where id = %s", (w2,))
     check("RLS: worker's visible row is their own", cur.fetchone()[0] == 1)
 
-    # RLS UPDATE refusal is silent filtering (0 rows), not an error.
+    # Stage 1 (register 10.2): workers CAN correct their own contact
+    # details, trade and availability; the guard trigger refuses changes
+    # to name, passport number, status or reasons.
     with conn.transaction():
-        cur.execute("update workers set trade = 'hacker' where id = %s", (w2,))
+        cur.execute("update workers set trade = 'painter' where id = %s", (w2,))
         touched = cur.rowcount
-    check("RLS: worker cannot edit their own record (0 rows updated)",
-          touched == 0)
+    check("RLS: worker corrects own trade (1 row updated)",
+          touched == 1)
     cur.execute("select trade from workers where id = %s", (w2,))
-    check("RLS: worker's trade unchanged", cur.fetchone()[0] == "plasterer")
+    check("RLS: worker's trade corrected", cur.fetchone()[0] == "painter")
+
+    def bad_name_edit():
+        with conn.transaction():
+            cur.execute("update workers set full_name = 'Someone Else' "
+                        "where id = %s", (w2,))
+    expect_error("Guard: worker cannot change their name", bad_name_edit)
+
+    def bad_passport_edit():
+        with conn.transaction():
+            cur.execute("update workers set passport_no = 'PW-UK-999999' "
+                        "where id = %s", (w2,))
+    expect_error("Guard: worker cannot change their passport number",
+                 bad_passport_edit)
 
     conn.rollback()
     print()

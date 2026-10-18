@@ -129,6 +129,60 @@
           <h3>Performance</h3>
           <p id="perf-line" class="profile-line"></p>
         </div>
+        <div class="card" id="passport-reminders" hidden>
+          <h3>Reminders</h3>
+          <p id="reminders-line" class="profile-line"></p>
+          <div id="reminders-rows"></div>
+        </div>
+        <div class="card" id="passport-details" hidden>
+          <h3>My details</h3>
+          <p class="footnote">Corrections go to the team straight away. Your name, passport number and status can only be changed by the team.</p>
+          <form id="self-details-form" novalidate>
+            <div class="fields">
+              <div class="field">
+                <label for="sd-phone">Phone</label>
+                <input id="sd-phone" autocomplete="off">
+              </div>
+              <div class="field">
+                <label for="sd-email">Email</label>
+                <input type="email" id="sd-email" autocomplete="off">
+              </div>
+              <div class="field">
+                <label for="sd-trade">Trade</label>
+                <input id="sd-trade" autocomplete="off">
+              </div>
+              <div class="field">
+                <label for="sd-availability">Availability</label>
+                <input id="sd-availability" autocomplete="off">
+              </div>
+              <button class="btn" type="submit" id="self-details-btn">Save corrections</button>
+            </div>
+            <p id="self-details-status" class="error" hidden></p>
+          </form>
+        </div>
+        <div class="card" id="passport-documents" hidden>
+          <h3>My documents</h3>
+          <div id="self-doc-rows"></div>
+          <form id="self-doc-form" novalidate>
+            <div class="fields">
+              <div class="field">
+                <label for="sd-doc-type">Replacement evidence</label>
+                <select id="sd-doc-type">
+                  <option value="cscs_card">CSCS card</option>
+                  <option value="passport">Passport or ID</option>
+                  <option value="certificate">Certificate</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="sd-doc-file">File</label>
+                <input type="file" id="sd-doc-file" required>
+              </div>
+              <button class="btn" type="submit" id="self-doc-btn">Upload</button>
+            </div>
+            <p id="self-doc-status" class="error" hidden></p>
+          </form>
+        </div>
       </div>
 
       <!-- Compliance Action Centre: Owner and Compliance recompute;
@@ -136,10 +190,14 @@
       <div id="action-centre" class="card" hidden>
         <div class="row-between">
           <h2>Compliance Action Centre</h2>
-          <button id="recompute-btn" class="btn small" type="button" hidden>Recompute schedule</button>
+          <span>
+            <button id="reminders-btn" class="btn small" type="button" hidden>Run reminders</button>
+            <button id="recompute-btn" class="btn small" type="button" hidden>Recompute schedule</button>
+          </span>
         </div>
         <p id="ac-summary" class="profile-line"></p>
         <div id="ac-groups"></div>
+        <div id="ac-reminders"></div>
         <p id="ac-status" class="error" hidden></p>
       </div>
 
@@ -199,6 +257,39 @@
             <button id="wd-readiness" class="btn small" type="button">Run readiness check</button>
           </div>
           <p id="wd-readiness-status" class="error" hidden></p>
+        </div>
+        <div class="card" id="wd-overrides-card" hidden>
+          <h3>Overrides</h3>
+          <p class="footnote">An override relaxes one requirement for this worker for a time. It never edits a check, and it is recorded permanently.</p>
+          <div id="wd-overrides-rows"></div>
+          <form id="override-form" novalidate>
+            <div class="fields">
+              <div class="field">
+                <label for="ov-requirement">Requirement</label>
+                <select id="ov-requirement">
+                  <option value="worker_not_verified">Worker record not verified</option>
+                  <option value="rtw_missing">Right to Work check missing</option>
+                  <option value="rtw_not_pass">Right to Work check did not pass</option>
+                  <option value="rtw_followup_overdue">Right to Work follow-up overdue</option>
+                </select>
+              </div>
+              <div class="field grow">
+                <label for="ov-reason">Reason (recorded permanently)</label>
+                <input id="ov-reason" autocomplete="off" required>
+              </div>
+              <div class="field">
+                <label for="ov-expires">Expires</label>
+                <input type="date" id="ov-expires">
+              </div>
+              <button class="btn" type="submit" id="override-btn">Approve override</button>
+            </div>
+            <p id="override-status" class="error" hidden></p>
+          </form>
+        </div>
+        <div class="card" id="wd-documents-card" hidden>
+          <h3>Documents</h3>
+          <p class="footnote">Identity documents are restricted. Only the Owner and Compliance can open them.</p>
+          <div id="wd-doc-rows"></div>
         </div>
         <div class="card">
           <h3>Right to Work checks</h3>
@@ -398,6 +489,17 @@
         </form>
       </div>
 
+      <!-- Assignment statement: the latest version for an assignment -->
+      <div id="statement-view" class="card" hidden>
+        <div class="row-between">
+          <h2 id="statement-title">Assignment statement</h2>
+          <button id="statement-close" class="btn ghost" type="button">Close</button>
+        </div>
+        <div id="statement-body"></div>
+        <button id="statement-generate" class="btn" type="button" hidden>Generate new version</button>
+        <p id="statement-status" class="error" hidden></p>
+      </div>
+
       <!-- Invitations: Owner and Operations only -->
       <div id="invitations" class="card" hidden>
         <h2>Invitations</h2>
@@ -433,6 +535,120 @@
         </table>
         <p class="footnote">Invitation emails are sent automatically once the
           invitation flow is connected in the next build step.</p>
+      </div>
+
+      <!-- Commercial records: Owner only -->
+      <div id="prices-panel" class="card" hidden>
+        <h2>Prices</h2>
+        <form id="price-form" novalidate>
+          <div class="fields">
+            <div class="field">
+              <label for="pr-scope">Scope</label>
+              <select id="pr-scope">
+                <option value="standard">Standard</option>
+                <option value="customer">Customer-specific</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="pr-contractor">Contractor (customer prices)</label>
+              <select id="pr-contractor"><option value="">—</option></select>
+            </div>
+            <div class="field">
+              <label for="pr-service">Service</label>
+              <select id="pr-service">
+                <option value="managed_onboarding">Managed onboarding</option>
+                <option value="compliance_monitoring">Compliance monitoring</option>
+                <option value="training_coordination">Training-request coordination</option>
+                <option value="rtw_check">Right to Work check</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="pr-price">Price (£)</label>
+              <input type="number" id="pr-price" step="0.01" min="0" required>
+            </div>
+            <div class="field">
+              <label for="pr-unit">Unit</label>
+              <input id="pr-unit" placeholder="e.g. per worker per month" value="per worker per month" required>
+            </div>
+          </div>
+          <div class="fields">
+            <div class="field">
+              <label for="pr-vat">VAT rate (%)</label>
+              <input type="number" id="pr-vat" step="0.5" min="0" placeholder="20">
+            </div>
+            <div class="field">
+              <label for="pr-frequency">Billing frequency</label>
+              <input id="pr-frequency" placeholder="e.g. monthly">
+            </div>
+            <div class="field">
+              <label for="pr-minimum">Minimum monthly (£)</label>
+              <input type="number" id="pr-minimum" step="0.01" min="0">
+            </div>
+            <div class="field">
+              <label for="pr-discount">Discount (%)</label>
+              <input type="number" id="pr-discount" step="0.5" min="0" max="100">
+            </div>
+            <div class="field grow">
+              <label for="pr-discount-reason">Discount reason (required with a discount)</label>
+              <input id="pr-discount-reason" autocomplete="off">
+            </div>
+            <button class="btn" type="submit" id="price-btn">Add price</button>
+          </div>
+          <p id="price-status" class="error" hidden></p>
+        </form>
+        <table>
+          <thead><tr><th>Service</th><th>Scope</th><th>Price</th><th>Approval</th><th></th></tr></thead>
+          <tbody id="price-rows"></tbody>
+        </table>
+
+        <h3>Service switches</h3>
+        <form id="subscription-form" novalidate>
+          <div class="fields">
+            <div class="field">
+              <label for="ss-contractor">Contractor</label>
+              <select id="ss-contractor"><option value="">Choose…</option></select>
+            </div>
+            <label class="check"><input type="checkbox" id="ss-onboarding"> Managed onboarding</label>
+            <label class="check"><input type="checkbox" id="ss-monitoring"> Compliance monitoring</label>
+            <label class="check"><input type="checkbox" id="ss-training"> Training-request coordination</label>
+            <button class="btn" type="submit" id="subscription-btn">Save switches</button>
+          </div>
+          <p id="subscription-status" class="error" hidden></p>
+        </form>
+        <table>
+          <thead><tr><th>Contractor</th><th>Onboarding</th><th>Monitoring</th><th>Training</th><th>From</th></tr></thead>
+          <tbody id="subscription-rows"></tbody>
+        </table>
+
+        <h3>External costs</h3>
+        <form id="cost-form" novalidate>
+          <div class="fields">
+            <div class="field grow">
+              <label for="ec-description">Description</label>
+              <input id="ec-description" autocomplete="off" required>
+            </div>
+            <div class="field">
+              <label for="ec-category">Category</label>
+              <select id="ec-category">
+                <option value="training_provider">Training provider</option>
+                <option value="identity_check">Identity check</option>
+                <option value="verification">Verification</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="ec-amount">Amount (£)</label>
+              <input type="number" id="ec-amount" step="0.01" min="0" required>
+            </div>
+            <button class="btn" type="submit" id="cost-btn">Record cost</button>
+          </div>
+          <p id="cost-status" class="error" hidden></p>
+        </form>
+        <table>
+          <thead><tr><th>Description</th><th>Category</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+          <tbody id="cost-rows"></tbody>
+        </table>
       </div>
     </section>
   </main>

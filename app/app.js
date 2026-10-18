@@ -165,6 +165,42 @@
     outcomeTitle: document.getElementById('outcome-title'),
     outcomeStatus: document.getElementById('outcome-status'),
     outcomeCancel: document.getElementById('outcome-cancel'),
+    remindersBtn: document.getElementById('reminders-btn'),
+    acReminders: document.getElementById('ac-reminders'),
+    statementView: document.getElementById('statement-view'),
+    statementTitle: document.getElementById('statement-title'),
+    statementBody: document.getElementById('statement-body'),
+    statementGenerate: document.getElementById('statement-generate'),
+    statementStatus: document.getElementById('statement-status'),
+    statementClose: document.getElementById('statement-close'),
+    pricesPanel: document.getElementById('prices-panel'),
+    priceForm: document.getElementById('price-form'),
+    priceStatus: document.getElementById('price-status'),
+    priceRows: document.getElementById('price-rows'),
+    prContractor: document.getElementById('pr-contractor'),
+    subscriptionForm: document.getElementById('subscription-form'),
+    subscriptionStatus: document.getElementById('subscription-status'),
+    subscriptionRows: document.getElementById('subscription-rows'),
+    ssContractor: document.getElementById('ss-contractor'),
+    costForm: document.getElementById('cost-form'),
+    costStatus: document.getElementById('cost-status'),
+    costRows: document.getElementById('cost-rows'),
+    overrideForm: document.getElementById('override-form'),
+    overrideStatus: document.getElementById('override-status'),
+    overrideRows: document.getElementById('wd-overrides-rows'),
+    overridesCard: document.getElementById('wd-overrides-card'),
+    documentsCard: document.getElementById('wd-documents-card'),
+    documentRows: document.getElementById('wd-doc-rows'),
+    passportReminders: document.getElementById('passport-reminders'),
+    remindersRows: document.getElementById('reminders-rows'),
+    remindersLine: document.getElementById('reminders-line'),
+    passportDetails: document.getElementById('passport-details'),
+    selfDetailsForm: document.getElementById('self-details-form'),
+    selfDetailsStatus: document.getElementById('self-details-status'),
+    passportDocuments: document.getElementById('passport-documents'),
+    selfDocRows: document.getElementById('self-doc-rows'),
+    selfDocForm: document.getElementById('self-doc-form'),
+    selfDocStatus: document.getElementById('self-doc-status'),
     signout: document.getElementById('signout')
   };
 
@@ -277,7 +313,8 @@
   function loadPassport(workerId) {
     els.passport.hidden = false;
 
-    sb.from('workers').select('passport_no, full_name, trade, status, status_reason')
+    sb.from('workers')
+      .select('passport_no, full_name, phone, email, trade, availability, status, status_reason')
       .eq('id', workerId).maybeSingle()
       .then(function (res) {
         var w = res.data;
@@ -293,7 +330,10 @@
         } else {
           els.passportReason.hidden = true;
         }
+        loadSelfDetails(w);
       });
+    loadWorkerReminders(workerId);
+    loadSelfDocuments(workerId);
 
     sb.from('rtw_checks')
       .select('method, check_date, result, restrictions, follow_up_due')
@@ -442,6 +482,7 @@
   var canRecordEvidence = false;
   var canRunReadiness = false;
   var canManageRequests = false;
+  var canSeeWorkerDocs = false;
 
   var NEXT_STATUS = { draft: 'in_review', in_review: 'verified' };
 
@@ -548,6 +589,8 @@
         renderWorkerDetail();
         loadWorkerEvidence(id);
         loadWorkerReadiness(id);
+        loadWorkerOverrides(id);
+        if (canSeeWorkerDocs) loadWorkerDocuments(id);
         els.workerDetail.scrollIntoView({ behavior: 'smooth' });
       });
   }
@@ -807,18 +850,22 @@
       .order('legal_name')
       .limit(100)
       .then(function (res) {
-        var sel = els.rqContractor;
-        var keep = sel.value;
-        sel.innerHTML = '<option value="">Choose…</option>';
-        (res.data || []).forEach(function (c) {
-          var o = document.createElement('option');
-          o.value = c.id;
-          o.textContent = c.legal_name;
-          sel.appendChild(o);
+        [els.rqContractor, els.prContractor, els.ssContractor].forEach(function (sel) {
+          if (!sel) return;
+          var keep = sel.value;
+          var placeholder = sel.options[0] && sel.options[0].value === ''
+            ? sel.options[0].textContent : 'Choose…';
+          sel.innerHTML = '<option value="">' + placeholder + '</option>';
+          (res.data || []).forEach(function (c) {
+            var o = document.createElement('option');
+            o.value = c.id;
+            o.textContent = c.legal_name;
+            sel.appendChild(o);
+          });
+          if (keep && Array.prototype.some.call(sel.options, function (o) {
+            return o.value === keep;
+          })) sel.value = keep;
         });
-        if (keep && Array.prototype.some.call(sel.options, function (o) {
-          return o.value === keep;
-        })) sel.value = keep;
       });
   }
 
@@ -1118,7 +1165,14 @@
               out.textContent = 'Record outcome';
               out.addEventListener('click', function () { openOutcome(a); });
               td.appendChild(out);
+              td.appendChild(document.createTextNode(' '));
             }
+            var stmt = document.createElement('button');
+            stmt.type = 'button';
+            stmt.className = 'btn small ghost';
+            stmt.textContent = 'Statement';
+            stmt.addEventListener('click', function () { openStatement(a); });
+            td.appendChild(stmt);
           }
           tr.appendChild(td);
           els.assignmentRows.appendChild(tr);
@@ -1443,6 +1497,572 @@
       });
   });
 
+  var MILESTONE_LABELS = { '60d': '60 days', '30d': '30 days',
+    '14d': '14 days', '7d': '7 days' };
+  var OVERRIDE_LABELS = {
+    worker_not_verified: 'Worker record not verified',
+    rtw_missing: 'Right to Work check missing',
+    rtw_not_pass: 'Right to Work check did not pass',
+    rtw_followup_overdue: 'Right to Work follow-up overdue'
+  };
+  var PRICE_SERVICES = {
+    managed_onboarding: 'Managed onboarding',
+    compliance_monitoring: 'Compliance monitoring',
+    training_coordination: 'Training-request coordination',
+    rtw_check: 'Right to Work check',
+    other: 'Other'
+  };
+  var COST_CATEGORIES = {
+    training_provider: 'Training provider', identity_check: 'Identity check',
+    verification: 'Verification', other: 'Other'
+  };
+  var DOC_TYPES = {
+    cscs_card: 'CSCS card', passport: 'Passport or ID',
+    certificate: 'Certificate', other: 'Other'
+  };
+
+  function loadAcReminders() {
+    sb.from('reminder_log')
+      .select('milestone, item_table, sent_at, workers(passport_no, full_name)')
+      .order('sent_at', { ascending: false })
+      .limit(20)
+      .then(function (res) {
+        var rows = res.data || [];
+        if (!rows.length) {
+          els.acReminders.innerHTML = '';
+          return;
+        }
+        var html = '<h3>Recent reminders</h3>';
+        rows.forEach(function (r) {
+          var w = r.workers || {};
+          html += '<p class="profile-line">' +
+            (w.passport_no ? w.passport_no + ' · ' : '') +
+            (w.full_name || 'Worker') + ' — ' +
+            (ITEM_TABLE_LABELS[r.item_table] || r.item_table) +
+            ' reminder (' + (MILESTONE_LABELS[r.milestone] || r.milestone) +
+            '), ' + fmtDate(r.sent_at) + '</p>';
+        });
+        els.acReminders.innerHTML = html;
+      });
+  }
+
+  els.remindersBtn.addEventListener('click', function () {
+    sb.rpc('run_expiry_reminders')
+      .then(function (res) {
+        var d = res.data || {};
+        if (!d.ok) {
+          showActionStatus(els.acStatus, false,
+            d.error === 'not_permitted'
+              ? 'Your role cannot run reminders.'
+              : 'Reminders could not run. Try again.');
+          return;
+        }
+        var by = d.by_milestone || {};
+        var parts = ['60d', '30d', '14d', '7d'].filter(function (m) {
+          return by[m];
+        }).map(function (m) {
+          return by[m] + ' at ' + (MILESTONE_LABELS[m] || m);
+        });
+        showActionStatus(els.acStatus, true, d.reminders > 0
+          ? d.reminders + ' reminder' + (d.reminders === 1 ? '' : 's') +
+            ' recorded' + (parts.length ? ': ' + parts.join(', ') : '') + '.'
+          : 'No new reminders due — everything within its window is already recorded.');
+        loadAcReminders();
+      })
+      .catch(function () {
+        showActionStatus(els.acStatus, false, 'Reminders could not run. Try again.');
+      });
+  });
+
+  function loadWorkerReminders(workerId) {
+    sb.from('reminder_log')
+      .select('milestone, item_table, sent_at')
+      .eq('worker_id', workerId)
+      .order('sent_at', { ascending: false })
+      .limit(20)
+      .then(function (res) {
+        var rows = res.data || [];
+        els.passportReminders.hidden = false;
+        els.remindersLine.textContent = rows.length
+          ? 'Reminders about your expiring evidence:'
+          : 'No reminders yet.';
+        els.remindersRows.innerHTML = rows.map(function (r) {
+          return '<p class="profile-line">' +
+            (ITEM_TABLE_LABELS[r.item_table] || r.item_table) +
+            ' — ' + (MILESTONE_LABELS[r.milestone] || r.milestone) +
+            ' reminder, ' + fmtDate(r.sent_at) + '</p>';
+        }).join('');
+      });
+  }
+
+  function loadSelfDetails(worker) {
+    els.passportDetails.hidden = false;
+    document.getElementById('sd-phone').value = worker.phone || '';
+    document.getElementById('sd-email').value = worker.email || '';
+    document.getElementById('sd-trade').value = worker.trade || '';
+    document.getElementById('sd-availability').value = worker.availability || '';
+  }
+
+  els.selfDetailsForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    els.selfDetailsStatus.hidden = true;
+    sb.from('workers')
+      .update({
+        phone: document.getElementById('sd-phone').value.trim() || null,
+        email: document.getElementById('sd-email').value.trim() || null,
+        trade: document.getElementById('sd-trade').value.trim() || null,
+        availability: document.getElementById('sd-availability').value.trim() || null
+      })
+      .eq('id', profile.worker_id)
+      .then(function (res) {
+        if (res.error) {
+          showActionStatus(els.selfDetailsStatus, false,
+            /may only correct/i.test(res.error.message || '')
+              ? 'Only your contact details, trade and availability can be changed.'
+              : friendlyDbError(res.error));
+          return;
+        }
+        showActionStatus(els.selfDetailsStatus, true,
+          'Corrections saved — the team can see them straight away.');
+      });
+  });
+
+  function loadSelfDocuments(workerId) {
+    sb.from('worker_documents')
+      .select('document_type, status, created_at')
+      .eq('worker_id', workerId)
+      .order('created_at', { ascending: false })
+      .limit(20)
+      .then(function (res) {
+        var rows = res.data || [];
+        els.passportDocuments.hidden = false;
+        els.selfDocRows.innerHTML = rows.length ? rows.map(function (d) {
+          return '<p class="profile-line">' +
+            (DOC_TYPES[d.document_type] || d.document_type) + ' — ' +
+            (EVIDENCE_STATUS[d.status] || d.status) + ', uploaded ' +
+            fmtDate(d.created_at) + '</p>';
+        }).join('') : '<p class="profile-line">No documents uploaded yet.</p>';
+      });
+  }
+
+  els.selfDocForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    els.selfDocStatus.hidden = true;
+    var file = document.getElementById('sd-doc-file').files[0];
+    var type = document.getElementById('sd-doc-type').value;
+    if (!file) {
+      showActionStatus(els.selfDocStatus, false, 'Choose a file to upload.');
+      return;
+    }
+    var path = profile.worker_id + '/' + Date.now() + '-' +
+      file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    sb.storage.from('worker-documents')
+      .upload(path, file)
+      .then(function (res) {
+        if (res.error) {
+          showActionStatus(els.selfDocStatus, false,
+            'The upload failed. Try again.');
+          return;
+        }
+        return sb.from('worker_documents')
+          .insert({ worker_id: profile.worker_id, document_type: type,
+                    storage_path: path })
+          .then(function (r2) {
+            if (r2.error) {
+              showActionStatus(els.selfDocStatus, false, friendlyDbError(r2.error));
+              return;
+            }
+            showActionStatus(els.selfDocStatus, true,
+              'Uploaded — the team will verify it.');
+            document.getElementById('sd-doc-file').value = '';
+            loadSelfDocuments(profile.worker_id);
+          });
+      });
+  });
+
+  function loadWorkerOverrides(workerId) {
+    sb.from('overrides')
+      .select('requirement, reason, expires_at, created_at')
+      .eq('worker_id', workerId)
+      .order('created_at', { ascending: false })
+      .limit(20)
+      .then(function (res) {
+        var rows = res.data || [];
+        els.overrideRows.innerHTML = rows.length ? rows.map(function (o) {
+          return '<p class="profile-line">' +
+            (OVERRIDE_LABELS[o.requirement] || o.requirement) + ' — ' +
+            o.reason + (o.expires_at ? ' (expires ' + fmtDate(o.expires_at) + ')' : '') +
+            ', approved ' + fmtDate(o.created_at) + '</p>';
+        }).join('') : '<p class="profile-line">No overrides on record.</p>';
+      });
+  }
+
+  els.overrideForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    els.overrideStatus.hidden = true;
+    var reason = document.getElementById('ov-reason').value.trim();
+    if (!reason) {
+      showActionStatus(els.overrideStatus, false,
+        'An override needs a reason — it is recorded permanently.');
+      return;
+    }
+    sb.from('overrides')
+      .insert({
+        worker_id: currentWorker.id,
+        requirement: document.getElementById('ov-requirement').value,
+        reason: reason,
+        approved_by: profile.id,
+        expires_at: document.getElementById('ov-expires').value || null
+      })
+      .then(function (res) {
+        if (res.error) {
+          showActionStatus(els.overrideStatus, false, friendlyDbError(res.error));
+          return;
+        }
+        showActionStatus(els.overrideStatus, true,
+          'Override approved and recorded. Re-run the readiness check to apply it.');
+        document.getElementById('ov-reason').value = '';
+        document.getElementById('ov-expires').value = '';
+        loadWorkerOverrides(currentWorker.id);
+      });
+  });
+
+  function loadWorkerDocuments(workerId) {
+    sb.from('worker_documents')
+      .select('id, document_type, storage_path, status, created_at')
+      .eq('worker_id', workerId)
+      .order('created_at', { ascending: false })
+      .limit(20)
+      .then(function (res) {
+        var rows = res.data || [];
+        els.documentRows.innerHTML = rows.length ? rows.map(function (d) {
+          return '<p class="profile-line">' +
+            (DOC_TYPES[d.document_type] || d.document_type) + ' — ' +
+            (EVIDENCE_STATUS[d.status] || d.status) + ', uploaded ' +
+            fmtDate(d.created_at) +
+            ' <button type="button" class="btn small ghost doc-open" data-path="' +
+            d.storage_path + '">Open</button></p>';
+        }).join('') : '<p class="profile-line">No documents uploaded.</p>';
+        Array.prototype.forEach.call(
+          els.documentRows.querySelectorAll('.doc-open'),
+          function (btn) {
+            btn.addEventListener('click', function () {
+              sb.storage.from('worker-documents')
+                .createSignedUrl(btn.getAttribute('data-path'), 600)
+                .then(function (r) {
+                  if (r.error || !r.data) {
+                    showActionStatus(els.overrideStatus, false,
+                      'The document could not be opened. Try again.');
+                    return;
+                  }
+                  window.open(r.data.signedUrl, '_blank');
+                });
+            });
+          });
+      });
+  }
+
+  var statementAssignment = null;
+
+  function openStatement(a) {
+    statementAssignment = a;
+    els.statementView.hidden = false;
+    var w = a.workers || {};
+    els.statementTitle.textContent = 'Assignment statement — ' +
+      (a.public_reference || '') + ' · ' + (w.full_name || 'worker');
+    els.statementStatus.hidden = true;
+    sb.from('assignment_statements')
+      .select('version, content, generated_at')
+      .eq('assignment_id', a.id)
+      .order('version', { ascending: false })
+      .limit(1)
+      .then(function (res) {
+        renderStatement((res.data || [])[0]);
+      });
+  }
+
+  function renderStatement(stmt) {
+    if (!stmt) {
+      els.statementBody.innerHTML =
+        '<p class="profile-line">No statement generated yet.</p>';
+      return;
+    }
+    var c = stmt.content || {};
+    var o = c.outcome || {};
+    els.statementBody.innerHTML =
+      '<p class="profile-line">Version ' + stmt.version + ', generated ' +
+      fmtDate(stmt.generated_at) + '</p>' +
+      '<p><strong>' + (c.title || 'Assignment statement') + '</strong></p>' +
+      '<p class="profile-line">Reference: ' + (c.reference || '—') + '</p>' +
+      '<p class="profile-line">Worker: ' +
+      ((c.worker && c.worker.name) || '—') +
+      (c.worker && c.worker.passport_no ? ' (' + c.worker.passport_no + ')' : '') + '</p>' +
+      '<p class="profile-line">Client: ' + (c.client || '—') + '</p>' +
+      '<p class="profile-line">Work: ' + ((c.work && c.work.trade) || '—') +
+      ', from ' + fmtDate(c.work && c.work.start_date) +
+      ' to ' + fmtDate(c.work && c.work.end_date) + '</p>' +
+      '<p class="profile-line">Status: ' + (ASSIGN_STATUS[c.status] || c.status || '—') + '</p>' +
+      (c.outcome
+        ? '<p class="profile-line">Outcome: attended ' + (o.attended ? 'yes' : 'no') +
+          (o.rating ? ', rating ' + o.rating + ' of 5' : '') +
+          (o.rehire_decision ? ', would rehire ' + o.rehire_decision : '') + '</p>'
+        : '') +
+      '<p class="footnote">' + (c.note || '') + '</p>';
+    els.statementView.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  els.statementClose.addEventListener('click', function () {
+    els.statementView.hidden = true;
+    statementAssignment = null;
+  });
+
+  els.statementGenerate.addEventListener('click', function () {
+    if (!statementAssignment) return;
+    els.statementStatus.hidden = true;
+    sb.rpc('generate_assignment_statement',
+      { p_assignment_id: statementAssignment.id })
+      .then(function (res) {
+        var d = res.data || {};
+        if (!d.ok) {
+          showActionStatus(els.statementStatus, false,
+            d.error === 'not_permitted'
+              ? 'Your role cannot generate statements.'
+              : 'The statement could not be generated. Try again.');
+          return;
+        }
+        renderStatement({ version: d.version, content: d.content,
+          generated_at: new Date().toISOString() });
+        showActionStatus(els.statementStatus, true,
+          'Statement version ' + d.version + ' generated and kept.');
+      })
+      .catch(function () {
+        showActionStatus(els.statementStatus, false,
+          'The statement could not be generated. Try again.');
+      });
+  });
+
+  function loadPrices() {
+    sb.from('price_catalog')
+      .select('id, scope, contractor_id, service, price, unit, approval_status')
+      .order('created_at', { ascending: false })
+      .limit(100)
+      .then(function (res) {
+        els.priceRows.innerHTML = '';
+        (res.data || []).forEach(function (p) {
+          var tr = document.createElement('tr');
+          [PRICE_SERVICES[p.service] || p.service,
+            p.scope === 'customer' ? 'Customer' : 'Standard',
+            '£' + p.price + ' ' + p.unit].forEach(function (t) {
+            var td = document.createElement('td');
+            td.textContent = t;
+            tr.appendChild(td);
+          });
+          var tdS = document.createElement('td');
+          tdS.innerHTML = badge(p.approval_status === 'approved' ? 'pass' : 'pending',
+            p.approval_status === 'approved' ? 'Approved' : 'Draft');
+          tr.appendChild(tdS);
+          var td = document.createElement('td');
+          td.className = 'right';
+          if (p.approval_status !== 'approved') {
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'btn small';
+            b.textContent = 'Approve';
+            b.addEventListener('click', function () {
+              sb.from('price_catalog')
+                .update({ approval_status: 'approved' })
+                .eq('id', p.id)
+                .then(function (r) {
+                  if (r.error) {
+                    showActionStatus(els.priceStatus, false, friendlyDbError(r.error));
+                    return;
+                  }
+                  loadPrices();
+                });
+            });
+            td.appendChild(b);
+          }
+          tr.appendChild(td);
+          els.priceRows.appendChild(tr);
+        });
+      });
+  }
+
+  els.priceForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    els.priceStatus.hidden = true;
+    var scope = document.getElementById('pr-scope').value;
+    var contractorId = scope === 'customer' ? els.prContractor.value : null;
+    if (scope === 'customer' && !contractorId) {
+      showActionStatus(els.priceStatus, false,
+        'Choose the contractor for a customer-specific price.');
+      return;
+    }
+    var price = parseFloat(document.getElementById('pr-price').value);
+    if (!price || price < 0) {
+      showActionStatus(els.priceStatus, false, 'Enter the price.');
+      return;
+    }
+    var discount = parseFloat(document.getElementById('pr-discount').value);
+    var discountReason = document.getElementById('pr-discount-reason').value.trim();
+    if (discount && !discountReason) {
+      showActionStatus(els.priceStatus, false,
+        'A discount needs a recorded reason.');
+      return;
+    }
+    sb.from('price_catalog').insert({
+      scope: scope,
+      contractor_id: contractorId,
+      service: document.getElementById('pr-service').value,
+      price: price,
+      unit: document.getElementById('pr-unit').value.trim() || 'per unit',
+      vat_rate: parseFloat(document.getElementById('pr-vat').value) || null,
+      billing_frequency: document.getElementById('pr-frequency').value.trim() || null,
+      minimum_monthly: parseFloat(document.getElementById('pr-minimum').value) || null,
+      discount_pct: discount || null,
+      discount_reason: discount ? discountReason : null
+    }).then(function (res) {
+      if (res.error) {
+        showActionStatus(els.priceStatus, false, friendlyDbError(res.error));
+        return;
+      }
+      els.priceStatus.hidden = true;
+      loadPrices();
+    });
+  });
+
+  function loadSubscriptions() {
+    sb.from('service_subscriptions')
+      .select('id, contractor_id, managed_onboarding, compliance_monitoring, training_coordination, effective_from, contractors(legal_name)')
+      .order('created_at', { ascending: false })
+      .limit(100)
+      .then(function (res) {
+        els.subscriptionRows.innerHTML = '';
+        (res.data || []).forEach(function (s) {
+          var c = s.contractors || {};
+          var tr = document.createElement('tr');
+          [c.legal_name || '—',
+            s.managed_onboarding ? 'On' : 'Off',
+            s.compliance_monitoring ? 'On' : 'Off',
+            s.training_coordination ? 'On' : 'Off',
+            fmtDate(s.effective_from)].forEach(function (t) {
+            var td = document.createElement('td');
+            td.textContent = t;
+            tr.appendChild(td);
+          });
+          els.subscriptionRows.appendChild(tr);
+        });
+      });
+  }
+
+  els.subscriptionForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    els.subscriptionStatus.hidden = true;
+    var contractorId = els.ssContractor.value;
+    if (!contractorId) {
+      showActionStatus(els.subscriptionStatus, false, 'Choose the contractor.');
+      return;
+    }
+    var patch = {
+      contractor_id: contractorId,
+      managed_onboarding: document.getElementById('ss-onboarding').checked,
+      compliance_monitoring: document.getElementById('ss-monitoring').checked,
+      training_coordination: document.getElementById('ss-training').checked
+    };
+    sb.from('service_subscriptions')
+      .select('id')
+      .eq('contractor_id', contractorId)
+      .limit(1)
+      .then(function (res) {
+        var existing = (res.data || [])[0];
+        var op = existing
+          ? sb.from('service_subscriptions').update(patch).eq('id', existing.id)
+          : sb.from('service_subscriptions').insert(patch);
+        return op;
+      })
+      .then(function (res) {
+        if (res.error) {
+          showActionStatus(els.subscriptionStatus, false, friendlyDbError(res.error));
+          return;
+        }
+        showActionStatus(els.subscriptionStatus, true, 'Service switches saved.');
+        loadSubscriptions();
+      });
+  });
+
+  function loadCosts() {
+    sb.from('external_costs')
+      .select('id, description, category, amount, status')
+      .order('created_at', { ascending: false })
+      .limit(100)
+      .then(function (res) {
+        els.costRows.innerHTML = '';
+        (res.data || []).forEach(function (c) {
+          var tr = document.createElement('tr');
+          [c.description, COST_CATEGORIES[c.category] || c.category,
+            '£' + c.amount].forEach(function (t) {
+            var td = document.createElement('td');
+            td.textContent = t;
+            tr.appendChild(td);
+          });
+          var tdS = document.createElement('td');
+          tdS.innerHTML = badge(c.status === 'approved' ? 'pass' :
+            c.status === 'incurred' ? 'verified' : 'pending', c.status);
+          tr.appendChild(tdS);
+          var td = document.createElement('td');
+          td.className = 'right';
+          if (c.status === 'proposed') {
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'btn small';
+            b.textContent = 'Approve';
+            b.addEventListener('click', function () {
+              sb.from('external_costs')
+                .update({ status: 'approved', approved_by: profile.id,
+                          approved_at: new Date().toISOString() })
+                .eq('id', c.id)
+                .then(function (r) {
+                  if (r.error) {
+                    showActionStatus(els.costStatus, false, friendlyDbError(r.error));
+                    return;
+                  }
+                  loadCosts();
+                });
+            });
+            td.appendChild(b);
+          }
+          tr.appendChild(td);
+          els.costRows.appendChild(tr);
+        });
+      });
+  }
+
+  els.costForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    els.costStatus.hidden = true;
+    var description = document.getElementById('ec-description').value.trim();
+    var amount = parseFloat(document.getElementById('ec-amount').value);
+    if (!description || !amount || amount < 0) {
+      showActionStatus(els.costStatus, false,
+        'Enter what the cost is for and the amount.');
+      return;
+    }
+    sb.from('external_costs').insert({
+      description: description,
+      category: document.getElementById('ec-category').value,
+      amount: amount
+    }).then(function (res) {
+      if (res.error) {
+        showActionStatus(els.costStatus, false, friendlyDbError(res.error));
+        return;
+      }
+      els.costStatus.hidden = true;
+      document.getElementById('ec-description').value = '';
+      document.getElementById('ec-amount').value = '';
+      loadCosts();
+    });
+  });
+
   function loadProfile(user) {
     els.noProfile.hidden = true;
     els.profileLine.textContent = 'Loading your profile…';
@@ -1487,6 +2107,8 @@
           roles.indexOf('compliance') !== -1;
         canManageRequests = roles.indexOf('owner') !== -1 ||
           roles.indexOf('operations') !== -1;
+        canSeeWorkerDocs = roles.indexOf('owner') !== -1 ||
+          roles.indexOf('compliance') !== -1;
         var canSeeWorkers = canRecordEvidence || roles.indexOf('auditor') !== -1;
         els.workersPanel.hidden = !canSeeWorkers;
         els.addWorkerForm.hidden = !canWriteWorkers;
@@ -1507,7 +2129,23 @@
           roles.indexOf('auditor') !== -1;
         els.actionCentre.hidden = !canSeeCentre;
         els.recomputeBtn.hidden = !canManageSchedule;
-        if (canSeeCentre) loadActionCentre();
+        els.remindersBtn.hidden = !canManageSchedule;
+        if (canSeeCentre) {
+          loadActionCentre();
+          loadAcReminders();
+        }
+        var canSeeOverrides = canSeeWorkers;
+        els.overridesCard.hidden = !canSeeOverrides;
+        els.overrideForm.hidden = roles.indexOf('owner') === -1;
+        els.documentsCard.hidden = !canSeeWorkerDocs;
+        els.statementGenerate.hidden = !canManageRequests;
+        var isOwner = roles.indexOf('owner') !== -1;
+        els.pricesPanel.hidden = !isOwner;
+        if (isOwner) {
+          loadPrices();
+          loadSubscriptions();
+          loadCosts();
+        }
         if (canSeeRequests) {
           loadRequests();
           if (canManageRequests) loadContractors();
