@@ -96,6 +96,8 @@
     inviteForm: document.getElementById('invite-form'),
     inviteEmail: document.getElementById('invite-email'),
     inviteRole: document.getElementById('invite-role'),
+    inviteContractorField: document.getElementById('invite-contractor-field'),
+    inviteContractor: document.getElementById('invite-contractor'),
     inviteStatus: document.getElementById('invite-status'),
     inviteRows: document.getElementById('invite-rows'),
     passport: document.getElementById('passport'),
@@ -483,6 +485,7 @@
   var canRunReadiness = false;
   var canManageRequests = false;
   var canSeeWorkerDocs = false;
+  var canGiveFeedback = false;
 
   var NEXT_STATUS = { draft: 'in_review', in_review: 'verified' };
 
@@ -850,7 +853,8 @@
       .order('legal_name')
       .limit(100)
       .then(function (res) {
-        [els.rqContractor, els.prContractor, els.ssContractor].forEach(function (sel) {
+        [els.rqContractor, els.prContractor, els.ssContractor,
+         els.inviteContractor].forEach(function (sel) {
           if (!sel) return;
           var keep = sel.value;
           var placeholder = sel.options[0] && sel.options[0].value === ''
@@ -1158,7 +1162,9 @@
               td.appendChild(can);
               td.appendChild(document.createTextNode(' '));
             }
-            if (a.status === 'confirmed') {
+          }
+          if (a.status === 'confirmed') {
+            if (canManageRequests) {
               var out = document.createElement('button');
               out.type = 'button';
               out.className = 'btn small';
@@ -1167,13 +1173,22 @@
               td.appendChild(out);
               td.appendChild(document.createTextNode(' '));
             }
-            var stmt = document.createElement('button');
-            stmt.type = 'button';
-            stmt.className = 'btn small ghost';
-            stmt.textContent = 'Statement';
-            stmt.addEventListener('click', function () { openStatement(a); });
-            td.appendChild(stmt);
+            if (canGiveFeedback) {
+              var fb = document.createElement('button');
+              fb.type = 'button';
+              fb.className = 'btn small';
+              fb.textContent = 'Record feedback';
+              fb.addEventListener('click', function () { openOutcome(a, 'feedback'); });
+              td.appendChild(fb);
+              td.appendChild(document.createTextNode(' '));
+            }
           }
+          var stmt = document.createElement('button');
+          stmt.type = 'button';
+          stmt.className = 'btn small ghost';
+          stmt.textContent = 'Statement';
+          stmt.addEventListener('click', function () { openStatement(a); });
+          td.appendChild(stmt);
           tr.appendChild(td);
           els.assignmentRows.appendChild(tr);
         });
@@ -1232,11 +1247,16 @@
   }
 
   var outcomeAssignment = null;
+  var outcomeMode = 'team';
 
-  function openOutcome(a) {
+  function openOutcome(a, mode) {
     outcomeAssignment = a;
+    outcomeMode = mode || 'team';
     var w = a.workers || {};
-    els.outcomeTitle.textContent = 'Record outcome — ' +
+    els.outcomeTitle.textContent =
+      (outcomeMode === 'feedback'
+        ? 'Record worker feedback — '
+        : 'Record outcome — ') +
       (a.public_reference || '') + ' · ' + (w.full_name || 'worker');
     els.outcomeForm.hidden = false;
     els.outcomeStatus.hidden = true;
@@ -1263,7 +1283,7 @@
         'Choose the rating and the rehire decision.');
       return;
     }
-    sb.from('assignment_outcomes').insert({
+    sb.from('assignment_outcomes').upsert({
       assignment_id: outcomeAssignment.id,
       attended: document.getElementById('oc-attended').value === 'yes',
       rating: parseInt(rating, 10),
@@ -1271,7 +1291,22 @@
       client_feedback: document.getElementById('oc-feedback').value.trim() || null
     }).then(function (res) {
       if (res.error) {
-        showActionStatus(els.outcomeStatus, false, friendlyDbError(res.error));
+        var msg = (res.error.message || '');
+        if (outcomeMode === 'feedback' &&
+            (msg.indexOf('duplicate') !== -1 || msg.indexOf('security') !== -1)) {
+          showActionStatus(els.outcomeStatus, false,
+            'Feedback is already recorded for this assignment.');
+        } else {
+          showActionStatus(els.outcomeStatus, false, friendlyDbError(res.error));
+        }
+        return;
+      }
+      if (outcomeMode === 'feedback') {
+        els.outcomeForm.hidden = true;
+        outcomeAssignment = null;
+        showActionStatus(els.assignmentStatus, true,
+          'Feedback recorded. The team completes the outcome.');
+        loadAssignments();
         return;
       }
       sb.from('assignments').update({ status: 'completed' })
@@ -2109,6 +2144,7 @@
           roles.indexOf('operations') !== -1;
         canSeeWorkerDocs = roles.indexOf('owner') !== -1 ||
           roles.indexOf('compliance') !== -1;
+        canGiveFeedback = roles.indexOf('contractor') !== -1;
         var canSeeWorkers = canRecordEvidence || roles.indexOf('auditor') !== -1;
         els.workersPanel.hidden = !canSeeWorkers;
         els.addWorkerForm.hidden = !canWriteWorkers;
@@ -2117,7 +2153,7 @@
         els.qualForm.hidden = !canRecordEvidence;
         els.wdReadinessActions.hidden = !canRunReadiness;
         var canSeeRequests = canManageRequests || roles.indexOf('compliance') !== -1 ||
-          roles.indexOf('auditor') !== -1;
+          roles.indexOf('auditor') !== -1 || canGiveFeedback;
         els.requestsPanel.hidden = !canSeeRequests;
         els.requestForm.hidden = !canManageRequests;
         els.contractorDetails.hidden = !canManageRequests;
@@ -2277,6 +2313,9 @@
     });
   });
 
+  els.inviteRole.addEventListener('change', function () {
+    els.inviteContractorField.hidden = els.inviteRole.value !== 'contractor';
+  });
   els.inviteForm.addEventListener('submit', function (e) {
     e.preventDefault();
     els.inviteStatus.hidden = true;
@@ -2287,8 +2326,16 @@
       els.inviteStatus.textContent = 'Enter an email address.';
       return;
     }
+    var contractorId = role === 'contractor' ? els.inviteContractor.value : null;
+    if (role === 'contractor' && !contractorId) {
+      els.inviteStatus.hidden = false;
+      els.inviteStatus.textContent =
+        'Choose the contractor this person belongs to (add one first if needed).';
+      return;
+    }
     sb.from('invitations')
-      .insert({ email: email, role: role, invited_by: profile.id })
+      .insert({ email: email, role: role, invited_by: profile.id,
+                 contractor_id: contractorId })
       .then(function (res) {
         if (res.error) {
           els.inviteStatus.hidden = false;
