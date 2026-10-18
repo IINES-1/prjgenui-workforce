@@ -95,6 +95,10 @@
     wdInviteLink: document.getElementById('wd-invite-link'),
     wdClose: document.getElementById('wd-close'),
     wdRtw: document.getElementById('wd-rtw'),
+    wdReadinessBox: document.getElementById('wd-readiness-box'),
+    wdReadinessActions: document.getElementById('wd-readiness-actions'),
+    wdReadiness: document.getElementById('wd-readiness'),
+    wdReadinessStatus: document.getElementById('wd-readiness-status'),
     rtwForm: document.getElementById('rtw-form'),
     rtwStatus: document.getElementById('rtw-status'),
     wdQuals: document.getElementById('wd-quals'),
@@ -375,8 +379,68 @@
   var currentWorker = null;
   var canWriteWorkers = false;
   var canRecordEvidence = false;
+  var canRunReadiness = false;
 
   var NEXT_STATUS = { draft: 'in_review', in_review: 'verified' };
+
+  function renderReadiness(ev) {
+    if (!ev) {
+      els.wdReadinessBox.innerHTML =
+        '<p class="footnote">No readiness check has been run yet.</p>';
+      return;
+    }
+    var html = '<p class="profile-line">' + badge(ev.outcome,
+      ev.outcome === 'pass' ? 'Ready' : 'Blocked') +
+      ' — checked ' + fmtDate(ev.created_at) +
+      ' (rules ' + ev.rules_version + ')</p>';
+    var blockers = ev.blockers || [];
+    if (blockers.length) {
+      html += '<ul class="blockers">';
+      blockers.forEach(function (b) {
+        html += '<li>' + (b.reason || b.code) +
+          (b.mandatory ? ' (required)' : '') + '</li>';
+      });
+      html += '</ul>';
+    }
+    els.wdReadinessBox.innerHTML = html;
+  }
+
+  function loadWorkerReadiness(id) {
+    sb.from('readiness_evaluations')
+      .select('outcome, blockers, rules_version, created_at')
+      .eq('worker_id', id).order('created_at', { ascending: false }).limit(1)
+      .then(function (res) {
+        renderReadiness((res.data || [])[0]);
+      });
+  }
+
+  function runReadiness() {
+    if (!currentWorker) return;
+    showActionStatus(els.wdReadinessStatus, true, 'Running the check…');
+    sb.rpc('evaluate_readiness', { p_worker_id: currentWorker.id })
+      .then(function (res) {
+        var r = res.data || {};
+        if (!r.ok) {
+          showActionStatus(els.wdReadinessStatus, false, {
+            not_signed_in: 'Your sign-in has expired — sign in again.',
+            not_permitted: 'Your role cannot run readiness checks.',
+            worker_not_found: 'That worker record no longer exists.'
+          }[r.error] || 'The check could not be run. Try again.');
+          return;
+        }
+        showActionStatus(els.wdReadinessStatus, true,
+          r.outcome === 'pass'
+            ? 'Ready — no blockers.'
+            : 'Blocked — every blocker above needs resolving.');
+        loadWorkerReadiness(currentWorker.id);
+      })
+      .catch(function () {
+        showActionStatus(els.wdReadinessStatus, false,
+          'The check could not be run right now. Try again.');
+      });
+  }
+
+  els.wdReadiness.addEventListener('click', runReadiness);
 
   function loadWorkers() {
     sb.from('workers')
@@ -414,12 +478,14 @@
     els.workerDetail.hidden = false;
     els.wdInviteLink.hidden = true;
     els.wdActionStatus.hidden = true;
+    els.wdReadinessStatus.hidden = true;
     els.wdReasonInput.value = '';
     sb.from('workers').select('*').eq('id', id).maybeSingle()
       .then(function (res) {
         currentWorker = res.data;
         renderWorkerDetail();
         loadWorkerEvidence(id);
+        loadWorkerReadiness(id);
         els.workerDetail.scrollIntoView({ behavior: 'smooth' });
       });
   }
@@ -713,12 +779,15 @@
           roles.indexOf('operations') !== -1;
         canRecordEvidence = canWriteWorkers ||
           roles.indexOf('compliance') !== -1;
+        canRunReadiness = roles.indexOf('owner') !== -1 ||
+          roles.indexOf('compliance') !== -1;
         var canSeeWorkers = canRecordEvidence || roles.indexOf('auditor') !== -1;
         els.workersPanel.hidden = !canSeeWorkers;
         els.addWorkerForm.hidden = !canWriteWorkers;
         els.wdActions.hidden = !canWriteWorkers;
         els.rtwForm.hidden = !canRecordEvidence;
         els.qualForm.hidden = !canRecordEvidence;
+        els.wdReadinessActions.hidden = !canRunReadiness;
         if (canSeeWorkers) {
           loadWorkers();
         } else {
