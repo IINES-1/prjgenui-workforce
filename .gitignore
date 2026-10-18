@@ -5,3 +5,6 @@ research/shots/
 tools/supabase_login.js
 .DS_Store
 Thumbs.db
+
+tmp/
+outputs/
