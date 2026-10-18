@@ -117,6 +117,26 @@
     perfLine: document.getElementById('perf-line'),
     workersPanel: document.getElementById('workers-panel'),
     workersRows: document.getElementById('workers-rows'),
+    crewsPanel: document.getElementById('crews-panel'),
+    crewsToolbar: document.getElementById('crews-toolbar'),
+    crewsCount: document.getElementById('crews-count'),
+    crewsTable: document.getElementById('crews-table'),
+    crewsRows: document.getElementById('crews-rows'),
+    crewsStatus: document.getElementById('crews-status'),
+    addCrewBtn: document.getElementById('add-crew-btn'),
+    crewFormCard: document.getElementById('crew-form-card'),
+    crewFormTitle: document.getElementById('crew-form-title'),
+    crewForm: document.getElementById('crew-form'),
+    crewFormStatus: document.getElementById('crew-form-status'),
+    crName: document.getElementById('cr-name'),
+    crSpecialism: document.getElementById('cr-specialism'),
+    crSupervisor: document.getElementById('cr-supervisor'),
+    crMembers: document.getElementById('cr-members'),
+    crNotes: document.getElementById('cr-notes'),
+    deployRows: document.getElementById('deploy-rows'),
+    addDeployBtn: document.getElementById('add-deploy-btn'),
+    deleteCrewBtn: document.getElementById('delete-crew-btn'),
+    cancelCrewBtn: document.getElementById('cancel-crew-btn'),
     addWorkerForm: document.getElementById('add-worker-form'),
     addWorkerStatus: document.getElementById('add-worker-status'),
     workerDetail: document.getElementById('worker-detail'),
@@ -167,6 +187,12 @@
     outcomeTitle: document.getElementById('outcome-title'),
     outcomeStatus: document.getElementById('outcome-status'),
     outcomeCancel: document.getElementById('outcome-cancel'),
+    ratesForm: document.getElementById('rates-form'),
+    ratesTitle: document.getElementById('rates-title'),
+    ratesStatus: document.getElementById('rates-status'),
+    rtPay: document.getElementById('rt-pay'),
+    rtCharge: document.getElementById('rt-charge'),
+    ratesCancel: document.getElementById('rates-cancel'),
     remindersBtn: document.getElementById('reminders-btn'),
     acReminders: document.getElementById('ac-reminders'),
     statementView: document.getElementById('statement-view'),
@@ -480,12 +506,15 @@
   }
 
   var currentWorker = null;
+  var workersCache = [];
   var canWriteWorkers = false;
   var canRecordEvidence = false;
   var canRunReadiness = false;
   var canManageRequests = false;
   var canSeeWorkerDocs = false;
   var canGiveFeedback = false;
+  var canSeeCrews = false;
+  var canWriteCrews = false;
 
   var NEXT_STATUS = { draft: 'in_review', in_review: 'verified' };
 
@@ -555,7 +584,8 @@
       .limit(100)
       .then(function (res) {
         els.workersRows.innerHTML = '';
-        (res.data || []).forEach(function (w) {
+        workersCache = res.data || [];
+        workersCache.forEach(function (w) {
           var tr = document.createElement('tr');
           [w.passport_no || '—', w.full_name, w.trade || '—'].forEach(function (t) {
             var td = document.createElement('td');
@@ -783,6 +813,262 @@
   els.wdBlock.addEventListener('click', function () { changeWorkerStatus('blocked'); });
   els.wdArchive.addEventListener('click', function () { changeWorkerStatus('archived'); });
   els.wdInvite.addEventListener('click', inviteCurrentWorker);
+
+  /* ------------- Crews (register 2.5 and 5.4; the approved
+     dashboard's crew model, unchanged) ------------- */
+
+  var currentCrew = null;
+
+  function crewConfidence(count) {
+    if (count === 0) return badge('new', 'New crew');
+    if (count < 3) return badge('pending_review', 'Limited evidence');
+    return badge('pass', 'Proven crew');
+  }
+
+  function loadCrews() {
+    sb.from('crews')
+      .select('id, name, specialism, supervisor_id, notes')
+      .order('created_at', { ascending: false })
+      .limit(100)
+      .then(function (res) {
+        if (res.error) {
+          showActionStatus(els.crewsStatus, false, friendlyDbError(res.error));
+          return;
+        }
+        var crews = res.data || [];
+        sb.from('crew_members').select('crew_id, worker_id').limit(2000)
+          .then(function (rm) {
+            var members = rm.data || [];
+            return sb.from('crew_deployments')
+              .select('id, crew_id, deploy_date, client, project, worked_well')
+              .order('deploy_date', { ascending: false })
+              .limit(2000)
+              .then(function (rd) {
+                renderCrews(crews, members, rd.data || []);
+              });
+          });
+      });
+  }
+
+  function renderCrews(crews, members, deployments) {
+    els.crewsCount.textContent = crews.length +
+      (crews.length === 1 ? ' crew' : ' crews') +
+      ' with a working history together.';
+    els.crewsTable.hidden = crews.length === 0;
+    els.crewsRows.innerHTML = '';
+    crews.forEach(function (c) {
+      var memberIds = members.filter(function (m) { return m.crew_id === c.id; })
+        .map(function (m) { return m.worker_id; });
+      var deps = deployments.filter(function (d) { return d.crew_id === c.id; });
+      var worked = deps.filter(function (d) { return d.worked_well; }).length;
+      var pct = deps.length
+        ? Math.round(worked / deps.length * 100) + '% worked well' : 'New';
+      var entry = { crew: c, members: memberIds, deployments: deps };
+      var tr = document.createElement('tr');
+      [c.name, String(memberIds.length), c.specialism || '—'].forEach(function (t) {
+        var td = document.createElement('td');
+        td.textContent = t;
+        tr.appendChild(td);
+      });
+      var tdE = document.createElement('td');
+      tdE.innerHTML = crewConfidence(deps.length) +
+        ' <span class="profile-line">' + pct + '</span>';
+      tr.appendChild(tdE);
+      var td = document.createElement('td');
+      td.className = 'right';
+      if (canWriteCrews) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn small';
+        btn.textContent = 'Edit';
+        btn.addEventListener('click', function () { openCrewForm(entry); });
+        td.appendChild(btn);
+      }
+      tr.appendChild(td);
+      els.crewsRows.appendChild(tr);
+    });
+  }
+
+  function crewWorkerOptions(select, selectedIds, includeNone) {
+    select.innerHTML = '';
+    if (includeNone) {
+      var o = document.createElement('option');
+      o.value = '';
+      o.textContent = 'None set';
+      select.appendChild(o);
+    }
+    workersCache.forEach(function (w) {
+      var opt = document.createElement('option');
+      opt.value = w.id;
+      opt.textContent = w.full_name +
+        (w.trade ? ' · ' + w.trade : '') +
+        (w.passport_no ? ' · ' + w.passport_no : '');
+      if (selectedIds && selectedIds.indexOf(w.id) !== -1) opt.selected = true;
+      select.appendChild(opt);
+    });
+    if (!workersCache.length && !includeNone) {
+      var hint = document.createElement('option');
+      hint.value = '';
+      hint.textContent = 'Add workers first, then build a crew from them.';
+      select.appendChild(hint);
+    }
+  }
+
+  function addDeployRow(d) {
+    var tr = document.createElement('tr');
+    function cell(child) {
+      var td = document.createElement('td');
+      td.appendChild(child);
+      tr.appendChild(td);
+    }
+    var date = document.createElement('input');
+    date.type = 'date';
+    date.className = 'cd-date';
+    if (d && d.deploy_date) date.value = d.deploy_date;
+    cell(date);
+    var client = document.createElement('input');
+    client.type = 'text';
+    client.className = 'cd-client';
+    client.placeholder = 'Client';
+    if (d && d.client) client.value = d.client;
+    cell(client);
+    var project = document.createElement('input');
+    project.type = 'text';
+    project.className = 'cd-project';
+    project.placeholder = 'Project';
+    if (d && d.project) project.value = d.project;
+    cell(project);
+    var worked = document.createElement('select');
+    worked.className = 'cd-worked';
+    [['', '—'], ['yes', 'Worked well'], ['no', 'Problems']].forEach(function (pair) {
+      var opt = document.createElement('option');
+      opt.value = pair[0];
+      opt.textContent = pair[1];
+      worked.appendChild(opt);
+    });
+    if (d && d.worked_well === true) worked.value = 'yes';
+    if (d && d.worked_well === false) worked.value = 'no';
+    cell(worked);
+    var rm = document.createElement('button');
+    rm.type = 'button';
+    rm.className = 'btn small danger';
+    rm.textContent = 'Remove';
+    rm.addEventListener('click', function () { tr.remove(); });
+    cell(rm);
+    els.deployRows.appendChild(tr);
+  }
+
+  function openCrewForm(entry) {
+    currentCrew = entry ? entry.crew : null;
+    els.crewFormStatus.hidden = true;
+    els.crewFormTitle.textContent = entry ? 'Edit crew' : 'Add crew';
+    els.deleteCrewBtn.hidden = !entry;
+    els.crName.value = entry ? entry.crew.name : '';
+    els.crSpecialism.value = entry ? (entry.crew.specialism || '') : '';
+    els.crNotes.value = entry ? (entry.crew.notes || '') : '';
+    crewWorkerOptions(els.crSupervisor,
+      entry && entry.crew.supervisor_id ? [entry.crew.supervisor_id] : [], true);
+    crewWorkerOptions(els.crMembers, entry ? entry.members : [], false);
+    els.deployRows.innerHTML = '';
+    if (entry) entry.deployments.forEach(addDeployRow);
+    els.crewFormCard.hidden = false;
+    els.crewFormCard.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  els.addCrewBtn.addEventListener('click', function () { openCrewForm(null); });
+  els.cancelCrewBtn.addEventListener('click', function () {
+    els.crewFormCard.hidden = true;
+    currentCrew = null;
+  });
+  els.addDeployBtn.addEventListener('click', function () { addDeployRow(null); });
+
+  els.deleteCrewBtn.addEventListener('click', function () {
+    if (!currentCrew) return;
+    if (!window.confirm('Delete this crew? This cannot be undone.')) return;
+    sb.from('crews').delete().eq('id', currentCrew.id)
+      .then(function (res) {
+        if (res.error) {
+          showActionStatus(els.crewFormStatus, false, friendlyDbError(res.error));
+          return;
+        }
+        els.crewFormCard.hidden = true;
+        currentCrew = null;
+        showActionStatus(els.crewsStatus, true, 'Crew deleted.');
+        loadCrews();
+      });
+  });
+
+  els.crewForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    els.crewFormStatus.hidden = true;
+    var name = els.crName.value.trim();
+    if (!name) {
+      showActionStatus(els.crewFormStatus, false, 'Enter the crew name.');
+      return;
+    }
+    var memberIds = Array.prototype.map.call(
+      els.crMembers.selectedOptions || [], function (o) { return o.value; })
+      .filter(function (v) { return v; });
+    var deployments = Array.prototype.map.call(
+      els.deployRows.querySelectorAll('tr'), function (row) {
+        return {
+          deploy_date: row.querySelector('.cd-date').value || null,
+          client: row.querySelector('.cd-client').value.trim() || null,
+          project: row.querySelector('.cd-project').value.trim() || null,
+          worked_well: row.querySelector('.cd-worked').value === ''
+            ? null : row.querySelector('.cd-worked').value === 'yes'
+        };
+      }).filter(function (d) { return d.deploy_date || d.client || d.project; });
+    var crew = {
+      name: name,
+      specialism: els.crSpecialism.value.trim() || null,
+      supervisor_id: els.crSupervisor.value || null,
+      notes: els.crNotes.value.trim() || null
+    };
+    var save = currentCrew
+      ? sb.from('crews').update(crew).eq('id', currentCrew.id).select('id')
+      : sb.from('crews').insert(crew).select('id');
+    save.then(function (res) {
+      if (res.error) {
+        showActionStatus(els.crewFormStatus, false, friendlyDbError(res.error));
+        return;
+      }
+      var id = (res.data || [])[0].id;
+      sb.from('crew_members').delete().eq('crew_id', id)
+        .then(function () {
+          if (!memberIds.length) return null;
+          return sb.from('crew_members').insert(memberIds.map(function (wid) {
+            return { crew_id: id, worker_id: wid };
+          }));
+        })
+        .then(function () {
+          return sb.from('crew_deployments').delete().eq('crew_id', id);
+        })
+        .then(function () {
+          if (!deployments.length) return null;
+          return sb.from('crew_deployments').insert(deployments.map(function (d) {
+            return {
+              crew_id: id,
+              deploy_date: d.deploy_date,
+              client: d.client,
+              project: d.project,
+              worked_well: d.worked_well
+            };
+          }));
+        })
+        .then(function (r) {
+          if (r && r.error) {
+            showActionStatus(els.crewFormStatus, false, friendlyDbError(r.error));
+            return;
+          }
+          els.crewFormCard.hidden = true;
+          currentCrew = null;
+          showActionStatus(els.crewsStatus, true, 'Crew saved.');
+          loadCrews();
+        });
+    });
+  });
+
 
   els.rtwForm.addEventListener('submit', function (e) {
     e.preventDefault();
@@ -1116,9 +1402,54 @@
     });
   }
 
+  /* Assignment rates (register 6.4): records only, kept as in the
+     dashboard. Billing on top waits for the employment-law opinion. */
+
+  var ratesAssignment = null;
+
+  function openRates(a) {
+    ratesAssignment = a;
+    els.ratesForm.hidden = false;
+    els.ratesStatus.hidden = true;
+    els.ratesTitle.textContent = 'Assignment rates — ' +
+      (a.public_reference || '') + ' · ' +
+      ((a.workers || {}).full_name || 'worker');
+    els.rtPay.value = a.worker_pay_rate || '';
+    els.rtCharge.value = a.client_charge_rate || '';
+    els.ratesForm.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  els.ratesCancel.addEventListener('click', function () {
+    els.ratesForm.hidden = true;
+    ratesAssignment = null;
+  });
+
+  els.ratesForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!ratesAssignment) return;
+    els.ratesStatus.hidden = true;
+    sb.from('assignments')
+      .update({
+        worker_pay_rate: els.rtPay.value.trim() || null,
+        client_charge_rate: els.rtCharge.value.trim() || null
+      })
+      .eq('id', ratesAssignment.id)
+      .then(function (res) {
+        if (res.error) {
+          showActionStatus(els.ratesStatus, false, friendlyDbError(res.error));
+          return;
+        }
+        els.ratesForm.hidden = true;
+        ratesAssignment = null;
+        showActionStatus(els.assignmentStatus, true, 'Rates recorded.');
+        loadAssignments();
+      });
+  });
+
   function loadAssignments() {
     sb.from('assignments')
       .select('id, public_reference, status, trade, start_date, request_id, ' +
+        'worker_pay_rate, client_charge_rate, ' +
         'workers(full_name, passport_no), workforce_requests(public_reference, number_needed)')
       .order('created_at', { ascending: false })
       .limit(50)
@@ -1139,7 +1470,10 @@
           tdS.innerHTML = badge(ASSIGN_BADGE[a.status] || 'pending',
             ASSIGN_STATUS[a.status] || a.status) +
             (req.public_reference ? ' <span class="profile-line">' +
-              req.public_reference + '</span>' : '');
+              req.public_reference + '</span>' : '') +
+            (canManageRequests && (a.worker_pay_rate || a.client_charge_rate)
+              ? ' <span class="profile-line">pay ' + (a.worker_pay_rate || '—') +
+                ' · charge ' + (a.client_charge_rate || '—') + '</span>' : '');
           tr.appendChild(tdS);
           var td = document.createElement('td');
           td.className = 'right';
@@ -1189,6 +1523,15 @@
           stmt.textContent = 'Statement';
           stmt.addEventListener('click', function () { openStatement(a); });
           td.appendChild(stmt);
+          if (canManageRequests) {
+            td.appendChild(document.createTextNode(' '));
+            var rt = document.createElement('button');
+            rt.type = 'button';
+            rt.className = 'btn small ghost';
+            rt.textContent = 'Rates';
+            rt.addEventListener('click', function () { openRates(a); });
+            td.appendChild(rt);
+          }
           tr.appendChild(td);
           els.assignmentRows.appendChild(tr);
         });
@@ -2152,6 +2495,12 @@
         els.rtwForm.hidden = !canRecordEvidence;
         els.qualForm.hidden = !canRecordEvidence;
         els.wdReadinessActions.hidden = !canRunReadiness;
+        var canSeeCrewsLocal = canSeeWorkers;
+        canSeeCrews = canSeeCrewsLocal;
+        canWriteCrews = canWriteWorkers;
+        els.crewsPanel.hidden = !canSeeCrews;
+        els.crewsToolbar.hidden = !canSeeCrews;
+        els.addCrewBtn.hidden = !canWriteCrews;
         var canSeeRequests = canManageRequests || roles.indexOf('compliance') !== -1 ||
           roles.indexOf('auditor') !== -1 || canGiveFeedback;
         els.requestsPanel.hidden = !canSeeRequests;
@@ -2193,6 +2542,11 @@
           loadWorkers();
         } else {
           els.workerDetail.hidden = true;
+        }
+        if (canSeeCrews) {
+          loadCrews();
+        } else {
+          els.crewFormCard.hidden = true;
         }
         if (profile.worker_id) {
           loadPassport(profile.worker_id);

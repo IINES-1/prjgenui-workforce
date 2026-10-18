@@ -359,6 +359,67 @@
         </div>
       </div>
 
+      <!-- Crews: Owner and Operations manage; Compliance and Auditor read -->
+      <div id="crews-panel" class="card" hidden>
+        <h2>Crews</h2>
+        <p class="footnote">A crew is a group of workers with a track record of
+          working well together. A crew only exists once you have seen it happen.</p>
+        <div class="row-between" id="crews-toolbar" hidden>
+          <p id="crews-count" class="profile-line"></p>
+          <button type="button" class="btn small" id="add-crew-btn">Add crew</button>
+        </div>
+        <p id="crews-status" class="error" hidden></p>
+        <table id="crews-table" hidden>
+          <thead><tr><th>Crew</th><th>Members</th><th>Specialism</th>
+            <th>Evidence</th><th></th></tr></thead>
+          <tbody id="crews-rows"></tbody>
+        </table>
+        <div id="crew-form-card" class="card" hidden>
+          <h3 id="crew-form-title">Add crew</h3>
+          <form id="crew-form" novalidate>
+            <div class="field">
+              <label for="cr-name">Crew name</label>
+              <input type="text" id="cr-name" autocomplete="off"
+                placeholder="e.g. Painting crew A" required>
+            </div>
+            <div class="field">
+              <label for="cr-specialism">Specialism</label>
+              <input type="text" id="cr-specialism" autocomplete="off"
+                placeholder="e.g. Education / occupied housing">
+            </div>
+            <div class="field">
+              <label for="cr-supervisor">Supervisor</label>
+              <select id="cr-supervisor"><option value="">None set</option></select>
+            </div>
+            <div class="field">
+              <label for="cr-members">Members</label>
+              <select id="cr-members" multiple size="6"></select>
+              <p class="footnote">Ctrl/Cmd-click to select more than one.</p>
+            </div>
+            <div class="field">
+              <label for="cr-notes">Notes</label>
+              <textarea id="cr-notes" rows="2"></textarea>
+            </div>
+            <h4>Deployment history</h4>
+            <p class="footnote">Log each time this crew went out together.</p>
+            <table>
+              <thead><tr><th>Date</th><th>Client</th><th>Project</th>
+                <th>Outcome</th><th></th></tr></thead>
+              <tbody id="deploy-rows"></tbody>
+            </table>
+            <button type="button" class="btn small ghost" id="add-deploy-btn">+ Add deployment</button>
+            <div class="row-between" style="margin-top:12px;">
+              <button type="button" class="btn small danger" id="delete-crew-btn" hidden>Delete crew</button>
+              <div class="row-between">
+                <button type="button" class="btn ghost" id="cancel-crew-btn">Cancel</button>
+                <button type="submit" class="btn">Save crew</button>
+              </div>
+            </div>
+            <p id="crew-form-status" class="error" hidden></p>
+          </form>
+        </div>
+      </div>
+
       <!-- Requests: Owner and Operations manage; Compliance and Auditor read -->
       <div id="requests-panel" class="card" hidden>
         <h2>Workforce requests</h2>
@@ -486,6 +547,25 @@
             <button class="btn ghost" type="button" id="outcome-cancel">Back</button>
           </div>
           <p id="outcome-status" class="error" hidden></p>
+        </form>
+        <form id="rates-form" class="card" hidden novalidate>
+          <h3 id="rates-title">Assignment rates</h3>
+          <p class="footnote">Records only. Billing is built on top of these in a later stage.</p>
+          <div class="fields">
+            <div class="field">
+              <label for="rt-pay">Worker pay rate</label>
+              <input type="text" id="rt-pay" autocomplete="off" placeholder="e.g. £180/day">
+            </div>
+            <div class="field">
+              <label for="rt-charge">Client charge rate</label>
+              <input type="text" id="rt-charge" autocomplete="off" placeholder="e.g. £220/day">
+            </div>
+          </div>
+          <div class="row-actions">
+            <button class="btn" type="submit" id="rates-btn">Save rates</button>
+            <button class="btn ghost" type="button" id="rates-cancel">Back</button>
+          </div>
+          <p id="rates-status" class="error" hidden></p>
         </form>
       </div>
 
