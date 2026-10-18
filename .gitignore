@@ -1,5 +1,7 @@
 .vercel
 secrets.js
 research/shots/
+# Local credential helper for the Supabase dashboard login (never commit)
+tools/supabase_login.js
 .DS_Store
 Thumbs.db
