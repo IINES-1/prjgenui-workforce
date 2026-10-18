@@ -77,6 +77,29 @@
     assignRows: document.getElementById('assign-rows'),
     perfCard: document.getElementById('passport-perf'),
     perfLine: document.getElementById('perf-line'),
+    workersPanel: document.getElementById('workers-panel'),
+    workersRows: document.getElementById('workers-rows'),
+    addWorkerForm: document.getElementById('add-worker-form'),
+    addWorkerStatus: document.getElementById('add-worker-status'),
+    workerDetail: document.getElementById('worker-detail'),
+    wdTitle: document.getElementById('wd-title'),
+    wdStatusLine: document.getElementById('wd-status-line'),
+    wdReason: document.getElementById('wd-reason'),
+    wdReasonInput: document.getElementById('wd-reason-input'),
+    wdActions: document.getElementById('wd-actions'),
+    wdAdvance: document.getElementById('wd-advance'),
+    wdBlock: document.getElementById('wd-block'),
+    wdArchive: document.getElementById('wd-archive'),
+    wdInvite: document.getElementById('wd-invite'),
+    wdActionStatus: document.getElementById('wd-action-status'),
+    wdInviteLink: document.getElementById('wd-invite-link'),
+    wdClose: document.getElementById('wd-close'),
+    wdRtw: document.getElementById('wd-rtw'),
+    rtwForm: document.getElementById('rtw-form'),
+    rtwStatus: document.getElementById('rtw-status'),
+    wdQuals: document.getElementById('wd-quals'),
+    qualForm: document.getElementById('qual-form'),
+    qualStatus: document.getElementById('qual-status'),
     signout: document.getElementById('signout')
   };
 
@@ -334,6 +357,322 @@
       });
   }
 
+  function showActionStatus(el, ok, message) {
+    el.hidden = false;
+    el.className = ok ? 'ok' : 'error';
+    el.textContent = message;
+  }
+
+  function friendlyDbError(err) {
+    var msg = (err && err.message) || '';
+    msg = msg.replace(/^.*?:\s*/, '');
+    if (msg.indexOf('row-level security') !== -1) {
+      return 'Your role is not permitted to do that.';
+    }
+    return msg || 'That change was not accepted. Check the details and try again.';
+  }
+
+  var currentWorker = null;
+  var canWriteWorkers = false;
+  var canRecordEvidence = false;
+
+  var NEXT_STATUS = { draft: 'in_review', in_review: 'verified' };
+
+  function loadWorkers() {
+    sb.from('workers')
+      .select('id, passport_no, full_name, trade, status')
+      .order('updated_at', { ascending: false })
+      .limit(100)
+      .then(function (res) {
+        els.workersRows.innerHTML = '';
+        (res.data || []).forEach(function (w) {
+          var tr = document.createElement('tr');
+          [w.passport_no || '—', w.full_name, w.trade || '—'].forEach(function (t) {
+            var td = document.createElement('td');
+            td.textContent = t;
+            tr.appendChild(td);
+          });
+          var tdStatus = document.createElement('td');
+          tdStatus.innerHTML = badge(w.status, WORKER_STATUS[w.status] || w.status);
+          tr.appendChild(tdStatus);
+          var td = document.createElement('td');
+          td.className = 'right';
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn small';
+          btn.textContent = 'Open';
+          btn.addEventListener('click', function () { openWorker(w.id); });
+          td.appendChild(btn);
+          tr.appendChild(td);
+          els.workersRows.appendChild(tr);
+        });
+      });
+  }
+
+  function openWorker(id) {
+    currentWorker = null;
+    els.workerDetail.hidden = false;
+    els.wdInviteLink.hidden = true;
+    els.wdActionStatus.hidden = true;
+    els.wdReasonInput.value = '';
+    sb.from('workers').select('*').eq('id', id).maybeSingle()
+      .then(function (res) {
+        currentWorker = res.data;
+        renderWorkerDetail();
+        loadWorkerEvidence(id);
+        els.workerDetail.scrollIntoView({ behavior: 'smooth' });
+      });
+  }
+
+  function renderWorkerDetail() {
+    var w = currentWorker;
+    if (!w) return;
+    els.wdTitle.textContent = w.full_name;
+    els.wdStatusLine.innerHTML =
+      (w.passport_no ? w.passport_no + ' · ' : '') +
+      (w.trade ? w.trade + ' · ' : '') +
+      badge(w.status, WORKER_STATUS[w.status] || w.status) +
+      ' — contact: ' + (w.email || w.phone || 'not recorded');
+    if ((w.status === 'blocked' || w.status === 'archived') && w.status_reason) {
+      els.wdReason.hidden = false;
+      els.wdReason.textContent = 'Reason: ' + w.status_reason;
+    } else {
+      els.wdReason.hidden = true;
+    }
+    els.wdAdvance.hidden = !canWriteWorkers || !NEXT_STATUS[w.status];
+    els.wdInvite.hidden = !canWriteWorkers || !w.email;
+  }
+
+  function loadWorkerEvidence(id) {
+    sb.from('rtw_checks')
+      .select('method, check_date, result, restrictions, follow_up_due, source')
+      .eq('worker_id', id).order('check_date', { ascending: false })
+      .then(function (res) {
+        els.wdRtw.innerHTML = miniTable((res.data || []).map(function (c) {
+          return [fmtDate(c.check_date),
+            RTW_METHODS[c.method] || c.method,
+            badge(c.result, RTW_RESULTS[c.result] || c.result),
+            c.source || '—',
+            c.follow_up_due ? 'Follow-up by ' + fmtDate(c.follow_up_due) : '—'];
+        }), ['Checked', 'Method', 'Result', 'Source', 'Next']);
+      });
+
+    var quals = [];
+    sb.from('qualifications')
+      .select('id, kind, number, status, expiry_date')
+      .eq('worker_id', id)
+      .then(function (res) {
+        (res.data || []).forEach(function (q) {
+          quals.push({ id: q.id, table: 'qualifications',
+            label: QUAL_KINDS[q.kind] || (q.kind || '').replace(/_/g, ' '),
+            number: q.number, status: q.status,
+            expiry: q.expiry_date ? fmtDate(q.expiry_date) : '—' });
+        });
+        return sb.from('training_certificates')
+          .select('id, training_type, status, expiry_date')
+          .eq('worker_id', id);
+      })
+      .then(function (res) {
+        (res.data || []).forEach(function (t) {
+          quals.push({ id: t.id, table: 'training_certificates',
+            label: (t.training_type || '').replace(/_/g, ' '),
+            number: null, status: t.status,
+            expiry: t.expiry_date ? fmtDate(t.expiry_date) : '—' });
+        });
+        quals.sort(function (a, b) { return (a.expiry || '') < (b.expiry || '') ? -1 : 1; });
+        if (!quals.length) {
+          els.wdQuals.innerHTML = '<p class="footnote">Nothing recorded yet.</p>';
+          return;
+        }
+        var html = '<table><thead><tr><th>Card or training</th><th>Number</th>' +
+          '<th>Status</th><th>Expires</th><th></th></tr></thead><tbody>';
+        quals.forEach(function (q) {
+          html += '<tr><td>' + q.label + '</td><td>' + (q.number || '—') + '</td><td>' +
+            badge(q.status, EVIDENCE_STATUS[q.status] || q.status) +
+            '</td><td>' + q.expiry + '</td><td class="right">';
+          if (canRecordEvidence) {
+            if (q.status === 'pending_review') {
+              html += '<button type="button" class="btn small" data-verify="' +
+                q.table + ':' + q.id + '">Verify</button> ';
+            }
+            if (q.status !== 'rejected') {
+              html += '<button type="button" class="btn small danger" data-reject="' +
+                q.table + ':' + q.id + '">Reject</button>';
+            }
+          }
+          html += '</td></tr>';
+        });
+        els.wdQuals.innerHTML = html + '</tbody></table>';
+        Array.prototype.forEach.call(
+          els.wdQuals.querySelectorAll('button[data-verify]'), function (b) {
+            b.addEventListener('click', function () {
+              setEvidenceStatus(b.getAttribute('data-verify').split(':'), 'verified');
+            });
+          });
+        Array.prototype.forEach.call(
+          els.wdQuals.querySelectorAll('button[data-reject]'), function (b) {
+            b.addEventListener('click', function () {
+              setEvidenceStatus(b.getAttribute('data-reject').split(':'), 'rejected');
+            });
+          });
+      });
+  }
+
+  function setEvidenceStatus(parts, status) {
+    var table = parts[0], id = parts[1];
+    sb.from(table).update({ status: status }).eq('id', id)
+      .then(function (res) {
+        if (res.error) {
+          showActionStatus(els.qualStatus, false, friendlyDbError(res.error));
+          return;
+        }
+        els.qualStatus.hidden = true;
+        loadWorkerEvidence(currentWorker.id);
+      });
+  }
+
+  function changeWorkerStatus(target) {
+    var reason = els.wdReasonInput.value.trim();
+    var patch = { status: target };
+    if (target === 'blocked' || target === 'archived') patch.status_reason = reason;
+    sb.from('workers').update(patch).eq('id', currentWorker.id)
+      .then(function (res) {
+        if (res.error) {
+          showActionStatus(els.wdActionStatus, false, friendlyDbError(res.error));
+          return;
+        }
+        showActionStatus(els.wdActionStatus, true,
+          target === 'blocked' || target === 'archived'
+            ? 'Status set to ' + (WORKER_STATUS[target] || target) + '.'
+            : 'Status advanced to ' + (WORKER_STATUS[target] || target) + '.');
+        currentWorker.status = target;
+        currentWorker.status_reason = patch.status_reason || null;
+        renderWorkerDetail();
+        loadWorkers();
+      });
+  }
+
+  function inviteCurrentWorker() {
+    sb.from('invitations')
+      .insert({ email: currentWorker.email, role: 'worker',
+                worker_id: currentWorker.id, invited_by: profile.id })
+      .select('token, expires_at')
+      .then(function (res) {
+        if (res.error) {
+          showActionStatus(els.wdActionStatus, false, friendlyDbError(res.error));
+          return;
+        }
+        var inv = (res.data || [])[0];
+        var link = location.origin + '/app/#invite=' + inv.token;
+        showActionStatus(els.wdActionStatus, true, 'Invitation saved.');
+        els.wdInviteLink.hidden = false;
+        els.wdInviteLink.textContent = 'Send this link to ' + currentWorker.email +
+          ' (expires ' + fmtDate(inv.expires_at) + '): ' + link;
+        loadInvitations();
+      });
+  }
+
+  els.addWorkerForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    els.addWorkerStatus.hidden = true;
+    var name = document.getElementById('w-name').value.trim();
+    if (!name) {
+      showActionStatus(els.addWorkerStatus, false, 'Enter the full name.');
+      return;
+    }
+    sb.from('workers').insert({
+      full_name: name,
+      trade: document.getElementById('w-trade').value.trim() || null,
+      email: document.getElementById('w-email').value.trim() || null
+    }).then(function (res) {
+      if (res.error) {
+        showActionStatus(els.addWorkerStatus, false, friendlyDbError(res.error));
+        return;
+      }
+      document.getElementById('w-name').value = '';
+      document.getElementById('w-trade').value = '';
+      document.getElementById('w-email').value = '';
+      showActionStatus(els.addWorkerStatus, true, 'Worker record created as a draft.');
+      loadWorkers();
+    });
+  });
+
+  els.wdClose.addEventListener('click', function () {
+    els.workerDetail.hidden = true;
+    currentWorker = null;
+  });
+  els.wdAdvance.addEventListener('click', function () {
+    if (currentWorker && NEXT_STATUS[currentWorker.status]) {
+      changeWorkerStatus(NEXT_STATUS[currentWorker.status]);
+    }
+  });
+  els.wdBlock.addEventListener('click', function () { changeWorkerStatus('blocked'); });
+  els.wdArchive.addEventListener('click', function () { changeWorkerStatus('archived'); });
+  els.wdInvite.addEventListener('click', inviteCurrentWorker);
+
+  els.rtwForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    els.rtwStatus.hidden = true;
+    var date = document.getElementById('rtw-date').value;
+    if (!date) {
+      showActionStatus(els.rtwStatus, false, 'Enter the check date.');
+      return;
+    }
+    sb.from('rtw_checks').insert({
+      worker_id: currentWorker.id,
+      method: document.getElementById('rtw-method').value,
+      check_date: date,
+      result: document.getElementById('rtw-result').value,
+      follow_up_due: document.getElementById('rtw-followup').value || null,
+      source: document.getElementById('rtw-source').value.trim() || 'recorded in platform'
+    }).then(function (res) {
+      if (res.error) {
+        showActionStatus(els.rtwStatus, false, friendlyDbError(res.error));
+        return;
+      }
+      els.rtwStatus.hidden = true;
+      document.getElementById('rtw-followup').value = '';
+      document.getElementById('rtw-source').value = '';
+      loadWorkerEvidence(currentWorker.id);
+    });
+  });
+
+  els.qualForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    els.qualStatus.hidden = true;
+    var type = document.getElementById('qual-type').value.trim();
+    if (!type || !currentWorker) {
+      showActionStatus(els.qualStatus, false, 'Enter the card or training type.');
+      return;
+    }
+    var slug = type.toLowerCase().replace(/\s+/g, '_');
+    var category = document.getElementById('qual-category').value;
+    var payload = {
+      worker_id: currentWorker.id,
+      expiry_date: document.getElementById('qual-expiry').value || null
+    };
+    var table;
+    if (category === 'training') {
+      table = 'training_certificates';
+      payload.training_type = slug;
+    } else {
+      table = 'qualifications';
+      payload.kind = slug;
+      payload.number = document.getElementById('qual-number').value.trim() || null;
+    }
+    sb.from(table).insert(payload).then(function (res) {
+      if (res.error) {
+        showActionStatus(els.qualStatus, false, friendlyDbError(res.error));
+        return;
+      }
+      els.qualStatus.hidden = true;
+      document.getElementById('qual-type').value = '';
+      document.getElementById('qual-number').value = '';
+      document.getElementById('qual-expiry').value = '';
+      loadWorkerEvidence(currentWorker.id);
+    });
+  });
+
   function loadProfile(user) {
     els.noProfile.hidden = true;
     els.profileLine.textContent = 'Loading your profile…';
@@ -364,14 +703,30 @@
         els.greeting.textContent = 'Hello, ' + first;
         els.profileLine.textContent = profile.full_name + ' · ' +
           roleList(profile.roles || []);
-        var canInvite = (profile.roles || []).some(function (r) {
+        var roles = profile.roles || [];
+        var canInvite = roles.some(function (r) {
           return r === 'owner' || r === 'operations';
         });
         els.invitations.hidden = !canInvite;
         if (canInvite) loadInvitations();
+        canWriteWorkers = roles.indexOf('owner') !== -1 ||
+          roles.indexOf('operations') !== -1;
+        canRecordEvidence = canWriteWorkers ||
+          roles.indexOf('compliance') !== -1;
+        var canSeeWorkers = canRecordEvidence || roles.indexOf('auditor') !== -1;
+        els.workersPanel.hidden = !canSeeWorkers;
+        els.addWorkerForm.hidden = !canWriteWorkers;
+        els.wdActions.hidden = !canWriteWorkers;
+        els.rtwForm.hidden = !canRecordEvidence;
+        els.qualForm.hidden = !canRecordEvidence;
+        if (canSeeWorkers) {
+          loadWorkers();
+        } else {
+          els.workerDetail.hidden = true;
+        }
         if (profile.worker_id) {
           loadPassport(profile.worker_id);
-        } else if ((profile.roles || []).indexOf('worker') !== -1) {
+        } else if (roles.indexOf('worker') !== -1) {
           els.passport.hidden = false;
           els.passportStatus.textContent = 'Your worker record is being set up by the team.';
           els.passportReason.hidden = true;

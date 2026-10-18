@@ -131,6 +131,123 @@
         </div>
       </div>
 
+      <!-- Workers: Owner, Operations, Compliance (and Auditor read-only lists) -->
+      <div id="workers-panel" class="card" hidden>
+        <h2>Workers</h2>
+        <form id="add-worker-form" novalidate>
+          <div class="fields">
+            <div class="field grow">
+              <label for="w-name">Full name</label>
+              <input id="w-name" autocomplete="off" required>
+            </div>
+            <div class="field">
+              <label for="w-trade">Trade</label>
+              <input id="w-trade" autocomplete="off" placeholder="e.g. painter and decorator">
+            </div>
+            <div class="field">
+              <label for="w-email">Email</label>
+              <input type="email" id="w-email" autocomplete="off">
+            </div>
+            <button class="btn" type="submit" id="add-worker-btn">Add worker</button>
+          </div>
+          <p id="add-worker-status" class="error" hidden></p>
+        </form>
+        <table>
+          <thead><tr><th>Passport</th><th>Name</th><th>Trade</th><th>Status</th><th></th></tr></thead>
+          <tbody id="workers-rows"></tbody>
+        </table>
+      </div>
+
+      <!-- Worker detail -->
+      <div id="worker-detail" hidden>
+        <div class="card">
+          <div class="row-between">
+            <h2 id="wd-title">Worker</h2>
+            <button id="wd-close" class="btn ghost" type="button">Close</button>
+          </div>
+          <p id="wd-status-line" class="profile-line"></p>
+          <p id="wd-reason" class="footnote" hidden></p>
+          <div class="fields" id="wd-actions">
+            <button id="wd-advance" class="btn small" type="button">Advance status</button>
+            <div class="field grow">
+              <label for="wd-reason-input">Reason (required to block or archive)</label>
+              <input id="wd-reason-input" autocomplete="off">
+            </div>
+            <button id="wd-block" class="btn small danger" type="button">Block</button>
+            <button id="wd-archive" class="btn small danger" type="button">Archive</button>
+            <button id="wd-invite" class="btn small" type="button">Invite to sign in</button>
+          </div>
+          <p id="wd-action-status" class="error" hidden></p>
+          <p id="wd-invite-link" class="footnote" hidden></p>
+        </div>
+        <div class="card">
+          <h3>Right to Work checks</h3>
+          <div id="wd-rtw"></div>
+          <form id="rtw-form" novalidate>
+            <div class="fields">
+              <div class="field">
+                <label for="rtw-method">Method</label>
+                <select id="rtw-method">
+                  <option value="home_office_share_code">Home Office share code</option>
+                  <option value="manual_passport">Manual passport check</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="rtw-date">Check date</label>
+                <input type="date" id="rtw-date" required>
+              </div>
+              <div class="field">
+                <label for="rtw-result">Result</label>
+                <select id="rtw-result">
+                  <option value="pass">Pass</option>
+                  <option value="fail">Fail</option>
+                  <option value="follow_up_required">Follow-up required</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="rtw-followup">Follow-up due</label>
+                <input type="date" id="rtw-followup">
+              </div>
+              <div class="field">
+                <label for="rtw-source">Source</label>
+                <input id="rtw-source" autocomplete="off" placeholder="e.g. Home Office online service">
+              </div>
+              <button class="btn" type="submit">Record check</button>
+            </div>
+            <p id="rtw-status" class="error" hidden></p>
+          </form>
+        </div>
+        <div class="card">
+          <h3>Cards and training</h3>
+          <div id="wd-quals"></div>
+          <form id="qual-form" novalidate>
+            <div class="fields">
+              <div class="field">
+                <label for="qual-category">Category</label>
+                <select id="qual-category">
+                  <option value="qualification">Card or qualification</option>
+                  <option value="training">Training</option>
+                </select>
+              </div>
+              <div class="field grow">
+                <label for="qual-type">Type</label>
+                <input id="qual-type" autocomplete="off" placeholder="e.g. cscs, ipaf, asbestos awareness" required>
+              </div>
+              <div class="field">
+                <label for="qual-number">Number (cards)</label>
+                <input id="qual-number" autocomplete="off">
+              </div>
+              <div class="field">
+                <label for="qual-expiry">Expiry</label>
+                <input type="date" id="qual-expiry">
+              </div>
+              <button class="btn" type="submit">Add</button>
+            </div>
+            <p id="qual-status" class="error" hidden></p>
+          </form>
+        </div>
+      </div>
+
       <!-- Invitations: Owner and Operations only -->
       <div id="invitations" class="card" hidden>
         <h2>Invitations</h2>
