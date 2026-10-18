@@ -11,6 +11,29 @@
     contractor: 'Contractor', worker: 'Worker', supplier: 'Supplier',
     auditor: 'Auditor'
   };
+  var WORKER_STATUS = {
+    draft: 'Draft', in_review: 'In review', verified: 'Verified',
+    expiring_soon: 'Expiring soon', blocked: 'Blocked', archived: 'Archived'
+  };
+  var EVIDENCE_STATUS = {
+    pending_review: 'Pending review', verified: 'Verified',
+    rejected: 'Rejected'
+  };
+  var ASSIGNMENT_STATUS = {
+    proposed: 'Proposed', confirmed: 'Confirmed', completed: 'Completed',
+    cancelled: 'Cancelled', legacy_recorded: 'History'
+  };
+  var RTW_METHODS = {
+    home_office_share_code: 'Home Office share code',
+    manual_passport: 'Manual passport check'
+  };
+  var RTW_RESULTS = {
+    pass: 'Pass', fail: 'Fail', follow_up_required: 'Follow-up required'
+  };
+  var QUAL_KINDS = {
+    cscs: 'CSCS card', nvq: 'NVQ', city_guilds: 'City & Guilds',
+    ipaf: 'IPAF', pasma: 'PASMA'
+  };
 
   var els = {
     loginView: document.getElementById('login-view'),
@@ -39,6 +62,21 @@
     inviteRole: document.getElementById('invite-role'),
     inviteStatus: document.getElementById('invite-status'),
     inviteRows: document.getElementById('invite-rows'),
+    passport: document.getElementById('passport'),
+    passportStatus: document.getElementById('passport-status'),
+    passportReason: document.getElementById('passport-reason'),
+    rtwCard: document.getElementById('passport-rtw'),
+    rtwRows: document.getElementById('rtw-rows'),
+    qualsCard: document.getElementById('passport-quals'),
+    qualsRows: document.getElementById('quals-rows'),
+    evidenceCard: document.getElementById('passport-evidence'),
+    evidenceRows: document.getElementById('evidence-rows'),
+    readinessCard: document.getElementById('passport-readiness'),
+    readinessBox: document.getElementById('readiness-box'),
+    assignmentsCard: document.getElementById('passport-assignments'),
+    assignRows: document.getElementById('assign-rows'),
+    perfCard: document.getElementById('passport-perf'),
+    perfLine: document.getElementById('perf-line'),
     signout: document.getElementById('signout')
   };
 
@@ -122,11 +160,185 @@
       });
   }
 
+  function hidePassport() {
+    els.passport.hidden = true;
+  }
+
+  function badge(status, label) {
+    var cls = 'badge';
+    if (status === 'verified' || status === 'pass' || status === 'completed') cls += ' ok';
+    else if (status === 'blocked' || status === 'rejected' || status === 'fail') cls += ' bad';
+    else if (status === 'expiring_soon' || status === 'pending_review' ||
+             status === 'follow_up_required') cls += ' warn';
+    return '<span class="' + cls + '">' + label + '</span>';
+  }
+
+  function miniTable(rows, headers) {
+    if (!rows.length) return '<p class="footnote">Nothing recorded yet.</p>';
+    var html = '<table><thead><tr>';
+    headers.forEach(function (h) { html += '<th>' + h + '</th>'; });
+    html += '</tr></thead><tbody>';
+    rows.forEach(function (cells) {
+      html += '<tr>';
+      cells.forEach(function (c) { html += '<td>' + c + '</td>'; });
+      html += '</tr>';
+    });
+    return html + '</tbody></table>';
+  }
+
+  function loadPassport(workerId) {
+    els.passport.hidden = false;
+
+    sb.from('workers').select('passport_no, full_name, trade, status, status_reason')
+      .eq('id', workerId).maybeSingle()
+      .then(function (res) {
+        var w = res.data;
+        if (!w) {
+          els.passportStatus.textContent = 'Your record is being set up by the team.';
+          return;
+        }
+        els.passportStatus.innerHTML = (w.passport_no ? w.passport_no + ' · ' : '') +
+          (w.trade ? w.trade + ' · ' : '') + badge(w.status, WORKER_STATUS[w.status] || w.status);
+        if ((w.status === 'blocked' || w.status === 'archived') && w.status_reason) {
+          els.passportReason.hidden = false;
+          els.passportReason.textContent = 'Reason: ' + w.status_reason;
+        } else {
+          els.passportReason.hidden = true;
+        }
+      });
+
+    sb.from('rtw_checks')
+      .select('method, check_date, result, restrictions, follow_up_due')
+      .eq('worker_id', workerId).order('check_date', { ascending: false })
+      .then(function (res) {
+        var rows = (res.data || []).map(function (c) {
+          return [fmtDate(c.check_date),
+            RTW_METHODS[c.method] || c.method,
+            badge(c.result, RTW_RESULTS[c.result] || c.result),
+            c.restrictions || '—',
+            c.follow_up_due ? 'Follow-up by ' + fmtDate(c.follow_up_due) : '—'];
+        });
+        els.rtwRows.innerHTML = '';
+        els.rtwCard.hidden = false;
+        els.rtwRows.innerHTML = miniTable(rows,
+          ['Checked', 'Method', 'Result', 'Restrictions', 'Next']);
+      });
+
+    var quals = [];
+    sb.from('qualifications')
+      .select('kind, number, status, expiry_date')
+      .eq('worker_id', workerId)
+      .then(function (res) {
+        (res.data || []).forEach(function (q) {
+          quals.push({
+            label: QUAL_KINDS[q.kind] || q.kind,
+            number: q.number, status: q.status,
+            expiry: q.expiry_date ? fmtDate(q.expiry_date) : '—'
+          });
+        });
+        return sb.from('training_certificates')
+          .select('training_type, status, expiry_date')
+          .eq('worker_id', workerId);
+      })
+      .then(function (res) {
+        (res.data || []).forEach(function (t) {
+          quals.push({
+            label: (t.training_type || '').replace(/_/g, ' '),
+            number: null, status: t.status,
+            expiry: t.expiry_date ? fmtDate(t.expiry_date) : '—'
+          });
+        });
+        quals.sort(function (a, b) { return (a.expiry || '') < (b.expiry || '') ? -1 : 1; });
+        els.qualsRows.innerHTML = '';
+        els.qualsCard.hidden = false;
+        els.qualsRows.innerHTML = miniTable(quals.map(function (q) {
+          return [q.label, q.number || '—',
+            badge(q.status, EVIDENCE_STATUS[q.status] || q.status), q.expiry];
+        }), ['Card or training', 'Number', 'Status', 'Expires']);
+      });
+
+    var evidence = [];
+    sb.from('proof_of_work')
+      .select('skill, supervisor, status')
+      .eq('worker_id', workerId)
+      .then(function (res) {
+        (res.data || []).forEach(function (p) {
+          evidence.push([p.skill + (p.supervisor ? ' (supervisor: ' + p.supervisor + ')' : ''),
+            badge(p.status, EVIDENCE_STATUS[p.status] || p.status)]);
+        });
+        return sb.from('work_history')
+          .select('period_start, period_end, description')
+          .eq('worker_id', workerId).order('period_start', { ascending: false });
+      })
+      .then(function (res) {
+        (res.data || []).forEach(function (h) {
+          evidence.push([(h.period_start ? fmtDate(h.period_start) : '—') +
+            ' – ' + (h.period_end ? fmtDate(h.period_end) : 'ongoing'),
+            h.description || '—']);
+        });
+        els.evidenceRows.innerHTML = '';
+        els.evidenceCard.hidden = false;
+        els.evidenceRows.innerHTML = miniTable(evidence, ['What', 'Detail']);
+      });
+
+    sb.from('readiness_evaluations')
+      .select('outcome, blockers, rules_version, created_at')
+      .eq('worker_id', workerId).order('created_at', { ascending: false }).limit(1)
+      .then(function (res) {
+        els.readinessBox.innerHTML = '';
+        var ev = (res.data || [])[0];
+        if (!ev) {
+          els.readinessCard.hidden = false;
+          els.readinessBox.innerHTML = '<p class="footnote">No readiness check has been run yet.</p>';
+          return;
+        }
+        var html = '<p class="profile-line">' + badge(ev.outcome,
+          ev.outcome === 'pass' ? 'Ready' : 'Blocked') +
+          ' — checked ' + fmtDate(ev.created_at) +
+          ' (rules ' + ev.rules_version + ')</p>';
+        var blockers = ev.blockers || [];
+        if (blockers.length) {
+          html += '<ul class="blockers">';
+          blockers.forEach(function (b) {
+            html += '<li>' + (b.reason || b.code) +
+              (b.mandatory ? ' (required for this job)' : '') + '</li>';
+          });
+          html += '</ul>';
+        }
+        els.readinessCard.hidden = false;
+        els.readinessBox.innerHTML = html;
+      });
+
+    sb.from('assignments')
+      .select('trade, start_date, end_date, status')
+      .eq('worker_id', workerId).order('created_at', { ascending: false }).limit(20)
+      .then(function (res) {
+        els.assignRows.innerHTML = '';
+        els.assignmentsCard.hidden = false;
+        els.assignRows.innerHTML = miniTable((res.data || []).map(function (a) {
+          return [a.trade || '—', fmtDate(a.start_date), fmtDate(a.end_date),
+            badge(a.status, ASSIGNMENT_STATUS[a.status] || a.status)];
+        }), ['Trade', 'Start', 'End', 'Status']);
+      });
+
+    sb.from('performance_scores')
+      .select('score, band, weights_version')
+      .eq('worker_id', workerId).maybeSingle()
+      .then(function (res) {
+        els.perfCard.hidden = false;
+        var s = res.data;
+        els.perfLine.textContent = s && s.score !== null
+          ? 'Performance record: ' + s.score + (s.band ? ' (' + s.band + ')' : '') +
+            ', weights ' + s.weights_version
+          : 'Not yet scored — the record builds from completed assignments and feedback.';
+      });
+  }
+
   function loadProfile(user) {
     els.noProfile.hidden = true;
     els.profileLine.textContent = 'Loading your profile…';
     sb.from('profiles')
-      .select('id, full_name, roles')
+      .select('id, full_name, roles, worker_id')
       .eq('id', user.id)
       .maybeSingle()
       .then(function (res) {
@@ -157,6 +369,15 @@
         });
         els.invitations.hidden = !canInvite;
         if (canInvite) loadInvitations();
+        if (profile.worker_id) {
+          loadPassport(profile.worker_id);
+        } else if ((profile.roles || []).indexOf('worker') !== -1) {
+          els.passport.hidden = false;
+          els.passportStatus.textContent = 'Your worker record is being set up by the team.';
+          els.passportReason.hidden = true;
+        } else {
+          hidePassport();
+        }
       })
       .catch(function () {
         els.noProfile.hidden = false;

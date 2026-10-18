@@ -95,6 +95,42 @@
         </form>
       </div>
 
+      <!-- Worker passport: the linked worker's own record -->
+      <div id="passport" hidden>
+        <div class="card">
+          <h2>My passport</h2>
+          <p id="passport-status" class="profile-line">Loading…</p>
+          <p id="passport-reason" class="footnote" hidden></p>
+        </div>
+        <div class="card" id="passport-rtw" hidden>
+          <h3>Right to Work</h3>
+          <table><tbody id="rtw-rows"></tbody></table>
+        </div>
+        <div class="card" id="passport-quals" hidden>
+          <h3>Cards, qualifications and training</h3>
+          <table><tbody id="quals-rows"></tbody></table>
+        </div>
+        <div class="card" id="passport-evidence" hidden>
+          <h3>Skill evidence and work history</h3>
+          <table><tbody id="evidence-rows"></tbody></table>
+        </div>
+        <div class="card" id="passport-readiness" hidden>
+          <h3>Readiness</h3>
+          <div id="readiness-box"></div>
+        </div>
+        <div class="card" id="passport-assignments" hidden>
+          <h3>Assignments</h3>
+          <table>
+            <thead><tr><th>Trade</th><th>Start</th><th>End</th><th>Status</th></tr></thead>
+            <tbody id="assign-rows"></tbody>
+          </table>
+        </div>
+        <div class="card" id="passport-perf" hidden>
+          <h3>Performance</h3>
+          <p id="perf-line" class="profile-line"></p>
+        </div>
+      </div>
+
       <!-- Invitations: Owner and Operations only -->
       <div id="invitations" class="card" hidden>
         <h2>Invitations</h2>

@@ -34,6 +34,29 @@ h1, h2, .brand {
 
 h1 { font-size: 1.55rem; margin: 0 0 0.4rem; }
 h2 { font-size: 1.15rem; margin: 0 0 0.5rem; }
+h3 {
+  font-size: 0.95rem;
+  margin: 0 0 0.6rem;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.badge {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 500;
+  padding: 0.1rem 0.5rem;
+  border-radius: 99px;
+  background: var(--line);
+  color: var(--ink);
+}
+.badge.ok { background: #d6e6d6; color: #2c4634; }
+.badge.warn { background: #f0e2c6; color: #6d5320; }
+.badge.bad { background: #edd3cf; color: #6b241a; }
+
+.blockers { margin: 0.6rem 0 0; padding-left: 1.2rem; }
+.blockers li { margin: 0.2rem 0; }
 
 .wrap {
   max-width: 960px;
