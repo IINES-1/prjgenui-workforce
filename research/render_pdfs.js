@@ -20,7 +20,10 @@ const fonts = {
 dp.setFonts(fonts);
 
 (async () => {
-  for (const name of ['baseline-register', 'gdpr-controls-proposal']) {
+  const names = fs.readdirSync(TMP)
+    .filter(f => f.endsWith('.pdf.json'))
+    .map(f => f.slice(0, -'.pdf.json'.length));
+  for (const name of names) {
     const spec = JSON.parse(
       fs.readFileSync(path.join(TMP, name + '.pdf.json'), 'utf8'));
     const doc = await dp.createPdf(spec);
