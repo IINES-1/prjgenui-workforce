@@ -49,7 +49,7 @@ Where a change is more than a like-for-like rebuild, it is marked **IMPROVED** o
 | 3.2 | Assignment readiness | Layers project, site and contractor requirements on top of general readiness | Same, enforced at deployment — the hard gate | REBUILT — Stage 0 |
 | 3.3 | Readiness snapshots | A dated snapshot of readiness is stored with each offer | Same | RETAINED — Stage 0 |
 | 3.4 | Blocker reasons | Every blocker carries a plain-English reason and recommended action | Same wording, carried through to worker self-view ("why am I blocked") | REBUILT — Stage 0/1 |
-| 3.5 | Evidence completeness | A certificate only counts as valid with status, evidence reference and a current expiry date | Same — a document upload alone never produces READY | RETAINED — Stage 0 |
+| 3.5 | Evidence completeness | A certificate only counts as valid with status, evidence reference and a current expiry date | Same — a document upload alone never produces READY. **Changed per your review:** qualifications without an expiry date (permanent, e.g. NVQ; some City & Guilds; renewable) are supported with an explicit validity marker and are never rejected for a missing expiry — the record is valid with status and evidence alone | RETAINED + AMENDED — Stage 0 (migration 0018) |
 | 3.6 | Expiry bands | Expired / due soon (0–30) / watch (31–60) / current (60+) | Same bands | RETAINED — Stage 0 |
 | 3.7 | Expired-evidence blocking | Expired evidence blocks a worker across the board | **Changed per your instruction of 16 October:** expired evidence creates a hard block only where that evidence is mandatory for the job or site (by law, role, contractor or site), not automatically for every assignment | IMPROVED — approval item — Stage 0 |
 | 3.8 | Expiry reminders | None — bands are visible but nothing is sent | Automated reminders at 60/30/14/7 days, to the worker and to us | NEW — Stage 1 |
@@ -96,7 +96,7 @@ Where a change is more than a like-for-like rebuild, it is marked **IMPROVED** o
 |---|---|---|---|---|
 | 7.1 | Worker audit trail | Every field change with old and new values, timestamp and author | Same, plus author tied to a real login | REBUILT — Stage 0 |
 | 7.2 | Evidence provenance | Evidence references and verifiers recorded on checks | Same, plus source system and check method per evidence type | REBUILT — Stage 0 |
-| 7.3 | Platform-wide audit | None — only worker records are audited | Views, exports, approvals, overrides and status changes all audited platform-wide | NEW — Stage 0 |
+| 7.3 | Platform-wide audit | None — only worker records are audited | Views, exports, approvals, overrides and status changes all audited platform-wide. **Added per your GDPR review (migration 0018):** the audit log never copies sensitive values — invitation tokens, share codes, credentials and recovery codes are scrubbed from every entry, and earlier entries were cleaned in the same pass | NEW — Stage 0 |
 | 7.4 | Controlled overrides | None | Override with approver, reason, expiry and permanent audit entry | NEW — Stage 1 |
 
 ---
@@ -120,9 +120,9 @@ Where a change is more than a like-for-like rebuild, it is marked **IMPROVED** o
 | 9.3 | Legacy migrations | Clients→contractors, embedded assignments, integrity checks | Re-run against the production schema with the same outcomes | REBUILT — Stage 0 |
 | 9.4 | IDs and references | PW-UK passport numbers, public assignment references, counters | Same format and sequence | RETAINED — Stage 0 |
 | 9.5 | Data export | JSON export of everything | Same, restricted to admin roles, every export audited | RETAINED + IMPROVED — Stage 0 |
-| 9.6 | Demo data | Easberg pilot seed names | Stays in the demo only; production starts clean | RETAINED (demo only) |
-| 9.7 | Prototype notice | "Prototype environment… not the sole legal compliance record" banner | Removed in production, because production will carry the real audit trail this notice currently disclaims | IMPROVED — approval item — Stage 0 |
-| 9.8 | Backups | None (single shared store) | Daily automated backups, point-in-time recovery, weekly separate export, recovery tested before the pilot | NEW — Stage 0 |
+| 9.6 | Demo data | Easberg pilot seed names | Stays in the demo only; production starts clean | RETAINED (demo only) — demo removed from the production site |
+| 9.7 | Prototype notice | "Prototype environment… not the sole legal compliance record" banner | Removed in production, because production will carry the real audit trail this notice currently disclaims | IMPROVED — done, approved by you 16 October — Stage 0 |
+| 9.8 | Backups | None (single shared store) | Backups to your seven-point standard: **(1)** an encrypted export of the records, taken weekly; **(2)** stored off-site, separate from the production database and its host; **(3)** access-restricted to named administrators; **(4)** access and restoration attempts audited; **(5)** kept for its own retention period, defined in the GDPR schedule (section 3), separate from live-data retention; **(6)** a restoration test before the pilot that covers both the records and the worker document files; **(7)** a documented restoration procedure recording the date, scope and outcome of the last test. Two points stated plainly: the weekly export does **not** reduce the data-loss window below the Supabase daily-backup window — the daily backups (7-day retention) remain the first line of recovery and the export is the independent second copy, and Supabase's daily backups do not cover Storage files, so worker documents are included in the weekly export itself. Activation waits for your written approval of the all-in monthly cost (compute, VAT, usage) and the account-ownership transfer plan | NEW — awaiting your approval — Stage 0 |
 
 ---
 
@@ -130,7 +130,7 @@ Where a change is more than a like-for-like rebuild, it is marked **IMPROVED** o
 
 | # | Baseline function | Current behaviour | Production plan | Status / Stage |
 |---|---|---|---|---|
-| 10.1 | Logins | None — anyone with the URL has full access | Login with the seven roles; every record and action permission-checked | NEW — Stage 0 |
+| 10.1 | Logins | None — anyone with the URL has full access | Login with the seven roles; every record and action permission-checked. **Added per your review:** two-factor (authenticator app) is enforced for admin accounts (Owner, Operations, Compliance) before the dashboard unlocks, and a named Owner account (marizilena@) replaces shared sign-in for admin use; the shared hello@ account will be demoted once you confirm your named account and MFA work | NEW — Stage 0 |
 | 10.2 | Worker self-view | None | Workers see their own passport, the reason for any block, their expiry dates; can correct details and upload replacement evidence | NEW — Stage 1 |
 | 10.3 | Contractor view | None | Contractors see their own requests, matches and assignments only | NEW — Stage 1/2 |
 | 10.4 | GDPR controls | None | Retention dates per data class, restricted access to identity documents, recorded consent | NEW — Stage 1 |

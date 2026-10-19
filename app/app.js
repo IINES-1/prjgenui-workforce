@@ -92,6 +92,16 @@
     finishForm: document.getElementById('finish-form'),
     finishToken: document.getElementById('finish-token'),
     finishStatus: document.getElementById('finish-status'),
+    mfaView: document.getElementById('mfa-view'),
+    mfaTitle: document.getElementById('mfa-title'),
+    mfaLede: document.getElementById('mfa-lede'),
+    mfaQr: document.getElementById('mfa-qr'),
+    mfaSecretLine: document.getElementById('mfa-secret-line'),
+    mfaSecret: document.getElementById('mfa-secret'),
+    mfaForm: document.getElementById('mfa-form'),
+    mfaCode: document.getElementById('mfa-code'),
+    mfaStatus: document.getElementById('mfa-status'),
+    mfaSignout: document.getElementById('mfa-signout'),
     invitations: document.getElementById('invitations'),
     inviteForm: document.getElementById('invite-form'),
     inviteEmail: document.getElementById('invite-email'),
@@ -244,9 +254,18 @@
   var sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
   var profile = null;
 
+  // Two-factor (TOTP) for admin accounts. Owner, Operations and
+  // Compliance see worker data, so they must pass a second factor
+  // (an authenticator app code) before the dashboard unlocks.
+  var MFA_ROLES = ['owner', 'operations', 'compliance'];
+  var mfaPassed = false;
+  var mfaFactor = null;
+  var mfaChallengeId = null;
+
   function showLogin(message) {
     els.appView.hidden = true;
     els.redeemView.hidden = true;
+    els.mfaView.hidden = true;
     els.loginView.hidden = false;
     if (message) {
       els.loginError.hidden = false;
@@ -259,9 +278,136 @@
   function showRedeem() {
     els.appView.hidden = true;
     els.loginView.hidden = true;
+    els.mfaView.hidden = true;
     els.redeemView.hidden = false;
     els.redeemStatus.hidden = true;
   }
+
+  function mfaSetStatus(ok, text) {
+    els.mfaStatus.hidden = false;
+    els.mfaStatus.className = ok ? 'ok' : 'error';
+    els.mfaStatus.textContent = text;
+  }
+
+  function mfaStartChallenge() {
+    return sb.auth.mfa.challenge({ factorId: mfaFactor.id })
+      .then(function (res) {
+        if (res.error) throw res.error;
+        mfaChallengeId = res.data.id;
+      });
+  }
+
+  function mfaEnroll() {
+    els.mfaTitle.textContent = 'Set up two-factor';
+    els.mfaLede.textContent =
+      'Admin accounts need an authenticator app (Google Authenticator, ' +
+      'Microsoft Authenticator or similar). Scan the code with the app, ' +
+      'then enter the 6-digit code it shows.';
+    els.mfaQr.hidden = false;
+    els.mfaSecretLine.hidden = false;
+    els.mfaCode.value = '';
+    els.mfaStatus.hidden = true;
+    sb.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'PRJGENUI Workforce' })
+      .then(function (res) {
+        if (res.error) {
+          mfaSetStatus(false, 'Two-factor setup could not start. ' +
+            'Sign out and try again.');
+          return;
+        }
+        mfaFactor = res.data;
+        var totp = res.data.totp || {};
+        els.mfaQr.innerHTML = totp.qr_code || '';
+        els.mfaSecret.textContent = totp.secret || '';
+        mfaStartChallenge().catch(function () {
+          mfaSetStatus(false, 'Could not start verification. Try again.');
+        });
+      });
+  }
+
+  function mfaChallengeExisting(factor) {
+    els.mfaTitle.textContent = 'Two-factor verification';
+    els.mfaLede.textContent =
+      'Enter the 6-digit code from your authenticator app.';
+    els.mfaQr.hidden = true;
+    els.mfaQr.innerHTML = '';
+    els.mfaSecretLine.hidden = true;
+    els.mfaCode.value = '';
+    els.mfaStatus.hidden = true;
+    mfaFactor = factor;
+    mfaStartChallenge().catch(function () {
+      mfaSetStatus(false, 'Could not start verification. Try again.');
+    });
+  }
+
+  function mfaGate(user) {
+    els.appView.hidden = true;
+    els.mfaView.hidden = false;
+    sb.auth.mfa.getAuthenticatorAssuranceLevel()
+      .then(function (res) {
+        if (res.error || !res.data) {
+          mfaSetStatus(false, 'Could not check two-factor status. Try again.');
+          return;
+        }
+        if (res.data.currentLevel === 'aal2') {
+          mfaPassed = true;
+          els.mfaView.hidden = true;
+          els.appView.hidden = false;
+          loadProfile(user);
+          return;
+        }
+        sb.auth.mfa.listFactors().then(function (fres) {
+          var verified = ((fres.data && fres.data.totp) || []).filter(
+            function (f) { return f.status === 'verified'; });
+          if (verified.length) mfaChallengeExisting(verified[0]);
+          else mfaEnroll();
+        });
+      });
+  }
+
+  els.mfaForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var code = (els.mfaCode.value || '').replace(/\s+/g, '');
+    if (!/^\d{6}$/.test(code)) {
+      mfaSetStatus(false, 'Enter the 6-digit code from your app.');
+      return;
+    }
+    if (!mfaFactor || !mfaChallengeId) {
+      mfaSetStatus(false, 'Verification is not ready yet. Try again in a moment.');
+      return;
+    }
+    sb.auth.mfa.verify({
+      factorId: mfaFactor.id,
+      challengeId: mfaChallengeId,
+      code: code
+    }).then(function (res) {
+      if (res.error) {
+        if (/expired/i.test(res.error.message || '')) {
+          mfaStartChallenge().then(function () {
+            mfaSetStatus(false, 'That code took too long. Enter a fresh one.');
+          });
+        } else {
+          mfaSetStatus(false, 'That code was not accepted. Check the app and try again.');
+        }
+        return;
+      }
+      mfaPassed = true;
+      mfaChallengeId = null;
+      els.mfaView.hidden = true;
+      els.appView.hidden = false;
+      sb.auth.getSession().then(function (sres) {
+        var u = sres.data && sres.data.session && sres.data.session.user;
+        if (u) loadProfile(u);
+      });
+    });
+  });
+
+  els.mfaSignout.addEventListener('click', function () {
+    mfaPassed = false;
+    mfaFactor = null;
+    mfaChallengeId = null;
+    sb.auth.signOut();
+    showLogin();
+  });
 
   function render(session) {
     if (session) {
@@ -272,6 +418,7 @@
       loadProfile(session.user);
     } else {
       profile = null;
+      mfaPassed = false;
       // Leave the redeem view alone: an invitee may be mid-flow when
       // the initial (signed-out) session event arrives.
       if (els.redeemView.hidden) showLogin();
@@ -382,18 +529,19 @@
 
     var quals = [];
     sb.from('qualifications')
-      .select('kind, number, status, expiry_date')
+      .select('kind, number, status, expiry_date, validity')
       .eq('worker_id', workerId)
       .then(function (res) {
         (res.data || []).forEach(function (q) {
           quals.push({
             label: QUAL_KINDS[q.kind] || q.kind,
             number: q.number, status: q.status,
-            expiry: q.expiry_date ? fmtDate(q.expiry_date) : '—'
+            expiry: q.expiry_date ? fmtDate(q.expiry_date) :
+              (q.validity === 'permanent' ? 'Permanent' : '—')
           });
         });
         return sb.from('training_certificates')
-          .select('training_type, status, expiry_date')
+          .select('training_type, status, expiry_date, validity')
           .eq('worker_id', workerId);
       })
       .then(function (res) {
@@ -401,7 +549,8 @@
           quals.push({
             label: (t.training_type || '').replace(/_/g, ' '),
             number: null, status: t.status,
-            expiry: t.expiry_date ? fmtDate(t.expiry_date) : '—'
+            expiry: t.expiry_date ? fmtDate(t.expiry_date) :
+              (t.validity === 'permanent' ? 'Permanent' : '—')
           });
         });
         quals.sort(function (a, b) { return (a.expiry || '') < (b.expiry || '') ? -1 : 1; });
@@ -663,17 +812,18 @@
 
     var quals = [];
     sb.from('qualifications')
-      .select('id, kind, number, status, expiry_date')
+      .select('id, kind, number, status, expiry_date, validity')
       .eq('worker_id', id)
       .then(function (res) {
         (res.data || []).forEach(function (q) {
           quals.push({ id: q.id, table: 'qualifications',
             label: QUAL_KINDS[q.kind] || (q.kind || '').replace(/_/g, ' '),
             number: q.number, status: q.status,
-            expiry: q.expiry_date ? fmtDate(q.expiry_date) : '—' });
+            expiry: q.expiry_date ? fmtDate(q.expiry_date) :
+              (q.validity === 'permanent' ? 'Permanent' : '—') });
         });
         return sb.from('training_certificates')
-          .select('id, training_type, status, expiry_date')
+          .select('id, training_type, status, expiry_date, validity')
           .eq('worker_id', id);
       })
       .then(function (res) {
@@ -681,7 +831,8 @@
           quals.push({ id: t.id, table: 'training_certificates',
             label: (t.training_type || '').replace(/_/g, ' '),
             number: null, status: t.status,
-            expiry: t.expiry_date ? fmtDate(t.expiry_date) : '—' });
+            expiry: t.expiry_date ? fmtDate(t.expiry_date) :
+              (t.validity === 'permanent' ? 'Permanent' : '—') });
         });
         quals.sort(function (a, b) { return (a.expiry || '') < (b.expiry || '') ? -1 : 1; });
         if (!quals.length) {
@@ -1107,9 +1258,13 @@
     }
     var slug = type.toLowerCase().replace(/\s+/g, '_');
     var category = document.getElementById('qual-category').value;
+    var validity = document.getElementById('qual-validity').value || 'expiring';
+    var expiry = document.getElementById('qual-expiry').value || null;
+    if (validity === 'permanent') expiry = null;
     var payload = {
       worker_id: currentWorker.id,
-      expiry_date: document.getElementById('qual-expiry').value || null
+      validity: validity,
+      expiry_date: expiry
     };
     var table;
     if (category === 'training') {
@@ -1129,6 +1284,7 @@
       document.getElementById('qual-type').value = '';
       document.getElementById('qual-number').value = '';
       document.getElementById('qual-expiry').value = '';
+      document.getElementById('qual-validity').value = 'expiring';
       loadWorkerEvidence(currentWorker.id);
     });
   });
@@ -2472,6 +2628,15 @@
         els.profileLine.textContent = profile.full_name + ' · ' +
           roleList(profile.roles || []);
         var roles = profile.roles || [];
+        // Admin accounts must pass two-factor before the dashboard unlocks.
+        var needsMfa = roles.some(function (r) {
+          return MFA_ROLES.indexOf(r) !== -1;
+        });
+        if (needsMfa && !mfaPassed) {
+          els.profileLine.textContent = '';
+          mfaGate(user);
+          return;
+        }
         var canInvite = roles.some(function (r) {
           return r === 'owner' || r === 'operations';
         });

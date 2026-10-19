@@ -164,6 +164,10 @@ input:focus, select:focus {
 .error { color: var(--danger); font-size: 0.9rem; margin: 0.75rem 0 0; }
 .ok { color: var(--sage-deep); }
 
+.mfa-qr { margin: 1rem 0 0; text-align: center; }
+.mfa-qr svg { width: 200px; height: 200px; }
+#mfa-secret { word-break: break-all; }
+
 .footnote {
   font-size: 0.85rem;
   color: var(--ink-soft);
