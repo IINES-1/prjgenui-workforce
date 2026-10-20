@@ -1,8 +1,8 @@
 # PRJGENUI Workforce — Email Delivery Setup (Zoho)
 
-**Version:** 1.0 draft · 3 March 2026
+**Version:** 1.1 draft · 20 October 2026
 **For:** Marizilena Silva Fortes (to action in Zoho and Porkbun)
-**Status:** current DNS state verified 3 March 2026
+**Status:** current DNS state verified 20 October 2026; `system@prjgenuiworkforce.co.uk` confirmed as the dedicated platform sender (your decision, 20 October 2026)
 
 This is the exact DNS and SMTP configuration for platform email
 (invitations, password resets, reminders) sent through Zoho, and the
@@ -24,7 +24,7 @@ The DKIM public key is generated inside your Zoho account, so the exact
 `p=` value comes from there (we cannot invent it, and it must not be
 emailed):
 
-1. In the **Zoho EU** admin console: **Mail → DKIM / Email Authentication**
+1. In the **Zoho EU** admin console: **Mail > DKIM / Email Authentication**
    for `prjgenuiworkforce.co.uk`.
 2. **Enable DKIM** and choose a selector, for example `zoho` (Zoho shows
    the selector name in the setup screen).
@@ -36,38 +36,40 @@ emailed):
    | Type | TXT |
    | Value | `v=DKIM1; k=rsa; p=<the long public key Zoho shows>` |
 
-4. Add it in **Porkbun → prjgenuiworkforce.co.uk → DNS records**, then
+4. Add it in **Porkbun > prjgenuiworkforce.co.uk > DNS records**, then
    click **Verify** in Zoho.
 5. Also enable in Zoho: **Return-Path alignment / SPF customisation**
    only if Zoho's screen asks for it; otherwise leave it alone.
 
 ## 3. DMARC — add one TXT record (exact value below)
 
-In Porkbun, add:
+First create the **dedicated DMARC reporting alias** in Zoho:
+`dmarc-reports@prjgenuiworkforce.co.uk` (a mailbox or alias used only for
+aggregate reports, so they never mix with normal mail). Then in Porkbun,
+add:
 
 | Field | Value |
 |---|---|
 | Host / Name | `_dmarc` |
 | Type | TXT |
-| Value | `v=DMARC1; p=none; rua=mailto:marizilena@prjgenuiworkforce.co.uk; adkim=r; aspf=r; fo=1` |
+| Value | `v=DMARC1; p=none; rua=mailto:dmarc-reports@prjgenuiworkforce.co.uk; adkim=r; aspf=r; fo=1` |
 
 - `p=none` is deliberate: it is the monitoring phase. Aggregate reports go
-  to your mailbox so you can see what is being sent and whether anything
-  fails alignment.
-- After 4–6 weeks of clean reports, change to
-  `p=quarantine; pct=100` first, then `p=reject` (we will confirm the
-  timing with you before each change; a misaligned system email would be
-  the thing to catch first).
+  to the dedicated reporting alias so you can see what is being sent and
+  whether anything fails alignment.
+- Reports are monitored for **a minimum of four weeks** (your instruction,
+  20 October 2026), and your approval is obtained before the policy
+  changes to `quarantine` and then `reject` — the first misaligned system
+  email is the thing to catch before tightening.
 
 ## 4. The dedicated system sender and its app password
 
-1. In Zoho, create the **system sender** mailbox, for example
-   `system@prjgenuiworkforce.co.uk` (or use `hello@` — your choice; a
-   dedicated sender keeps platform mail separate and lets you revoke it
-   independently). Create `marizilena@prjgenuiworkforce.co.uk` as your
-   own mailbox.
+1. In Zoho, create the **system sender** mailbox:
+   `system@prjgenuiworkforce.co.uk` (confirmed by you, 20 October 2026;
+   `hello@` stays for normal correspondence), and
+   `marizilena@prjgenuiworkforce.co.uk` as your own mailbox.
 2. For the system sender, create an **app-specific password** in Zoho
-   (Security → App Passwords) named something like
+   (Security > App Passwords) named something like
    `prjgenui-platform-smtp`.
 
 ## 5. SMTP configuration — the secure method (no passwords by email)
@@ -106,13 +108,21 @@ the platform only needs a redeploy to pick it up.
 3. First platform email arrives (test invitation to yourself); open it
    and check **SPF: pass, DKIM: pass** in the message details.
 4. DMARC aggregate reports start arriving at
-   `marizilena@prjgenuiworkforce.co.uk` (first reports within 24 hours).
-5. After two clean weeks, we confirm with you before tightening `p=`.
+   `dmarc-reports@prjgenuiworkforce.co.uk` (first reports within 24
+   hours).
+5. Reports are monitored for **a minimum of four weeks**.
+6. Before production approval, the three platform email types are tested
+   end-to-end from the app: **invitations, password resets and expiry
+   reminders** — each one delivered, each one authenticated (SPF, DKIM,
+   DMARC-aligned), each one carrying only its minimum content.
+7. After the four-week monitoring period, we obtain your approval before
+   changing the policy to `quarantine`, and again before `reject`.
 
 ## 7. What we still need from you
 
-- The technical handover pack, company/system manual and checksum record
-  from your 0.3-E package (for the acceptance catalogue in the register).
-- Your choice on the system sender address (`system@` vs `hello@`).
-- Confirmation of the DPIA/LIA commitment (privacy notice section 10) and
-  of the backup destination option in the cost and ownership proposal.
+- The Zoho actions above (DKIM record, DMARC record, the
+  `dmarc-reports@` alias, the `system@` mailbox and its app-specific
+  password).
+- Your MFA enrolment on the named Owner account, so the ownership
+  transfers can proceed and the SMTP app password can be entered into the
+  hosting account's secrets by you.

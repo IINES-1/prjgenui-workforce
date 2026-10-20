@@ -1,6 +1,9 @@
 """Build the pdfmake specs for the two review documents.
 
-Outputs (internal): tmp/baseline-register.pdf.json, tmp/gdpr-controls-proposal.pdf.json
+SUPERSEDED (20 October 2026): all documents now build straight from
+docs/*.md via research/build_pdfs_from_md.py (which also keeps ordered-list
+numbering correct). This script is kept as history; do not run it — it
+would overwrite the current specs with stale content.
 """
 import json
 import os

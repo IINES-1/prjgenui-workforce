@@ -1,6 +1,6 @@
 # PRJGENUI Workforce — Platform Terms of Use
 
-**Version:** 1.1 draft for review · 3 March 2026
+**Version:** 1.2 draft for review · 20 October 2026
 **For approval by:** Marizilena Silva Fortes
 **Note:** draft only — for legal review alongside the employment-law
 opinion before the pilot; wording intentionally short and plain.
@@ -76,7 +76,14 @@ relationship itself.
 ## 7. Intellectual property
 
 - PRJGENUI Workforce Ltd owns the platform, its software and its content,
-  other than anything you upload.
+  other than anything you upload. This ownership position is **supported
+  by the development agreement** between PRJGENUI Workforce Ltd and the
+  developer (IINES Ltd), which provides either assignment of the
+  project-specific intellectual property to PRJGENUI Workforce Ltd, or an
+  equivalent permanent licence giving PRJGENUI full operational control,
+  continuation rights, access to the source code and the right to appoint
+  another developer — the position is agreed in writing before these
+  terms become final.
 - You keep ownership of the documents you upload; by uploading you allow
   PRJGENUI to store, check and use them for the purposes in the privacy
   notice (including sharing verification outcomes with engaging

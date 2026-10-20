@@ -1,6 +1,6 @@
 # PRJGENUI Workforce — GDPR retention and lawful-basis schedule (register 10.4)
 
-**Version:** 2.2 draft for review · 3 March 2026 (backup retention period stated exactly, per your review)
+**Version:** 2.3 draft for review · 20 October 2026 (backup retention 12 weeks rolling, per your decision; consent framed as four categories plus a separate withdrawal record, per your confirmation)
 **For approval by:** Marizilena Silva Fortes
 **Register item:** 10.4 — retention per data class, restricted access to identity
 documents, recorded lawful basis and consent.
@@ -98,22 +98,27 @@ retention date is computed, not re-interpreted later.
   hold hides the item from the "Retention due" group and blocks the delete
   action until it is lifted. Holds are audited like everything else.
 - **Backups sit inside the retention framework.** The weekly export
-  (register 9.8) has its own exact retention period: **12 months, rolling**
-  — 52 weekly exports, with the oldest deleted when the 53rd lands, so no
-  export is ever older than 12 months. When live records are deleted under
-  this schedule, the corresponding rows leave the next and subsequent
-  exports, so deleted data ages out of the backup chain within at most 12
-  months rather than persisting indefinitely. The data-subject-rights
-  process in section 6 states this plainly to anyone who asks.
+  (register 9.8) has its own exact retention period, per your decision of
+  20 October 2026: **12 weeks, rolling** — 12 weekly exports, with the
+  oldest deleted when the 13th is created, so no export is ever older
+  than 12 weeks (to be reviewed after the pilot if operational evidence
+  shows a longer period is necessary). When live records are deleted
+  under this schedule, the corresponding rows leave the next and
+  subsequent exports, so deleted data ages out of the backup chain
+  within at most 12 weeks rather than persisting indefinitely. The
+  data-subject-rights process in section 6 states this plainly to anyone
+  who asks.
 - The weekly export (register 9.8) lists what exists per class, so
   data-subject requests can be answered from a current inventory.
 
 ## 4. Consent, acknowledgement and declarations — recorded as separate events
 
 You are right that one general consent box cannot carry the processing. The
-system records five **distinct, separately-timestamped events**, each with
-its own statement version, and none of them is treated as the lawful basis
-on its own — the lawful basis per purpose is the schedule in section 2.
+system records **four acceptance/declaration categories plus a separate
+withdrawal record** — five distinct, separately-timestamped records, each
+with its own statement version and account identity, and none of them is
+treated as the lawful basis on its own — the lawful basis per purpose is
+the schedule in section 2.
 
 | Event | What it records | Where it happens | Withdrawable? |
 |---|---|---|---|
@@ -159,14 +164,15 @@ manually, and every step is recorded in the audit log:
    Operations or Compliance with the change audited.
 7. **Backups**: erasure applies to live data immediately; the corresponding
    rows leave the next weekly export and age out of the backup chain within
-   at most 12 months (the backup retention period, section 3). This is
+   at most 12 weeks (the backup retention period, section 3). This is
    stated plainly in the response.
 
 ---
 
 ## Approval
 
-Reply "approved" to accept the schedule and the five-event consent model, or
+Reply "approved" to accept the schedule and the consent model (four
+acceptance/declaration categories plus a separate withdrawal record), or
 list the row numbers (1-9) or sections (3-6) you want discussed first.
 Lawful bases stay provisional until the employment-law opinion, as stated in
 the introduction.

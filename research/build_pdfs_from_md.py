@@ -12,17 +12,29 @@ import os
 import re
 
 DOCS = [
+    ("baseline-register", "Baseline-to-Production Mapping Register",
+     "0.3-E reconciliation and AT-01–AT-25 acceptance catalogue (v1.3)",
+     "portrait"),
+    ("gdpr-controls-proposal", "GDPR retention and lawful-basis schedule",
+     "Retention, lawful basis, consent (v2.3) — landscape for the "
+     "11-column schedule table", "landscape"),
     ("privacy-notice", "Platform Privacy Notice",
-     "Data protection — privacy notice (v1.1)"),
+     "Data protection — privacy notice (v1.2)", "portrait"),
     ("platform-terms", "Platform Terms of Use",
-     "Platform terms of use (v1.1)"),
+     "Platform terms of use (v1.2)", "portrait"),
     ("processors", "Processors and sub-processors",
-     "Processor list and international transfers (v1.1)"),
+     "Processor list and international transfers (v1.2)", "portrait"),
     ("email-delivery-setup", "Email Delivery Setup (Zoho)",
-     "DNS (SPF/DKIM/DMARC) and secure SMTP configuration"),
+     "DNS (SPF/DKIM/DMARC) and secure SMTP configuration", "portrait"),
     ("supabase-cost-and-ownership-proposal",
      "Supabase Cost, Ownership and Backup Proposal",
-     "Register 9.8 activation — cost, ownership transfer, backup, restoration"),
+     "Register 9.8 activation — cost, ownership transfer, backup, key "
+     "recovery, restoration", "portrait"),
+    ("dpia", "Data Protection Impact Assessment",
+     "DPIA draft (v1.0) — to be completed before real personal data",
+     "portrait"),
+    ("lia", "Legitimate Interests Assessment",
+     "LIA draft (v1.0) — matching and performance evidence", "portrait"),
 ]
 
 LAYOUT = "lightHorizontalLines"
@@ -83,6 +95,17 @@ def split_row(line):
 SEP = re.compile(r'^\|[\s:|-]+$')
 
 
+def ol_item(num, text):
+    """Ordered-list item rendered with its source number, so numbering
+    continues correctly across tables/paragraphs that interrupt a list
+    (pdfmake's ol always restarts at 1)."""
+    inner = inline(text)
+    if isinstance(inner, str):
+        inner = [inner]
+    return {"text": [{"text": f"{num}. "}] + inner, "style": "body",
+            "margin": [10, 0, 0, 4]}
+
+
 def convert(md):
     lines = md.split('\n')
     content = []
@@ -121,14 +144,12 @@ def convert(md):
             continue
         m = re.match(r'^(\d+)\.\s+(.*)$', stripped)
         if m:
-            items = []
             while i < len(lines):
                 mm = re.match(r'^(\d+)\.\s+(.*)$', lines[i].strip())
                 if not mm:
                     break
-                items.append(inline(mm.group(2)))
+                content.append(ol_item(mm.group(1), mm.group(2)))
                 i += 1
-            content.append({"ol": items, "margin": [0, 0, 0, 8]})
             continue
         # plain paragraph: join wrapped source lines
         buf = [stripped]
@@ -146,19 +167,22 @@ def convert(md):
 
 
 os.makedirs('tmp', exist_ok=True)
-for name, title, subject in DOCS:
+for name, title, subject, orientation in DOCS:
     path = f'docs/{name}.md'
     with open(path, encoding='utf-8') as f:
         md = f.read()
     doc = {
         "pageSize": "A4",
-        "pageMargins": [48, 48, 48, 48],
+        "pageMargins": [48, 48, 48, 48] if orientation == "portrait"
+        else [30, 40, 30, 40],
         "defaultStyle": {"font": "Roboto", "fontSize": 9.5},
         "styles": styles,
         "info": {"title": f"PRJGENUI Workforce — {title}",
                  "author": "Ian", "subject": subject},
         "content": convert(md),
     }
+    if orientation == "landscape":
+        doc["pageOrientation"] = "landscape"
     out = f'tmp/{name}.pdf.json'
     with open(out, 'w', encoding='utf-8') as f:
         json.dump(doc, f, ensure_ascii=False, indent=1)

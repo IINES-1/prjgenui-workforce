@@ -1,6 +1,6 @@
 # PRJGENUI Workforce — Platform Privacy Notice
 
-**Version:** 1.1 draft for review · 3 March 2026
+**Version:** 1.2 draft for review · 20 October 2026
 **For approval by:** Marizilena Silva Fortes
 **Shown at:** first sign-in to the platform (versioned, with a recorded
 acknowledgement event per GDPR schedule section 4)
@@ -66,12 +66,19 @@ practically put you forward — we will say plainly which item is missing and
 why, and nothing else is blocked by it.
 
 **Optional:** everything else — photos, additional non-required
-qualifications, preferences. Leaving these out does not affect
-registration, matching or assignments in any way.
+qualifications, and preferences (for example the kind of work or locations
+you prefer). Preferences **may influence which assignments you are put
+forward for**, but leaving them blank **never prevents registration and
+never changes your compliance status** — no optional item affects your
+eligibility, only which work you are matched to when there is a choice.
 
 Optional consent (for example, marketing/news updates, if ever offered) is
 always a separate, unticked prompt and can be withdrawn at any time without
-affecting any other function.
+affecting any other function. The withdrawal itself is recorded as a
+separate event, with its own timestamp and wording version — alongside the
+four acceptance/declaration records (privacy-notice acknowledgement,
+platform-terms acceptance, legal/contractual declarations, optional
+consent), each with its own version, timestamp and account identity.
 
 ## 5. How matching and performance scoring works
 
@@ -105,7 +112,9 @@ reason in your own passport view.
 You can:
 
 - ask for a copy of your data, and for corrections, erasure or
-  restriction;
+  restriction, and ask for your data to be provided to you (or, where you
+  ask, to another organisation) in a structured, commonly used,
+  machine-readable form (data portability), where this right applies;
 - **object to processing that relies on legitimate interests** — this
   applies to the performance and reliability evidence and re-matching
   described in section 5; we will then stop that processing unless we can
@@ -128,7 +137,7 @@ review of the decision.
 Where a legal obligation requires us to keep something (for example the
 right-to-work record), we will tell you what we are keeping, why and for
 how long. Where deletion happens, backup copies age out within at most 12
-months (the backup retention period).
+weeks (the backup retention period).
 
 **Complaining to the regulator:** you can complain to the Information
 Commissioner's Office, Wycliffe House, Water Lane, Wilmslow, Cheshire
@@ -145,6 +154,24 @@ action is audited, and the audit log never contains secret values
 
 ## 8. Who we share it with, and where it is processed
 
+**Engaging contractors, their clients and site supervisors** receive the
+limited information needed for matching and assignments — not only as
+sources of information, but as recipients. What they receive:
+
+- the worker's trade, availability and compliance status **relevant to
+  their site and request requirements** (for example that required checks
+  are current), and the match reasons for their request;
+- assignment details: dates, site, role, attendance and outcome records
+  for the assignment they engaged, and the assignment statement;
+- who to contact about the worker on their site.
+
+**What contractors never receive:** identity documents and scans —
+contractors cannot access identity documents; Right to Work evidence
+itself; other workers' records; internal assessments, performance scores
+or per-factor breakdowns; or anything not connected to their own requests
+and assignments. Contractors see only their own requests, matches and
+assignments.
+
 We use a small number of processors, listed in full in **processors.md**.
 In summary: Supabase (database, sign-in, document storage — London, UK),
 Vercel (website and platform hosting — limited categories: IP addresses
@@ -153,7 +180,7 @@ outside the UK, covered by the safeguards in processors.md), Zoho (email
 delivery — EU data centre, designated adequate under UK law), Porkbun (DNS
 management) and IINES Ltd (platform development and support, acting under
 a written processing agreement). We never sell your data. The encrypted
-weekly backup (UK destination) is described in the baseline register 9.8.
+weekly backup (AWS S3, London) is described in the baseline register 9.8.
 
 Where your data is processed outside the UK, the transfers and their
 safeguards (adequacy or the UK Addendum/IDTA) are recorded per provider in
@@ -171,7 +198,8 @@ Before the platform is used with real personal data, we will complete a
 Data Protection Impact Assessment (DPIA) and a Legitimate Interests
 Assessment (LIA) covering the matching and scoring described in section 5,
 including the profiling factors and the human-review arrangements, and we
-will review the outcome with you.
+will review the outcome with you. The drafts of both are attached to the
+review pack; the commitment was approved by you on 20 October 2026.
 
 ---
 

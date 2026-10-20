@@ -2,7 +2,7 @@
 
 The file `PRJGENUI_Workforce_0.3-E_APPROVED.html` in this directory is the
 approved baseline (schema 10) handover package supplied by Marizilena Silva
-Fortes on 3 March 2026. It is a read-only reference copy: it must never be
+Fortes on 20 October 2026. It is a read-only reference copy: it must never be
 edited, and reconciliation work happens in `docs/baseline-register.md`, not
 here.
 
