@@ -1,6 +1,6 @@
 # PRJGENUI Workforce — GDPR retention and lawful-basis schedule (register 10.4)
 
-**Version:** 2.1 draft for review · 19 October 2026
+**Version:** 2.2 draft for review · 3 March 2026 (backup retention period stated exactly, per your review)
 **For approval by:** Marizilena Silva Fortes
 **Register item:** 10.4 — retention per data class, restricted access to identity
 documents, recorded lawful basis and consent.
@@ -98,13 +98,13 @@ retention date is computed, not re-interpreted later.
   hold hides the item from the "Retention due" group and blocks the delete
   action until it is lifted. Holds are audited like everything else.
 - **Backups sit inside the retention framework.** The weekly export
-  (register 9.8) has its own retention period (7-point backup standard,
-  point 5), shorter than or equal to the longest live-data class. When live
-  records are deleted under this schedule, the corresponding rows leave the
-  next and subsequent exports, so deleted data ages out of the backup chain
-  within its own retention period rather than persisting indefinitely. The
-  data-subject-rights process in section 6 states this plainly to anyone who
-  asks.
+  (register 9.8) has its own exact retention period: **12 months, rolling**
+  — 52 weekly exports, with the oldest deleted when the 53rd lands, so no
+  export is ever older than 12 months. When live records are deleted under
+  this schedule, the corresponding rows leave the next and subsequent
+  exports, so deleted data ages out of the backup chain within at most 12
+  months rather than persisting indefinitely. The data-subject-rights
+  process in section 6 states this plainly to anyone who asks.
 - The weekly export (register 9.8) lists what exists per class, so
   data-subject requests can be answered from a current inventory.
 
@@ -159,8 +159,8 @@ manually, and every step is recorded in the audit log:
    Operations or Compliance with the change audited.
 7. **Backups**: erasure applies to live data immediately; the corresponding
    rows leave the next weekly export and age out of the backup chain within
-   its own retention period (section 3). This is stated plainly in the
-   response.
+   at most 12 months (the backup retention period, section 3). This is
+   stated plainly in the response.
 
 ---
 
