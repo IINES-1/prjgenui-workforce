@@ -1,8 +1,8 @@
-# PRJGENUI Workforce — Email Delivery Setup (Zoho)
+# PRJGENUI Workforce — Email Delivery Setup (Zoho + Resend)
 
-**Version:** 1.2 · 25 October 2026
+**Version:** 1.3 · 25 October 2026
 **For:** Marizilena Silva Fortes (to action in Zoho and Porkbun)
-**Status:** DNS and Zoho configuration complete 25 October 2026 — DKIM selector `zoho` **verified** in Zoho, DMARC published and resolving publicly, four-week monitoring clock started 25 October 2026 (earliest policy change: 22 November 2026, with approval)
+**Status:** DNS and Zoho configuration complete 25 October 2026 — DKIM selector `zoho` **verified** in Zoho, DMARC published and resolving publicly, four-week monitoring clock started 25 October 2026 (earliest policy change: 22 November 2026, with approval). **Sending changed to Resend 25 October 2026** (Zoho Mail free plan has no SMTP for new signups; Resend free tier sends 3,000/month): domain verified in Resend, DNS published, SMTP credentials set in the hosting account, and a live test email delivered to the Zoho inbox the same day.
 
 This is the exact DNS and SMTP configuration for platform email
 (invitations, password resets, reminders) sent through Zoho, and the
@@ -74,31 +74,43 @@ add:
 
 ## 5. SMTP configuration — the secure method (no passwords by email)
 
-The platform sends through Zoho's SMTP relay:
+The platform sends through **Resend** (transactional email service, free
+tier, EU region `eu-west-1`). Zoho remains the receiving side (the MX
+records above stay untouched); Resend is the sending side, authenticated
+with its own DNS records published 25 October 2026:
+
+| Record | Host (Porkbun) | Value |
+|---|---|---|
+| DKIM TXT | `resend._domainkey` | Resend's generated public key (`p=MIGf…`, from the Resend domain page) |
+| CNAME | `rsend` | `rsend-euw1.forge.rmta.net` |
+| CNAME | `send` | `send.forge.rmta.net` |
+
+Resend's offered MX record was **deliberately not added**: it is only for
+Resend's optional inbound-receive feature and, at priority 9, it would
+outrank the Zoho MX records and divert incoming mail away from the Zoho
+mailboxes. Domain verification passed on 25 October 2026 without it.
+
+The sending credentials (an API key named `prjgenui-smtp`, created in
+the Resend account under `hello@prjgenuiworkforce.co.uk`) are stored as
+the `SMTP_*` environment variables in the hosting account (Vercel,
+Production environment, encrypted at rest, readable by the deployment
+only — never in the repository):
 
 | Setting | Value |
 |---|---|
-| Host | `smtp.zoho.eu` (confirm on the SMTP settings page in your Zoho account) |
-| Port | `587` with STARTTLS (or `465` TLS) |
-| User | the system sender mailbox, e.g. `system@prjgenuiworkforce.co.uk` |
-| Password | the app-specific password — **entered by you, never by email** |
+| `SMTP_HOST` | `smtp.resend.com` |
+| `SMTP_PORT` | `465` |
+| `SMTP_USER` | `resend` |
+| `SMTP_PASSWORD` | the Resend API key (rotation = revoke and re-create in Resend, then replace the variable and redeploy) |
 
-The app password is stored as a **platform secret in the hosting account
-(Vercel environment variables)**, encrypted at rest, readable by the
-deployment only — never in the repository, in chat, or in ordinary
-email. Two ways to get it in, both without anyone else seeing it:
+Platform email is sent from `system@prjgenuiworkforce.co.uk` (the default
+in the app; the address exists as a Zoho mailbox, and replies land there).
+A live test from the domain was delivered to the Zoho inbox on
+25 October 2026 with the sending chain fully working.
 
-- **Preferred:** you are invited to the Vercel project as a member with
-  **Settings access** (or you take ownership of the project per the
-  ownership-transfer proposal), and you paste the app password into the
-  `SMTP_PASSWORD` environment variable yourself. We never see it.
-- **Interim, if the transfer is not yet done:** set it over a live screen
-  share (you type, we don't look) or use a one-time secret link that
-  self-destructs on first open. Plain email is excluded in every case.
-
-Rotation: the app password can be revoked and re-created in Zoho at any
-time, and the new one replaces the old in the same place it was entered —
-the platform only needs a redeploy to pick it up.
+Rotation: the Resend API key can be revoked and re-created at any time;
+the new one replaces `SMTP_PASSWORD` in the same place — the platform
+only needs a redeploy to pick it up.
 
 ## 6. Verification checklist
 
@@ -106,8 +118,10 @@ the platform only needs a redeploy to pick it up.
 2. `nslookup -type=TXT _dmarc.prjgenuiworkforce.co.uk` returns the record
    from section 3 — **done, 25 October 2026** (confirmed against public DNS).
 3. First platform email arrives (test invitation to yourself); open it
-   and check **SPF: pass, DKIM: pass** in the message details — pending
-   platform email wiring.
+   and check **SPF: pass, DKIM: pass** in the message details — sending
+   chain verified live through Resend 25 October 2026 (test delivered to
+   the Zoho inbox); the first invitation from the app follows the next
+   production deployment.
 4. DMARC aggregate reports start arriving at
    `dmarc-reports@prjgenuiworkforce.co.uk` (first reports within 24
    hours of the first authenticated email).
@@ -123,9 +137,9 @@ the platform only needs a redeploy to pick it up.
 
 ## 7. What we still need from you
 
-- The `dmarc-reports@` and `system@` mailboxes already exist in Zoho
-  (created 25 October 2026). What remains is the **app-specific SMTP
-  password** for `system@`, created when the platform email wiring starts
-  and entered into the hosting account's secrets by you (section 5).
+- Nothing for sending: the Resend account, DNS, credentials and a live
+  delivered test are all in place (25 October 2026). One production
+  deployment of the hosting account remains (blocked by a Vercel
+  build-queue issue on their side that day, unrelated to this setup).
 - Your MFA enrolment on the named Owner account, so the ownership
   transfers can proceed.
