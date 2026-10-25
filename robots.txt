@@ -1,2 +1,4 @@
 User-agent: *
 Allow: /
+
+Sitemap: https://prjgenuiworkforce.co.uk/sitemap.xml

@@ -687,3 +687,8 @@ button{cursor:pointer;}
 .founder-img{margin-top:24px;max-width:230px;border:1px solid var(--line-strong);overflow:hidden;aspect-ratio:3/4;}
 .founder-img img{width:100%;height:100%;object-fit:cover;object-position:50% 20%;}
 .tile .person{width:100%;max-width:240px;margin:0 0 18px;aspect-ratio:4/5;object-fit:cover;object-position:50% 15%;border:1px solid var(--line-strong);}
+
+/* Language switcher (footer) */
+.footer-bottom .lang-switch{width:100%;margin:0;padding-top:10px;font-size:.75rem;letter-spacing:.12em;}
+.footer-bottom .lang-switch span{color:rgba(255,255,255,.5);}
+.footer-bottom .lang-switch a{min-height:auto;}
