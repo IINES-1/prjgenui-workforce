@@ -1,6 +1,8 @@
 # PRJGENUI Workforce — Platform Privacy Notice
 
-**Version:** 1.2 draft for review · 20 October 2026
+**Version:** 1.3 draft for review · 25 October 2026 (backup wording: the
+weekly backup is stored in the platform's own UK-hosted storage, not the
+previously approved AWS S3 destination)
 **For approval by:** Marizilena Silva Fortes
 **Shown at:** first sign-in to the platform (versioned, with a recorded
 acknowledgement event per GDPR schedule section 4)
@@ -180,7 +182,8 @@ outside the UK, covered by the safeguards in processors.md), Zoho (email
 delivery — EU data centre, designated adequate under UK law), Porkbun (DNS
 management) and IINES Ltd (platform development and support, acting under
 a written processing agreement). We never sell your data. The encrypted
-weekly backup (AWS S3, London) is described in the baseline register 9.8.
+weekly backup is stored in the platform's own UK-hosted storage and is
+described in the baseline register 9.8.
 
 Where your data is processed outside the UK, the transfers and their
 safeguards (adequacy or the UK Addendum/IDTA) are recorded per provider in

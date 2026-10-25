@@ -1,8 +1,11 @@
 # PRJGENUI Workforce — Data Protection Impact Assessment (DPIA)
 
-**Version:** 1.0 draft for review with Marizilena Silva Fortes · 20 October 2026
+**Version:** 1.1 draft for review with Marizilena Silva Fortes · 25 October 2026
 **Status:** to be completed and signed off before any real personal data is
-processed (commitment approved 20 October 2026; production gate item)
+processed (commitment approved 20 October 2026; production gate item).
+Revised 25 October 2026 (IINES decision): backup destination moved from
+AWS S3 London to Supabase Storage in the same project, free plan; the data
+loss row reflects the interim residual risk.
 
 ---
 
@@ -27,11 +30,13 @@ South East; categories per the schedule's nine data classes; identity
 evidence restricted to Owner/Compliance and the worker's own view; private
 object storage with signed, short-lived access only.
 
-**Technology:** Supabase (London, UK — AWS eu-west-2), Vercel hosting
+**Technology:** Supabase (London, UK — AWS eu-west-2; database, sign-in,
+documents and, from 25 October 2026, the weekly encrypted backup copies in
+a private Storage bucket — client-side AES-256, 12-week rolling retention;
+IINES decision, previously approved as AWS S3 London), Vercel hosting
 (limited categories: IPs and request logs, global network, UK
-Addendum/IDTA), Zoho email (EU data centre, adequate under UK law), AWS S3
-London for encrypted backups (client-side AES-256, 12-week rolling
-retention). Processor register: processors.md.
+Addendum/IDTA), Zoho email (EU data centre, adequate under UK law).
+Processor register: processors.md.
 
 **Profiling and automated processing:** the matching engine and
 performance evidence are profiling for the purpose of matching workers to
@@ -80,7 +85,7 @@ through the versioned privacy notice with a recorded acknowledgement.
 | Profiling/scoring used unfairly or opaquely | Medium — scores influence selection | Explainable per-factor output with recorded weights version; worker sees own breakdown; no solely-automated decisions; compliance failures never overridden by scores (AT-03/AT-24 controls); challenge route | Low |
 | Identity document misuse or over-exposure | High impact if it occurred | Private bucket, per-worker storage policies, signed short-lived URLs only; identity evidence visible only to Owner/Compliance and the worker; scans deleted once the check is recorded unless the scan is the record | Low |
 | Unlawful or premature live-data use | Medium | Production gate: no real worker data until all gates pass (reconciliation, 25 tests, DPIA/LIA, employment-law opinion, executed processing agreement, final documents, ownership/MFA, email tested, first backup, restoration test) | Controlled by the gate |
-| Data loss | Medium | Supabase daily backups (7-day) + weekly encrypted export to AWS S3 London (12-week rolling), key held by the controller, audited access/restoration, restoration test before the pilot | Low |
+| Data loss | Medium | Weekly encrypted export stored in a private Supabase Storage bucket in the same UK project (12-week rolling, changed from AWS S3 London 25 October 2026), key held by the controller, backup and restore actions audited, restoration test before the pilot. Stated plainly: on the free plan this export is the **only** backup (no provider daily backups), and because it sits in the same Supabase account as the primary it does not protect against whole-account loss — residual risk accepted as interim for fictional-data operation | Medium (interim; returns to Low when a separate-provider destination or provider backups are restored) |
 | Over-retention | Medium | Per-class retention with computed due dates, confirmed deletion, legal holds exceptional and time-limited, backups age out within 12 weeks | Low |
 | Credential compromise | Medium | MFA enforced for admin roles; named accounts only; shared accounts demoted at transfer; no credentials by email | Low |
 | International transfer without safeguards | Medium | Transfer mechanisms recorded per provider (processors.md): Supabase London primary, Vercel Addendum/IDTA, Zoho EEA adequacy; sub-processor lists verified before activation | Low |
