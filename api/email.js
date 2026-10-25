@@ -57,7 +57,9 @@ module.exports = async function (req, res) {
     const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/check_invitation', {
       method: 'POST',
       headers: {
-        'apikey': jwt,
+        // The gateway requires the publishable (anon) key as apikey;
+        // the caller's session travels in Authorization.
+        'apikey': process.env.SUPABASE_ANON_KEY || jwt,
         'Authorization': 'Bearer ' + jwt,
         'Content-Type': 'application/json'
       },
