@@ -20,8 +20,10 @@
     rejected: 'Rejected'
   };
   var ASSIGNMENT_STATUS = {
-    proposed: 'Proposed', confirmed: 'Confirmed', completed: 'Completed',
-    cancelled: 'Cancelled', legacy_recorded: 'History'
+    proposed: 'Proposed', offered: 'Offered', accepted: 'Accepted',
+    confirmed: 'Confirmed', active: 'Active', completed: 'Completed',
+    cancelled: 'Cancelled', no_show: 'No show', replaced: 'Replaced',
+    legacy_recorded: 'History'
   };
   var RTW_METHODS = {
     home_office_share_code: 'Home Office share code',
@@ -50,8 +52,10 @@
     filled: 'Filled', closed: 'Closed'
   };
   var ASSIGN_STATUS = {
-    proposed: 'Proposed', confirmed: 'Confirmed', completed: 'Completed',
-    cancelled: 'Cancelled', legacy_recorded: 'Legacy'
+    proposed: 'Proposed', offered: 'Offered', accepted: 'Accepted',
+    confirmed: 'Confirmed', active: 'Active', completed: 'Completed',
+    cancelled: 'Cancelled', no_show: 'No show', replaced: 'Replaced',
+    legacy_recorded: 'Legacy'
   };
   var BLOCKER_ACTIONS = {
     rtw_missing: 'Verify via share code, manual check or Employer Checking Service',
@@ -66,8 +70,21 @@
     rtw_checks: 'Right to Work follow-up'
   };
   var ASSIGN_BADGE = {
-    proposed: 'pending', confirmed: 'pass', completed: 'verified',
-    cancelled: 'fail', legacy_recorded: 'pending'
+    proposed: 'pending', offered: 'pending', accepted: 'pending',
+    confirmed: 'pass', active: 'verified', completed: 'verified',
+    cancelled: 'fail', no_show: 'fail', replaced: 'fail',
+    legacy_recorded: 'pending'
+  };
+  var ATTEND_OUTCOME = {
+    attended: 'Attended', late: 'Late', no_show: 'No show',
+    excused: 'Excused', not_recorded: 'Not recorded'
+  };
+  var ATTEND_STATUS = {
+    verified: 'Recorded', disputed: 'Disputed', corrected: 'Corrected'
+  };
+  var INCIDENT_TYPE = {
+    cancellation: 'Cancellation', no_show: 'No show',
+    replacement_required: 'Replacement required'
   };
   var currentRequest = null;
 
@@ -188,6 +205,45 @@
     assignmentsPanel: document.getElementById('assignments-panel'),
     assignmentRows: document.getElementById('assignment-rows'),
     assignmentStatus: document.getElementById('assignment-status'),
+    attendancePanel: document.getElementById('attendance-panel'),
+    atAssignment: document.getElementById('at-assignment'),
+    atDate: document.getElementById('at-date'),
+    atOutcome: document.getElementById('at-outcome'),
+    atSource: document.getElementById('at-source'),
+    atNote: document.getElementById('at-note'),
+    attendanceForm: document.getElementById('attendance-form'),
+    attendanceStatus: document.getElementById('attendance-status'),
+    attendanceRows: document.getElementById('attendance-rows'),
+    resolveDisputeForm: document.getElementById('resolve-dispute-form'),
+    resolveDisputeTitle: document.getElementById('resolve-dispute-title'),
+    rdResolution: document.getElementById('rd-resolution'),
+    rdOutcome: document.getElementById('rd-outcome'),
+    rdNote: document.getElementById('rd-note'),
+    resolveDisputeStatus: document.getElementById('resolve-dispute-status'),
+    incidentsPanel: document.getElementById('incidents-panel'),
+    inAssignment: document.getElementById('in-assignment'),
+    inType: document.getElementById('in-type'),
+    inNotes: document.getElementById('in-notes'),
+    incidentForm: document.getElementById('incident-form'),
+    incidentStatus: document.getElementById('incident-status'),
+    incidentRows: document.getElementById('incident-rows'),
+    incidentDetail: document.getElementById('incident-detail'),
+    incidentDetailTitle: document.getElementById('incident-detail-title'),
+    incidentDetailLine: document.getElementById('incident-detail-line'),
+    iaDecision: document.getElementById('ia-decision'),
+    iaNotes: document.getElementById('ia-notes'),
+    iaReplacement: document.getElementById('ia-replacement'),
+    incidentActionStatus: document.getElementById('incident-action-status'),
+    contractorPanel: document.getElementById('contractor-panel'),
+    contractorTitle: document.getElementById('contractor-title'),
+    contractorLine: document.getElementById('contractor-line'),
+    coRequestRows: document.getElementById('co-request-rows'),
+    coAssignmentRows: document.getElementById('co-assignment-rows'),
+    coAttendanceRows: document.getElementById('co-attendance-rows'),
+    coStatements: document.getElementById('co-statements'),
+    passportAttendance: document.getElementById('passport-attendance'),
+    passportAttendanceRows: document.getElementById('passport-attendance-rows'),
+    passportAttendanceStatus: document.getElementById('passport-attendance-status'),
     actionCentre: document.getElementById('action-centre'),
     acSummary: document.getElementById('ac-summary'),
     acGroups: document.getElementById('ac-groups'),
@@ -636,6 +692,63 @@
           ? 'Performance record: ' + s.score + (s.band ? ' (' + s.band + ')' : '') +
             ', weights ' + s.weights_version
           : 'Not yet scored — the record builds from completed assignments and feedback.';
+      });
+
+    // The worker's own attendance evidence, with the dispute right. A
+    // dispute goes to the team for review; the original stays on record.
+    sb.from('attendance_evidence')
+      .select('id, shift_date, outcome, status, note, ' +
+              'assignments(public_reference, trade)')
+      .eq('worker_id', workerId)
+      .order('shift_date', { ascending: false }).limit(20)
+      .then(function (res) {
+        els.passportAttendance.hidden = false;
+        els.passportAttendanceRows.innerHTML = '';
+        (res.data || []).forEach(function (ev) {
+          var tr = document.createElement('tr');
+          var a = ev.assignments || {};
+          [(a.public_reference || a.trade || 'Assignment'),
+           fmtDate(ev.shift_date),
+           ATTEND_OUTCOME[ev.outcome] || ev.outcome,
+           badge(ev.status === 'verified' ? 'verified'
+             : ev.status === 'disputed' ? 'pending_review' : 'pass',
+             ATTEND_STATUS[ev.status] || ev.status)].forEach(function (t) {
+            var td = document.createElement('td');
+            td.textContent = t === null || t === undefined ? '—' : t;
+            tr.appendChild(td);
+          });
+          var td = document.createElement('td');
+          if (ev.status !== 'disputed') {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn small';
+            btn.textContent = 'Dispute';
+            btn.addEventListener('click', function () {
+              var note = window.prompt(
+                'What is wrong with this attendance record? ' +
+                'The team will review it; the original stays on record.',
+                '');
+              if (note === null) return;
+              sb.rpc('dispute_attendance_evidence',
+                     { p_evidence_id: ev.id, p_note: note })
+                .then(function (r) {
+                  var d = r.data || {};
+                  if (!d.ok) {
+                    showActionStatus(els.passportAttendanceStatus, false,
+                      d.reason || 'The dispute could not be raised.');
+                    return;
+                  }
+                  showActionStatus(els.passportAttendanceStatus, true,
+                    'Dispute raised. The team must review it before the ' +
+                    'record changes.');
+                  loadPassport(workerId);
+                });
+            });
+            td.appendChild(btn);
+          }
+          tr.appendChild(td);
+          els.passportAttendanceRows.appendChild(tr);
+        });
       });
   }
 
@@ -1439,7 +1552,7 @@
         els.matchesSummary.textContent = 'Generated ' + fmtDate(gen.created_at) +
           ' (rules ' + gen.rules_version + ')';
         return sb.from('matches')
-          .select('rank, factors, workers(id, full_name, passport_no, trade)')
+          .select('id, decision, rank, factors, workers(id, full_name, passport_no, trade)')
           .eq('generation_id', gen.id)
           .order('rank', { ascending: false, nullsFirst: false });
       })
@@ -1457,15 +1570,41 @@
             (w.full_name || 'Worker') +
             (m.rank
               ? ' ' + badge('pass', 'Put forward #' + m.rank)
-              : ' ' + badge('fail', 'Held back'));
+              : ' ' + badge('fail', 'Held back')) +
+            (m.decision === 'approved'
+              ? ' ' + badge('verified', 'Approved match')
+              : '');
           if (m.rank && canManageRequests && w.id) {
-            var propose = document.createElement('button');
-            propose.type = 'button';
-            propose.className = 'btn small';
-            propose.textContent = 'Propose assignment';
-            propose.addEventListener('click', function () { proposeAssignment(w); });
-            head.appendChild(document.createTextNode(' '));
-            head.appendChild(propose);
+            if (m.decision !== 'approved') {
+              var approve = document.createElement('button');
+              approve.type = 'button';
+              approve.className = 'btn small';
+              approve.textContent = 'Approve match';
+              approve.addEventListener('click', function () {
+                sb.from('matches')
+                  .update({ decision: 'approved', decided_by: profile.id,
+                            decided_at: new Date().toISOString() })
+                  .eq('id', m.id)
+                  .then(function (r) {
+                    if (r.error) {
+                      showActionStatus(els.matchesSummary, false,
+                        friendlyDbError(r.error));
+                      return;
+                    }
+                    loadMatches(currentRequest);
+                  });
+              });
+              head.appendChild(document.createTextNode(' '));
+              head.appendChild(approve);
+            } else {
+              var offer = document.createElement('button');
+              offer.type = 'button';
+              offer.className = 'btn small';
+              offer.textContent = 'Send offer';
+              offer.addEventListener('click', function () { sendOffer(w); });
+              head.appendChild(document.createTextNode(' '));
+              head.appendChild(offer);
+            }
           }
           div.appendChild(head);
           var tbl = document.createElement('table');
@@ -1533,29 +1672,33 @@
     els.matchesView.hidden = true;
   });
 
-  function proposeAssignment(w) {
+  /* The offer flow (the only route the app creates assignments): an
+     approved match becomes an offer and its assignment at 'offered' in
+     one recorded operator action. The database refuses anything that is
+     not an approved match, and a second live offer for the same worker
+     and request. */
+
+  function sendOffer(w) {
     if (!currentRequest) return;
-    sb.from('assignments').insert({
-      request_id: currentRequest.id,
-      worker_id: w.id,
-      contractor_id: currentRequest.contractor_id || null,
-      trade: currentRequest.trade,
-      start_date: currentRequest.start_date || null,
-      role: 'worker'
-    }).then(function (res) {
-      if (res.error) {
-        showActionStatus(els.matchesSummary, false, friendlyDbError(res.error));
-        return;
-      }
-      sb.from('workforce_requests')
-        .update({ status: 'offered' })
-        .eq('id', currentRequest.id)
-        .in('status', ['open', 'matched'])
-        .then(function () {
-          loadRequests();
-          loadAssignments();
-        });
-    });
+    els.matchesSummary.hidden = false;
+    sb.rpc('create_assignment_from_match',
+           { p_request_id: currentRequest.id, p_worker_id: w.id })
+      .then(function (res) {
+        var d = res.data || {};
+        if (!d.ok) {
+          showActionStatus(els.matchesSummary, false,
+            d.reason || ({
+              no_approved_match: 'Only an approved match can be offered.',
+              already_offered: 'This worker already has a live offer for this request.'
+            })[d.error] || 'The offer could not be created.');
+          return;
+        }
+        showActionStatus(els.matchesSummary, true,
+          'Offer created for ' + (w.full_name || 'the worker') +
+          '. Record their answer in the assignments panel.');
+        loadRequests();
+        loadAssignments();
+      });
   }
 
   /* Assignment rates (register 6.4): records only, kept as in the
@@ -1634,7 +1777,28 @@
           var td = document.createElement('td');
           td.className = 'right';
           if (canManageRequests) {
-            if (a.status === 'proposed') {
+            if (a.status === 'offered') {
+              var acc = document.createElement('button');
+              acc.type = 'button';
+              acc.className = 'btn small';
+              acc.textContent = 'Accepted';
+              acc.title = 'Record the worker\'s acceptance of the offer';
+              acc.addEventListener('click', function () {
+                recordResponse(a, 'accepted');
+              });
+              td.appendChild(acc);
+              td.appendChild(document.createTextNode(' '));
+              var dec = document.createElement('button');
+              dec.type = 'button';
+              dec.className = 'btn small ghost';
+              dec.textContent = 'Declined';
+              dec.addEventListener('click', function () {
+                recordResponse(a, 'declined');
+              });
+              td.appendChild(dec);
+              td.appendChild(document.createTextNode(' '));
+            }
+            if (a.status === 'proposed' || a.status === 'accepted') {
               var conf = document.createElement('button');
               conf.type = 'button';
               conf.className = 'btn small';
@@ -1643,7 +1807,19 @@
               td.appendChild(conf);
               td.appendChild(document.createTextNode(' '));
             }
-            if (a.status === 'proposed' || a.status === 'confirmed') {
+            if (a.status === 'confirmed') {
+              var act = document.createElement('button');
+              act.type = 'button';
+              act.className = 'btn small';
+              act.textContent = 'Activate';
+              act.title = 'Second readiness gate — the worker goes on site';
+              act.addEventListener('click', function () { activateAssignment(a); });
+              td.appendChild(act);
+              td.appendChild(document.createTextNode(' '));
+            }
+            if (a.status === 'proposed' || a.status === 'offered' ||
+                a.status === 'accepted' || a.status === 'confirmed' ||
+                a.status === 'active') {
               var can = document.createElement('button');
               can.type = 'button';
               can.className = 'btn small ghost';
@@ -1653,7 +1829,7 @@
               td.appendChild(document.createTextNode(' '));
             }
           }
-          if (a.status === 'confirmed') {
+          if (a.status === 'confirmed' || a.status === 'active') {
             if (canManageRequests) {
               var out = document.createElement('button');
               out.type = 'button';
@@ -1692,42 +1868,531 @@
           els.assignmentRows.appendChild(tr);
         });
       });
+    loadAttendance();
+    loadIncidents();
+  }
+
+  function refreshAfterAssignmentChange(a) {
+    els.assignmentStatus.hidden = true;
+    sb.from('assignments')
+      .select('id', { count: 'exact', head: true })
+      .eq('request_id', a.request_id)
+      .in('status', ['confirmed', 'active', 'completed'])
+      .then(function (cnt) {
+        var req = a.workforce_requests || {};
+        if ((cnt.count || 0) >= (req.number_needed || 1)) {
+          sb.from('workforce_requests')
+            .update({ status: 'filled' })
+            .eq('id', a.request_id)
+            .in('status', ['offered', 'matched', 'open'])
+            .then(function () { loadRequests(); loadAssignments(); });
+        } else {
+          loadRequests();
+          loadAssignments();
+        }
+      });
   }
 
   function confirmAssignment(a) {
-    sb.from('assignments').update({ status: 'confirmed' })
-      .eq('id', a.id)
+    sb.rpc('confirm_assignment', { p_assignment_id: a.id })
       .then(function (res) {
-        if (res.error) {
-          var msg = (res.error.message || '');
-          if (msg.indexOf('hard gate') !== -1) {
-            showActionStatus(els.assignmentStatus, false,
-              'The hard gate refused confirmation — this worker needs a current ' +
-              'passing readiness evaluation first. Open the worker\'s detail and ' +
-              'run a readiness check, then confirm.');
-          } else {
-            showActionStatus(els.assignmentStatus, false, friendlyDbError(res.error));
-          }
+        var d = res.data || {};
+        if (!d.ok) {
+          showActionStatus(els.assignmentStatus, false,
+            d.error === 'hard_gate_refused'
+              ? (d.reason || 'The readiness gate refused confirmation — ' +
+                  'this worker needs a current passing readiness check first.')
+              : d.reason || friendlyDbError(res.error));
           return;
         }
-        els.assignmentStatus.hidden = true;
-        sb.from('assignments')
-          .select('id', { count: 'exact', head: true })
-          .eq('request_id', a.request_id)
-          .eq('status', 'confirmed')
-          .then(function (cnt) {
-            var req = a.workforce_requests || {};
-            if ((cnt.count || 0) >= (req.number_needed || 1)) {
-              sb.from('workforce_requests')
-                .update({ status: 'filled' })
-                .eq('id', a.request_id)
-                .eq('status', 'offered')
-                .then(function () { loadRequests(); loadAssignments(); });
-            } else {
-              loadRequests();
-              loadAssignments();
-            }
+        refreshAfterAssignmentChange(a);
+      });
+  }
+
+  function activateAssignment(a) {
+    sb.rpc('activate_assignment', { p_assignment_id: a.id })
+      .then(function (res) {
+        var d = res.data || {};
+        if (!d.ok) {
+          showActionStatus(els.assignmentStatus, false,
+            d.error === 'hard_gate_refused'
+              ? (d.reason || 'The second readiness gate refused activation — ' +
+                  'run a fresh readiness check for this worker first.')
+              : d.reason || friendlyDbError(res.error));
+          return;
+        }
+        showActionStatus(els.assignmentStatus, true,
+          'Activated — the worker is on site. A pre-activation readiness ' +
+          'snapshot was recorded.');
+        loadAssignments();
+      });
+  }
+
+  function recordResponse(a, response) {
+    sb.rpc('record_offer_response',
+           { p_assignment_id: a.id, p_response: response })
+      .then(function (res) {
+        var d = res.data || {};
+        if (!d.ok) {
+          showActionStatus(els.assignmentStatus, false,
+            d.reason || 'The response could not be recorded.');
+          return;
+        }
+        showActionStatus(els.assignmentStatus, true,
+          response === 'accepted'
+            ? 'Acceptance recorded. Confirm the assignment when it is booked in.'
+            : 'Decline recorded — the assignment is cancelled.');
+        refreshAfterAssignmentChange(a);
+      });
+  }
+
+  /* ---- Attendance (FR-11, AT-10/AT-11): one authoritative record per
+     assignment and shift date; a dispute appends, it never overwrites
+     the original; resolution is Compliance's ---- */
+
+  var disputeEvidence = null;
+
+  function loadAttendance() {
+    if (els.attendancePanel.hidden) return;
+    sb.from('assignments')
+      .select('id, public_reference, status, workers(full_name)')
+      .in('status', ['confirmed', 'active', 'completed'])
+      .order('created_at', { ascending: false }).limit(50)
+      .then(function (res) {
+        var current = els.atAssignment.value;
+        els.atAssignment.innerHTML = '<option value="">Choose…</option>';
+        (res.data || []).forEach(function (a) {
+          var opt = document.createElement('option');
+          opt.value = a.id;
+          opt.textContent = (a.public_reference || 'Assignment') + ' · ' +
+            (((a.workers || {}).full_name) || 'worker') +
+            ' (' + (ASSIGN_STATUS[a.status] || a.status) + ')';
+          els.atAssignment.appendChild(opt);
+        });
+        if (current) els.atAssignment.value = current;
+      });
+    sb.from('attendance_evidence')
+      .select('id, shift_date, outcome, status, note, source, ' +
+              'assignments(public_reference), workers(full_name), ' +
+              'attendance_disputes(id, status, note, resolution, ' +
+              'corrected_outcome)')
+      .order('shift_date', { ascending: false }).limit(50)
+      .then(function (res) {
+        els.attendanceRows.innerHTML = '';
+        (res.data || []).forEach(function (ev) {
+          var a = ev.assignments || {};
+          var w = ev.workers || {};
+          var disp = (ev.attendance_disputes || [])[0];
+          var tr = document.createElement('tr');
+          [(a.public_reference || '—'),
+           (w.full_name || '—'), fmtDate(ev.shift_date),
+           ATTEND_OUTCOME[ev.outcome] || ev.outcome,
+           disp && disp.status === 'open'
+             ? 'Disputed' + (disp.note ? ': ' + disp.note : '')
+             : ATTEND_STATUS[ev.status] || ev.status].forEach(function (t) {
+            var td = document.createElement('td');
+            td.textContent = t;
+            tr.appendChild(td);
           });
+          var td = document.createElement('td');
+          if (disp && disp.corrected_outcome) {
+            td.textContent = 'Corrected to ' +
+              (ATTEND_OUTCOME[disp.corrected_outcome] || disp.corrected_outcome);
+          }
+          tr.appendChild(td);
+          var tda = document.createElement('td');
+          if (disp && disp.status === 'open' &&
+              (profile && profile.roles.indexOf('compliance') !== -1)) {
+            var rs = document.createElement('button');
+            rs.type = 'button';
+            rs.className = 'btn small';
+            rs.textContent = 'Resolve';
+            rs.addEventListener('click', function () {
+              disputeEvidence = disp;
+              els.resolveDisputeForm.hidden = false;
+              els.resolveDisputeTitle.textContent = 'Resolve dispute — ' +
+                (a.public_reference || '') + ' · ' + fmtDate(ev.shift_date) +
+                ' (recorded: ' + (ATTEND_OUTCOME[ev.outcome] || ev.outcome) +
+                '; worker says: ' + (disp.note || '—') + ')';
+              els.rdResolution.value = 'original_stands';
+              els.rdOutcome.value = '';
+              els.rdNote.value = '';
+              els.resolveDisputeForm.scrollIntoView({ behavior: 'smooth' });
+            });
+            tda.appendChild(rs);
+          }
+          tr.appendChild(tda);
+          els.attendanceRows.appendChild(tr);
+        });
+      });
+  }
+
+  els.attendanceForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    els.attendanceStatus.hidden = true;
+    if (!els.atAssignment.value || !els.atDate.value) {
+      showActionStatus(els.attendanceStatus, false,
+        'Choose the assignment and the shift date.');
+      return;
+    }
+    sb.rpc('record_attendance_evidence', {
+      p_assignment_id: els.atAssignment.value,
+      p_shift_date: els.atDate.value,
+      p_outcome: els.atOutcome.value,
+      p_source: els.atSource.value.trim() || null,
+      p_note: els.atNote.value.trim() || null
+    }).then(function (res) {
+      var d = res.data || {};
+      if (!d.ok) {
+        showActionStatus(els.attendanceStatus, false,
+          d.reason || ({
+            duplicate_record: 'A record already exists for this assignment ' +
+              'and date — dispute it first if it needs correcting.'
+          })[d.error] || 'The record could not be saved.');
+        return;
+      }
+      showActionStatus(els.attendanceStatus, true, 'Attendance recorded.');
+      els.atDate.value = '';
+      els.atNote.value = '';
+      loadAttendance();
+    });
+  });
+
+  els.resolveDisputeForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!disputeEvidence) return;
+    els.resolveDisputeStatus.hidden = true;
+    var resolution = els.rdResolution.value;
+    var corrected = resolution === 'corrected'
+      ? (els.rdOutcome.value || null) : null;
+    sb.rpc('resolve_attendance_dispute', {
+      p_dispute_id: disputeEvidence.id,
+      p_resolution: resolution,
+      p_corrected_outcome: corrected,
+      p_note: els.rdNote.value.trim() || null
+    }).then(function (res) {
+      var d = res.data || {};
+      if (!d.ok) {
+        showActionStatus(els.resolveDisputeStatus, false,
+          d.reason || ({
+            correction_required: 'Choose the corrected outcome.',
+            correction_identical: 'That is the same as the original — ' +
+              'resolve as "original stands" instead.'
+          })[d.error] || 'The dispute could not be resolved.');
+        return;
+      }
+      showActionStatus(els.resolveDisputeStatus, true,
+        'Dispute resolved. The original record and the resolution are ' +
+        'both on file.');
+      els.resolveDisputeForm.hidden = true;
+      disputeEvidence = null;
+      loadAttendance();
+    });
+  });
+
+  /* ---- Replacement incidents (FR-12, AT-12/AT-13): the chain reuses
+     the normal controls; approvals append; the site-pack
+     acknowledgement is an explicit operator action ---- */
+
+  var currentIncident = null;
+
+  function loadIncidents() {
+    if (els.incidentsPanel.hidden) return;
+    sb.from('assignments')
+      .select('id, public_reference, status, workers(full_name)')
+      .in('status', ['confirmed', 'active'])
+      .order('created_at', { ascending: false }).limit(50)
+      .then(function (res) {
+        var current = els.inAssignment.value;
+        els.inAssignment.innerHTML = '<option value="">Choose…</option>';
+        (res.data || []).forEach(function (a) {
+          var opt = document.createElement('option');
+          opt.value = a.id;
+          opt.textContent = (a.public_reference || 'Assignment') + ' · ' +
+            (((a.workers || {}).full_name) || 'worker') +
+            ' (' + (ASSIGN_STATUS[a.status] || a.status) + ')';
+          els.inAssignment.appendChild(opt);
+        });
+        if (current) els.inAssignment.value = current;
+      });
+    sb.from('replacement_incidents')
+      .select('id, incident_type, recorded_at, notes, resolved_at, request_id, ' +
+              'site_pack_ack_at, replacement_assignment_id, ' +
+              'assignments!replacement_incidents_assignment_id_fkey' +
+                '(public_reference, status), ' +
+              'replacement_incident_approvals(decision, notes, created_at)')
+      .order('recorded_at', { ascending: false }).limit(30)
+      .then(function (res) {
+        var incidents = res.data || [];
+        // replacement references resolved separately: two FK paths to
+        // assignments cannot be embedded in one query
+        var repIds = incidents
+          .map(function (inc) { return inc.replacement_assignment_id; })
+          .filter(function (id) { return !!id; });
+        var render = function (repRefs) {
+          els.incidentRows.innerHTML = '';
+          incidents.forEach(function (inc) {
+            var a = inc.assignments || {};
+            var repRef = inc.replacement_assignment_id
+              ? (repRefs[inc.replacement_assignment_id] || 'linked') : '—';
+            var tr = document.createElement('tr');
+            [(a.public_reference || '—'),
+             INCIDENT_TYPE[inc.incident_type] || inc.incident_type,
+             fmtDate(inc.recorded_at),
+             repRef,
+             inc.resolved_at ? 'Resolved' : 'Open'].forEach(function (t) {
+              var td = document.createElement('td');
+              td.textContent = t;
+              tr.appendChild(td);
+            });
+            var td = document.createElement('td');
+            td.className = 'right';
+            if (!inc.resolved_at && canManageRequests) {
+              var open = document.createElement('button');
+              open.type = 'button';
+              open.className = 'btn small';
+              open.textContent = 'Manage';
+              open.addEventListener('click', function () {
+                openIncident(inc);
+              });
+              td.appendChild(open);
+            }
+            tr.appendChild(td);
+            els.incidentRows.appendChild(tr);
+          });
+        };
+        if (repIds.length) {
+          sb.from('assignments')
+            .select('id, public_reference')
+            .in('id', repIds)
+            .then(function (r2) {
+              var map = {};
+              (r2.data || []).forEach(function (x) { map[x.id] = x.public_reference; });
+              render(map);
+            });
+        } else {
+          render({});
+        }
+      });
+  }
+
+  function openIncident(inc) {
+    currentIncident = inc;
+    els.incidentDetail.hidden = false;
+    var a = inc.assignments || {};
+    var approvals = (inc.replacement_incident_approvals || []);
+    var last = approvals.length
+      ? approvals[approvals.length - 1] : null;
+    els.incidentDetailTitle.textContent =
+      'Incident — ' + (a.public_reference || '') +
+      ' · ' + (INCIDENT_TYPE[inc.incident_type] || inc.incident_type);
+    els.incidentDetailLine.innerHTML =
+      'Recorded ' + fmtDate(inc.recorded_at) +
+      (inc.notes ? ' — ' + inc.notes : '') +
+      (last ? ' · last approval: ' + last.decision +
+        (last.notes ? ' (' + last.notes + ')' : '') : '') +
+      (inc.site_pack_ack_at
+        ? ' · site pack acknowledged ' + fmtDate(inc.site_pack_ack_at)
+        : ' · site pack NOT acknowledged') +
+      (inc.resolved_at ? ' · resolved ' + fmtDate(inc.resolved_at) : '');
+    // replacement candidates: live assignments for the same request that
+    // came through the offer flow
+    sb.from('assignments')
+      .select('id, public_reference, status, workers(full_name)')
+      .eq('request_id', inc.request_id)
+      .in('status', ['offered', 'accepted', 'confirmed', 'active'])
+      .order('created_at', { ascending: false }).limit(20)
+      .then(function (res) {
+        els.iaReplacement.innerHTML = '<option value="">Choose…</option>';
+        (res.data || []).forEach(function (c) {
+          if (c.id === inc.assignment_id) return;
+          var opt = document.createElement('option');
+          opt.value = c.id;
+          opt.textContent = (c.public_reference || 'Assignment') + ' · ' +
+            (((c.workers || {}).full_name) || 'worker') +
+            ' (' + (ASSIGN_STATUS[c.status] || c.status) + ')';
+          els.iaReplacement.appendChild(opt);
+        });
+      });
+    els.iaDecision.value = 'approved';
+    els.iaNotes.value = '';
+    els.incidentActionStatus.hidden = true;
+    els.incidentDetail.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  els.incidentForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    els.incidentStatus.hidden = true;
+    if (!els.inAssignment.value) {
+      showActionStatus(els.incidentStatus, false, 'Choose the assignment.');
+      return;
+    }
+    sb.rpc('record_replacement_incident', {
+      p_assignment_id: els.inAssignment.value,
+      p_incident_type: els.inType.value,
+      p_notes: els.inNotes.value.trim() || null
+    }).then(function (res) {
+      var d = res.data || {};
+      if (!d.ok) {
+        showActionStatus(els.incidentStatus, false,
+          d.reason || ({
+            incident_already_open: 'An unresolved incident already exists ' +
+              'for this assignment.'
+          })[d.error] || 'The incident could not be recorded.');
+        return;
+      }
+      showActionStatus(els.incidentStatus, true,
+        'Incident recorded.' +
+        (els.inType.value === 'cancellation'
+          ? ' The assignment was cancelled through the status engine.'
+          : els.inType.value === 'no_show'
+            ? ' The assignment is marked no-show.'
+            : ''));
+      els.inNotes.value = '';
+      loadAssignments();
+    });
+  });
+
+  document.getElementById('ia-approval-btn').addEventListener('click', function () {
+    if (!currentIncident) return;
+    sb.rpc('record_replacement_approval', {
+      p_incident_id: currentIncident.id,
+      p_decision: els.iaDecision.value,
+      p_notes: els.iaNotes.value.trim() || null
+    }).then(function (res) {
+      var d = res.data || {};
+      if (!d.ok) {
+        showActionStatus(els.incidentActionStatus, false,
+          d.reason || 'The approval could not be recorded.');
+        return;
+      }
+      showActionStatus(els.incidentActionStatus, true,
+        'Approval appended to the history.');
+      els.iaNotes.value = '';
+      loadIncidents();
+    });
+  });
+
+  document.getElementById('ia-link-btn').addEventListener('click', function () {
+    if (!currentIncident) return;
+    if (!els.iaReplacement.value) {
+      showActionStatus(els.incidentActionStatus, false,
+        'Choose the replacement assignment (same request, through the ' +
+        'offer flow).');
+      return;
+    }
+    sb.rpc('link_replacement_assignment', {
+      p_incident_id: currentIncident.id,
+      p_replacement_assignment_id: els.iaReplacement.value
+    }).then(function (res) {
+      var d = res.data || {};
+      if (!d.ok) {
+        showActionStatus(els.incidentActionStatus, false,
+          d.reason || 'The replacement could not be linked.');
+        return;
+      }
+      showActionStatus(els.incidentActionStatus, true,
+        'Replacement linked. The original is marked replaced where its ' +
+        'status allows.');
+      loadAssignments();
+    });
+  });
+
+  document.getElementById('ia-ack-btn').addEventListener('click', function () {
+    if (!currentIncident) return;
+    sb.rpc('acknowledge_replacement_site_pack',
+           { p_incident_id: currentIncident.id })
+      .then(function (res) {
+        var d = res.data || {};
+        if (!d.ok) {
+          showActionStatus(els.incidentActionStatus, false,
+            d.reason || 'The acknowledgement could not be recorded.');
+          return;
+        }
+        showActionStatus(els.incidentActionStatus, true,
+          'Site pack acknowledged.');
+        loadIncidents();
+      });
+  });
+
+  document.getElementById('ia-resolve-btn').addEventListener('click', function () {
+    if (!currentIncident) return;
+    sb.rpc('resolve_replacement_incident', {
+      p_incident_id: currentIncident.id,
+      p_notes: null
+    }).then(function (res) {
+      var d = res.data || {};
+      if (!d.ok) {
+        showActionStatus(els.incidentActionStatus, false,
+          d.reason || 'The chain could not be resolved.');
+        return;
+      }
+      showActionStatus(els.incidentActionStatus, true,
+        'Chain closed. Elapsed time: ' +
+        Math.round((d.elapsed || 0) / 60) + ' minutes.');
+      els.incidentDetail.hidden = true;
+      currentIncident = null;
+      loadAssignments();
+    });
+  });
+
+  /* ---- Contractor view (FR-16): own requests, assignments,
+     attendance and statements — worker name and trade only ---- */
+
+  function loadContractorOverview() {
+    sb.rpc('contractor_overview')
+      .then(function (res) {
+        var d = res.data || {};
+        if (!d.ok) {
+          els.contractorLine.textContent =
+            d.reason || 'Your contractor view could not be loaded.';
+          return;
+        }
+        els.contractorTitle.textContent = d.contractor.legal_name || 'Your company';
+        els.contractorLine.textContent =
+          (d.contractor.contact_name ? d.contractor.contact_name + ' · ' : '') +
+          (d.contractor.email || '') + (d.contractor.phone
+            ? ' · ' + d.contractor.phone : '');
+        els.coRequestRows.innerHTML = miniTable(
+          (d.requests || []).map(function (r) {
+            return [r.public_reference || '—', r.trade || '—',
+                    r.number_needed, fmtDate(r.start_date),
+                    (REQUEST_STATUS[r.status] || r.status)];
+          }), ['Ref', 'Trade', 'Needed', 'Start', 'Status']);
+        els.coAssignmentRows.innerHTML = miniTable(
+          (d.assignments || []).map(function (a) {
+            return [a.public_reference || '—', a.worker_name || '—',
+                    a.worker_trade || a.trade || '—', fmtDate(a.start_date),
+                    ASSIGN_STATUS[a.status] || a.status];
+          }), ['Ref', 'Worker', 'Trade', 'Start', 'Status']);
+        els.coAttendanceRows.innerHTML = miniTable(
+          (d.attendance || []).map(function (att) {
+            return [att.public_reference || '—',
+                    fmtDate(att.shift_date),
+                    ATTEND_OUTCOME[att.outcome] || att.outcome];
+          }), ['Assignment', 'Date', 'Outcome']);
+        els.coStatements.innerHTML = '';
+        (d.statements || []).forEach(function (s) {
+          var c = s.content || {};
+          var w = c.worker || {};
+          var work = c.work || {};
+          var box = document.createElement('div');
+          box.className = 'note';
+          box.innerHTML =
+            '<p class="profile-line"><strong>' + (c.title || 'Statement') +
+            ' v' + s.version + '</strong> · ' + fmtDate(s.generated_at) + '</p>' +
+            '<p>' + (c.reference || '') + ' · ' + (w.name || '') +
+            (w.trade ? ' · ' + w.trade : '') + '</p>' +
+            '<p>' + (work.start_date ? fmtDate(work.start_date) : '—') +
+            (work.end_date ? ' – ' + fmtDate(work.end_date) : '') + '</p>' +
+            '<p>Status: ' + (ASSIGN_STATUS[c.status] || c.status || '—') + '</p>' +
+            '<p class="footnote">' + (c.note || '') + '</p>';
+          els.coStatements.appendChild(box);
+        });
+        if (!(d.statements || []).length) {
+          els.coStatements.innerHTML =
+            '<p class="footnote">No statements generated yet.</p>';
+        }
       });
   }
 
@@ -2673,6 +3338,22 @@
         els.contractorDetails.hidden = !canManageRequests;
         els.assignmentsPanel.hidden = !canSeeRequests;
         els.outcomeForm.hidden = true;
+        // Attendance and incidents are team surfaces; the contractor
+        // sees their own copy through the contractor view below, and
+        // the worker through the passport.
+        var canSeeAttendance = canManageRequests ||
+          roles.indexOf('compliance') !== -1 ||
+          roles.indexOf('auditor') !== -1;
+        els.attendancePanel.hidden = !canSeeAttendance;
+        els.attendanceForm.hidden = !canManageRequests;
+        els.incidentsPanel.hidden = !canSeeAttendance;
+        els.incidentForm.hidden = !canManageRequests;
+        if (roles.indexOf('contractor') !== -1) {
+          els.contractorPanel.hidden = false;
+          loadContractorOverview();
+        } else {
+          els.contractorPanel.hidden = true;
+        }
         var canManageSchedule = roles.indexOf('owner') !== -1 ||
           roles.indexOf('compliance') !== -1;
         var canSeeCentre = canManageSchedule || roles.indexOf('operations') !== -1 ||
@@ -2773,6 +3454,16 @@
               }
             });
             td.appendChild(copy);
+            td.appendChild(document.createTextNode(' '));
+            var emailBtn = document.createElement('button');
+            emailBtn.type = 'button';
+            emailBtn.className = 'btn small ghost';
+            emailBtn.textContent = 'Email invitee';
+            emailBtn.addEventListener('click', function () {
+              emailInvitation(inv, emailBtn);
+            });
+            td.appendChild(emailBtn);
+            td.appendChild(document.createTextNode(' '));
             var revoke = document.createElement('button');
             revoke.type = 'button';
             revoke.className = 'btn small danger';
@@ -2789,6 +3480,50 @@
   function revokeInvitation(id) {
     sb.from('invitations').delete().eq('id', id)
       .then(function () { loadInvitations(); });
+  }
+
+  /* Send the invitation email through the platform's sender. The
+     serverless function verifies the invitation server-side before
+     anything is sent. If email sending is not active yet (SMTP not
+     configured), the operator keeps the copy-link route. */
+  function emailInvitation(inv, btn) {
+    btn.disabled = true;
+    var old = btn.textContent;
+    btn.textContent = 'Sending…';
+    sb.auth.getSession().then(function (sres) {
+      var jwt = sres.data && sres.data.session &&
+        sres.data.session.access_token;
+      if (!jwt) throw new Error('no session');
+      return fetch('/api/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json',
+                   'Authorization': 'Bearer ' + jwt },
+        body: JSON.stringify({ kind: 'invitation', token: inv.token })
+      });
+    }).then(function (r) { return r.json(); })
+      .then(function (d) {
+        btn.disabled = false;
+        btn.textContent = old;
+        if (d.ok) {
+          showActionStatus(els.inviteStatus, true,
+            'Invitation email sent to ' + inv.email + ' from ' +
+            (d.from || 'the platform sender') + '.');
+        } else if (d.error === 'smtp_not_configured') {
+          showActionStatus(els.inviteStatus, false,
+            'Email sending is not active yet — copy the link and send it ' +
+            'yourself for now. (Activate the platform sender by adding the ' +
+            'SMTP app password to the hosting secrets.)');
+        } else {
+          showActionStatus(els.inviteStatus, false,
+            d.reason || 'The email could not be sent. Copy the link instead.');
+        }
+      })
+      .catch(function () {
+        btn.disabled = false;
+        btn.textContent = old;
+        showActionStatus(els.inviteStatus, false,
+          'The email could not be sent. Copy the link instead.');
+      });
   }
 
   els.loginForm.addEventListener('submit', function (e) {

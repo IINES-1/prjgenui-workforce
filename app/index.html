@@ -147,6 +147,18 @@
             <tbody id="assign-rows"></tbody>
           </table>
         </div>
+        <div class="card" id="passport-attendance" hidden>
+          <h3>My attendance</h3>
+          <p class="footnote">If a record is wrong, dispute it — the team
+            must review it before it changes, and the original stays on
+            record either way.</p>
+          <table>
+            <thead><tr><th>Assignment</th><th>Date</th><th>Outcome</th>
+              <th>Status</th><th></th></tr></thead>
+            <tbody id="passport-attendance-rows"></tbody>
+          </table>
+          <p id="passport-attendance-status" class="error" hidden></p>
+        </div>
         <div class="card" id="passport-perf" hidden>
           <h3>Performance</h3>
           <p id="perf-line" class="profile-line"></p>
@@ -599,6 +611,148 @@
         </form>
       </div>
 
+      <!-- Attendance: Owner and Operations record; Compliance resolves
+           disputes; Auditor reads; the worker's own view is in the
+           passport above -->
+      <div id="attendance-panel" class="card" hidden>
+        <h2>Attendance</h2>
+        <p class="footnote">One record per assignment and shift date. The
+          existing record is the authoritative one — dispute it to
+          correct it.</p>
+        <form id="attendance-form" novalidate>
+          <div class="fields">
+            <div class="field grow">
+              <label for="at-assignment">Assignment</label>
+              <select id="at-assignment"><option value="">Choose…</option></select>
+            </div>
+            <div class="field">
+              <label for="at-date">Shift date</label>
+              <input type="date" id="at-date" required>
+            </div>
+            <div class="field">
+              <label for="at-outcome">Outcome</label>
+              <select id="at-outcome">
+                <option value="attended">Attended</option>
+                <option value="late">Late</option>
+                <option value="no_show">No show</option>
+                <option value="excused">Excused</option>
+                <option value="not_recorded">Not recorded</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="at-source">Source</label>
+              <input id="at-source" autocomplete="off"
+                     placeholder="e.g. site log, supervisor call">
+            </div>
+            <div class="field grow">
+              <label for="at-note">Note</label>
+              <input id="at-note" autocomplete="off">
+            </div>
+            <button class="btn" type="submit" id="attendance-btn">Record attendance</button>
+          </div>
+          <p id="attendance-status" class="error" hidden></p>
+        </form>
+        <table>
+          <thead><tr><th>Assignment</th><th>Worker</th><th>Date</th>
+            <th>Outcome</th><th>Status</th><th>Dispute</th><th></th></tr></thead>
+          <tbody id="attendance-rows"></tbody>
+        </table>
+        <form id="resolve-dispute-form" class="card" hidden novalidate>
+          <h3 id="resolve-dispute-title">Resolve dispute</h3>
+          <div class="fields">
+            <div class="field">
+              <label for="rd-resolution">Resolution</label>
+              <select id="rd-resolution">
+                <option value="original_stands">Original stands</option>
+                <option value="corrected">Corrected</option>
+                <option value="withdrawn">Withdrawn by the worker</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="rd-outcome">Corrected outcome (corrections only)</label>
+              <select id="rd-outcome">
+                <option value="">—</option>
+                <option value="attended">Attended</option>
+                <option value="late">Late</option>
+                <option value="no_show">No show</option>
+                <option value="excused">Excused</option>
+                <option value="not_recorded">Not recorded</option>
+              </select>
+            </div>
+            <div class="field grow">
+              <label for="rd-note">Note</label>
+              <input id="rd-note" autocomplete="off">
+            </div>
+            <button class="btn" type="submit" id="resolve-dispute-btn">Resolve</button>
+          </div>
+          <p id="resolve-dispute-status" class="error" hidden></p>
+        </form>
+      </div>
+
+      <!-- Replacement incidents: Owner and Operations manage;
+           Compliance and Auditor read -->
+      <div id="incidents-panel" class="card" hidden>
+        <h2>Replacement incidents</h2>
+        <form id="incident-form" novalidate>
+          <div class="fields">
+            <div class="field grow">
+              <label for="in-assignment">Assignment</label>
+              <select id="in-assignment"><option value="">Choose…</option></select>
+            </div>
+            <div class="field">
+              <label for="in-type">Type</label>
+              <select id="in-type">
+                <option value="cancellation">Cancellation</option>
+                <option value="no_show">No show</option>
+                <option value="replacement_required">Replacement required</option>
+              </select>
+            </div>
+            <div class="field grow">
+              <label for="in-notes">Notes</label>
+              <input id="in-notes" autocomplete="off">
+            </div>
+            <button class="btn" type="submit" id="incident-btn">Record incident</button>
+          </div>
+          <p id="incident-status" class="error" hidden></p>
+        </form>
+        <table>
+          <thead><tr><th>Assignment</th><th>Type</th><th>Recorded</th>
+            <th>Replacement</th><th>Status</th><th></th></tr></thead>
+          <tbody id="incident-rows"></tbody>
+        </table>
+        <div id="incident-detail" class="card" hidden>
+          <h3 id="incident-detail-title">Incident</h3>
+          <p id="incident-detail-line" class="profile-line"></p>
+          <div class="fields">
+            <div class="field">
+              <label for="ia-decision">Record approval</label>
+              <select id="ia-decision">
+                <option value="approved">Approved</option>
+                <option value="refused">Refused</option>
+              </select>
+            </div>
+            <div class="field grow">
+              <label for="ia-notes">Approval note</label>
+              <input id="ia-notes" autocomplete="off">
+            </div>
+            <button class="btn small" type="button" id="ia-approval-btn">Add approval</button>
+          </div>
+          <div class="fields">
+            <div class="field grow">
+              <label for="ia-replacement">Link replacement (same request,
+                created through the offer flow)</label>
+              <select id="ia-replacement"><option value="">Choose…</option></select>
+            </div>
+            <button class="btn small" type="button" id="ia-link-btn">Link</button>
+          </div>
+          <div class="row-actions">
+            <button class="btn small" type="button" id="ia-ack-btn">Acknowledge site pack</button>
+            <button class="btn small danger" type="button" id="ia-resolve-btn">Resolve chain</button>
+          </div>
+          <p id="incident-action-status" class="error" hidden></p>
+        </div>
+      </div>
+
       <!-- Assignment statement: the latest version for an assignment -->
       <div id="statement-view" class="card" hidden>
         <div class="row-between">
@@ -763,6 +917,30 @@
           <thead><tr><th>Description</th><th>Category</th><th>Amount</th><th>Status</th><th></th></tr></thead>
           <tbody id="cost-rows"></tbody>
         </table>
+      </div>
+
+      <!-- Contractor view: the contractor's own requests, assignments,
+           attendance and statements (no worker identity documents) -->
+      <div id="contractor-panel" class="card" hidden>
+        <h2 id="contractor-title">Your company</h2>
+        <p id="contractor-line" class="profile-line">Loading…</p>
+        <h3>Workforce requests</h3>
+        <table>
+          <thead><tr><th>Ref</th><th>Trade</th><th>Needed</th><th>Start</th><th>Status</th></tr></thead>
+          <tbody id="co-request-rows"></tbody>
+        </table>
+        <h3>Assignments</h3>
+        <table>
+          <thead><tr><th>Ref</th><th>Worker</th><th>Trade</th><th>Start</th><th>Status</th></tr></thead>
+          <tbody id="co-assignment-rows"></tbody>
+        </table>
+        <h3>Attendance</h3>
+        <table>
+          <thead><tr><th>Assignment</th><th>Date</th><th>Outcome</th></tr></thead>
+          <tbody id="co-attendance-rows"></tbody>
+        </table>
+        <h3>Assignment statements</h3>
+        <div id="co-statements"></div>
       </div>
     </section>
   </main>

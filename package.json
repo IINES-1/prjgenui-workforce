@@ -1,0 +1,9 @@
+{
+  "name": "prjgenui-workforce",
+  "version": "1.0.0",
+  "private": true,
+  "description": "PRJGENUI Workforce marketing site, team platform and serverless functions.",
+  "dependencies": {
+    "nodemailer": "^6.9.13"
+  }
+}
