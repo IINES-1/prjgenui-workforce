@@ -1,4 +1,10 @@
 {
+  "rewrites": [
+    {
+      "source": "/secrets.js",
+      "destination": "/api/secrets"
+    }
+  ],
   "redirects": [
     {
       "source": "/:path*",

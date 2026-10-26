@@ -3,9 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "description": "PRJGENUI Workforce marketing site, team platform and serverless functions.",
-  "scripts": {
-    "build": "node scripts/write-secrets.js"
-  },
   "dependencies": {
     "nodemailer": "^6.9.13"
   }
