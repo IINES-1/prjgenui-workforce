@@ -8,3 +8,4 @@ Thumbs.db
 
 tmp/
 outputs/
+node_modules/
