@@ -1,5 +1,7 @@
 .vercel
-secrets.js
+# Only the root-level local copy is ignored; api/secrets.js (the deployed
+# runtime endpoint, containing no values) must be committable.
+/secrets.js
 research/shots/
 # Local credential helper for the Supabase dashboard login (never commit)
 tools/supabase_login.js
