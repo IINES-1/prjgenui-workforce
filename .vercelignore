@@ -8,6 +8,7 @@ colours-2.html
 logos.html
 logos-forest.html
 tools/
+!tools/write-secrets.js
 research/
 docs/
 *.py
