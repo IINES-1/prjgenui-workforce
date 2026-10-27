@@ -872,16 +872,10 @@
   function setLang(lang) {
     current = lang;
     try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
-    if (lang === 'en') {
-      /* the dictionaries map English -> target; going back to English
-         reloads the original interface */
-      location.reload();
-      return;
-    }
-    buildSelector();
-    var lbl = document.querySelector('.prj-lang label');
-    if (lbl) lbl.textContent = 'Idioma';
-    applyAll();
+    /* always reload: the dictionaries translate from English, so every
+       switch starts from the pristine page and applies the new language
+       on load */
+    location.reload();
   }
 
   /* ---- boot ---- */
