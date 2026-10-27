@@ -770,7 +770,9 @@
     if (!raw || !raw.trim()) return;
     var lead = raw.match(/^\s*/)[0];
     var trail = raw.match(/\s*$/)[0];
-    var core = raw.trim();
+    /* the source HTML breaks some strings across lines; the dictionaries
+       key on the single-spaced form */
+    var core = raw.trim().replace(/\s+/g, ' ');
     var out = convert(core);
     if (out !== null) { node.nodeValue = lead + out + trail; return; }
     if (/\d/.test(core)) {
