@@ -879,7 +879,17 @@
   }
 
   /* ---- boot ---- */
-  try { current = localStorage.getItem(LANG_KEY) || 'en'; } catch (e) { current = 'en'; }
+  /* the public site's Spanish and Portuguese pages link here as
+     app/#lang=es / app/#lang=pt so a visitor arrives in the language they
+     were already reading; read it once, remember it, clean the URL */
+  var m = /^#lang=(en|es|pt)$/.exec(location.hash || '');
+  if (m) {
+    try { localStorage.setItem(LANG_KEY, m[1]); } catch (e) {}
+    current = m[1];
+    history.replaceState(null, '', location.pathname + location.search);
+  } else {
+    try { current = localStorage.getItem(LANG_KEY) || 'en'; } catch (e) { current = 'en'; }
+  }
   if (!DICTS[current] && current !== 'en') current = 'en';
 
   function boot() {
