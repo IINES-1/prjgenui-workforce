@@ -3929,9 +3929,9 @@
             html += overdue
               ? alertRow(false, 'Overdue invoices: ' + overdue + '.')
               : alertRow(true, 'No overdue invoices.');
-            html += alertRow(exposure > 0,
+            html += alertRow(exposure === 0,
               'Payment exposure (sent, unpaid): ' + money(exposure) + '.');
-            html += alertRow(liability > 0,
+            html += alertRow(liability === 0,
               'Worker pay liability (approved, not yet invoiced): ' +
               money(liability) + '.');
             html += alertRow(true, 'Approved timesheet revenue to date: ' +
