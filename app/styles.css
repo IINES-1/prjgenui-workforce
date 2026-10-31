@@ -241,6 +241,28 @@ td {
 }
 td.right { text-align: right; padding-right: 0; }
 
+/* Control Tower metric boxes */
+.ct-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+.ct-box {
+  border: 1px solid #c9c9c9;
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: #fbfaf7;
+}
+.ct-box.ct-warn { border-color: #c0392b; background: #fdf3f1; }
+.ct-value { font-weight: 600; font-size: 1.15rem; }
+.ct-label { font-size: 0.75rem; color: #5b5b5b; }
+.alert-line { color: #a93226; font-weight: 500; margin: 4px 0; }
+.low-margin { color: #a93226; }
+
 .foot {
   background: var(--sage-deep);
   color: #eef2ec;

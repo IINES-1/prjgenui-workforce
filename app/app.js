@@ -256,8 +256,6 @@
     ratesForm: document.getElementById('rates-form'),
     ratesTitle: document.getElementById('rates-title'),
     ratesStatus: document.getElementById('rates-status'),
-    rtPay: document.getElementById('rt-pay'),
-    rtCharge: document.getElementById('rt-charge'),
     ratesCancel: document.getElementById('rates-cancel'),
     remindersBtn: document.getElementById('reminders-btn'),
     acReminders: document.getElementById('ac-reminders'),
@@ -295,6 +293,37 @@
     selfDocRows: document.getElementById('self-doc-rows'),
     selfDocForm: document.getElementById('self-doc-form'),
     selfDocStatus: document.getElementById('self-doc-status'),
+    controlTower: document.getElementById('control-tower'),
+    ctSummary: document.getElementById('ct-summary'),
+    ctMetrics: document.getElementById('ct-metrics'),
+    ctAlerts: document.getElementById('ct-alerts'),
+    ctAlertsEmpty: document.getElementById('ct-alerts-empty'),
+    wSearch: document.getElementById('w-search'),
+    wrForm: document.getElementById('wr-form'),
+    wrStatus: document.getElementById('wr-status'),
+    wunForm: document.getElementById('wun-form'),
+    wunRows: document.getElementById('wun-rows'),
+    wunStatus: document.getElementById('wun-status'),
+    timesheetsPanel: document.getElementById('timesheets-panel'),
+    tsAssignment: document.getElementById('ts-assignment'),
+    tsRows: document.getElementById('ts-rows'),
+    tsStatus: document.getElementById('ts-status'),
+    commercialPanel: document.getElementById('commercial-panel'),
+    marginRows: document.getElementById('margin-rows'),
+    marginSummary: document.getElementById('margin-summary'),
+    invoiceRows: document.getElementById('invoice-rows'),
+    ivStatus: document.getElementById('iv-status'),
+    finAlerts: document.getElementById('fin-alerts'),
+    pipelinePanel: document.getElementById('pipeline-panel'),
+    pipelineRows: document.getElementById('pipeline-rows'),
+    pipelineStatus: document.getElementById('pipeline-status'),
+    commRows: document.getElementById('comm-rows'),
+    cmStatus: document.getElementById('cm-status'),
+    bulkInviteForm: document.getElementById('bulk-invite-form'),
+    bulkWorkerForm: document.getElementById('bulk-worker-form'),
+    passportAvailability: document.getElementById('passport-availability'),
+    saRows: document.getElementById('sa-rows'),
+    coInvoiceRows: document.getElementById('co-invoice-rows'),
     signout: document.getElementById('signout')
   };
 
@@ -565,6 +594,7 @@
       });
     loadWorkerReminders(workerId);
     loadSelfDocuments(workerId);
+    loadSelfAvailability(workerId);
 
     sb.from('rtw_checks')
       .select('method, check_date, result, restrictions, follow_up_due')
@@ -839,35 +869,46 @@
 
   els.wdReadiness.addEventListener('click', runReadiness);
 
+  function renderWorkersList() {
+    var q = (els.wSearch.value || '').trim().toLowerCase();
+    els.workersRows.innerHTML = '';
+    workersCache.forEach(function (w) {
+      if (q && (w.full_name + ' ' + (w.trade || '') + ' ' +
+          (w.passport_no || '')).toLowerCase().indexOf(q) === -1) return;
+      var tr = document.createElement('tr');
+      [w.passport_no || '—', w.full_name, w.trade || '—'].forEach(function (t) {
+        var td = document.createElement('td');
+        td.textContent = t;
+        tr.appendChild(td);
+      });
+      var tdStatus = document.createElement('td');
+      tdStatus.innerHTML = badge(w.status, WORKER_STATUS[w.status] || w.status);
+      tr.appendChild(tdStatus);
+      var td = document.createElement('td');
+      td.className = 'right';
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'btn small';
+      btn.textContent = 'Open';
+      btn.addEventListener('click', function () { openWorker(w.id); });
+      td.appendChild(btn);
+      tr.appendChild(td);
+      els.workersRows.appendChild(tr);
+    });
+  }
+
+  if (els.wSearch) {
+    els.wSearch.addEventListener('input', renderWorkersList);
+  }
+
   function loadWorkers() {
     sb.from('workers')
       .select('id, passport_no, full_name, trade, status')
       .order('updated_at', { ascending: false })
       .limit(100)
       .then(function (res) {
-        els.workersRows.innerHTML = '';
         workersCache = res.data || [];
-        workersCache.forEach(function (w) {
-          var tr = document.createElement('tr');
-          [w.passport_no || '—', w.full_name, w.trade || '—'].forEach(function (t) {
-            var td = document.createElement('td');
-            td.textContent = t;
-            tr.appendChild(td);
-          });
-          var tdStatus = document.createElement('td');
-          tdStatus.innerHTML = badge(w.status, WORKER_STATUS[w.status] || w.status);
-          tr.appendChild(tdStatus);
-          var td = document.createElement('td');
-          td.className = 'right';
-          var btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'btn small';
-          btn.textContent = 'Open';
-          btn.addEventListener('click', function () { openWorker(w.id); });
-          td.appendChild(btn);
-          tr.appendChild(td);
-          els.workersRows.appendChild(tr);
-        });
+        renderWorkersList();
       });
   }
 
@@ -885,6 +926,7 @@
         loadWorkerEvidence(id);
         loadWorkerReadiness(id);
         loadWorkerOverrides(id);
+        loadWorkerUnavailability(id);
         if (canSeeWorkerDocs) loadWorkerDocuments(id);
         els.workerDetail.scrollIntoView({ behavior: 'smooth' });
       });
@@ -907,7 +949,111 @@
     }
     els.wdAdvance.hidden = !canWriteWorkers || !NEXT_STATUS[w.status];
     els.wdInvite.hidden = !canWriteWorkers || !w.email;
+    document.getElementById('wr-pay').value =
+      w.default_pay_rate === null || w.default_pay_rate === undefined ? '' : w.default_pay_rate;
+    document.getElementById('wr-ot').value =
+      w.default_overtime_rate === null || w.default_overtime_rate === undefined ? '' : w.default_overtime_rate;
+    document.getElementById('wr-wk').value =
+      w.default_weekend_rate === null || w.default_weekend_rate === undefined ? '' : w.default_weekend_rate;
+    document.getElementById('wr-location').value = w.base_location || '';
+    document.getElementById('wr-range').value =
+      w.travel_range_km === null || w.travel_range_km === undefined ? '' : w.travel_range_km;
   }
+
+  /* Worker default rates, base location and travel range */
+  els.wrForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!currentWorker) return;
+    els.wrStatus.hidden = true;
+    function num(id) {
+      var v = document.getElementById(id).value.trim();
+      return v === '' ? null : parseFloat(v);
+    }
+    sb.from('workers')
+      .update({
+        default_pay_rate: num('wr-pay'),
+        default_overtime_rate: num('wr-ot'),
+        default_weekend_rate: num('wr-wk'),
+        base_location: document.getElementById('wr-location').value.trim() || null,
+        travel_range_km: num('wr-range') === null ? null : parseInt(num('wr-range'), 10)
+      })
+      .eq('id', currentWorker.id)
+      .then(function (res) {
+        if (res.error) {
+          showActionStatus(els.wrStatus, false, friendlyDbError(res.error));
+          return;
+        }
+        showActionStatus(els.wrStatus, true, 'Rates and location saved.');
+        sb.from('workers').select('*').eq('id', currentWorker.id).maybeSingle()
+          .then(function (r) { if (r.data) { currentWorker = r.data; } });
+      });
+  });
+
+  function loadWorkerUnavailability(id) {
+    sb.from('worker_unavailability')
+      .select('id, date, note')
+      .eq('worker_id', id)
+      .order('date', { ascending: true })
+      .limit(200)
+      .then(function (res) {
+        var rows = res.data || [];
+        els.wunRows.innerHTML = '';
+        if (!rows.length) {
+          els.wunRows.innerHTML =
+            '<p class="profile-line">No unavailable dates recorded.</p>';
+          return;
+        }
+        var tableHtml = miniTable(rows.map(function (u) {
+          return [fmtDate(u.date), u.note || '—'];
+        }), ['Date', 'Note']);
+        if (canWriteWorkers) {
+          var buttons = document.createElement('div');
+          buttons.className = 'row-actions';
+          rows.forEach(function (u) {
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'btn small ghost';
+            b.textContent = 'Remove ' + fmtDate(u.date);
+            b.addEventListener('click', function () {
+              sb.from('worker_unavailability').delete().eq('id', u.id)
+                .then(function () { loadWorkerUnavailability(id); });
+            });
+            buttons.appendChild(b);
+          });
+          els.wunRows.innerHTML = tableHtml;
+          els.wunRows.appendChild(buttons);
+        } else {
+          els.wunRows.innerHTML = tableHtml;
+        }
+      });
+  }
+
+  els.wunForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (!currentWorker) return;
+    els.wunStatus.hidden = true;
+    var date = document.getElementById('wun-date').value;
+    if (!date) {
+      showActionStatus(els.wunStatus, false, 'Choose a date.');
+      return;
+    }
+    sb.from('worker_unavailability')
+      .insert({ worker_id: currentWorker.id, date: date,
+                note: document.getElementById('wun-note').value.trim() || null,
+                created_by: profile.id })
+      .then(function (res) {
+        if (res.error) {
+          showActionStatus(els.wunStatus, false,
+            res.error.code === '23505'
+              ? 'That date is already marked.'
+              : friendlyDbError(res.error));
+          return;
+        }
+        document.getElementById('wun-date').value = '';
+        document.getElementById('wun-note').value = '';
+        loadWorkerUnavailability(currentWorker.id);
+      });
+  });
 
   function loadWorkerEvidence(id) {
     sb.from('rtw_checks')
@@ -1409,7 +1555,10 @@
       .limit(100)
       .then(function (res) {
         [els.rqContractor, els.prContractor, els.ssContractor,
-         els.inviteContractor].forEach(function (sel) {
+         els.inviteContractor,
+         document.getElementById('bi-contractor'),
+         document.getElementById('iv-contractor'),
+         document.getElementById('cm-contractor')].forEach(function (sel) {
           if (!sel) return;
           var keep = sel.value;
           var placeholder = sel.options[0] && sel.options[0].value === ''
@@ -1713,8 +1862,22 @@
     els.ratesTitle.textContent = 'Assignment rates — ' +
       (a.public_reference || '') + ' · ' +
       ((a.workers || {}).full_name || 'worker');
-    els.rtPay.value = a.worker_pay_rate || '';
-    els.rtCharge.value = a.client_charge_rate || '';
+    var w = a.workers || {};
+    function num(id, val) {
+      document.getElementById(id).value =
+        (val === null || val === undefined) ? '' : val;
+    }
+    num('rt-pay-h', a.pay_rate);
+    num('rt-ot-pay', a.overtime_pay_rate);
+    num('rt-wk-pay', a.weekend_pay_rate);
+    num('rt-charge-h', a.charge_rate);
+    num('rt-ot-charge', a.overtime_charge_rate);
+    num('rt-wk-charge', a.weekend_charge_rate);
+    if (a.pay_rate === null || a.pay_rate === undefined) {
+      num('rt-pay-h', w.default_pay_rate);
+      num('rt-ot-pay', w.default_overtime_rate);
+      num('rt-wk-pay', w.default_weekend_rate);
+    }
     els.ratesForm.scrollIntoView({ behavior: 'smooth' });
   }
 
@@ -1727,10 +1890,18 @@
     e.preventDefault();
     if (!ratesAssignment) return;
     els.ratesStatus.hidden = true;
+    function num(id) {
+      var v = document.getElementById(id).value.trim();
+      return v === '' ? null : parseFloat(v);
+    }
     sb.from('assignments')
       .update({
-        worker_pay_rate: els.rtPay.value.trim() || null,
-        client_charge_rate: els.rtCharge.value.trim() || null
+        pay_rate: num('rt-pay-h'),
+        overtime_pay_rate: num('rt-ot-pay'),
+        weekend_pay_rate: num('rt-wk-pay'),
+        charge_rate: num('rt-charge-h'),
+        overtime_charge_rate: num('rt-ot-charge'),
+        weekend_charge_rate: num('rt-wk-charge')
       })
       .eq('id', ratesAssignment.id)
       .then(function (res) {
@@ -1742,14 +1913,15 @@
         ratesAssignment = null;
         showActionStatus(els.assignmentStatus, true, 'Rates recorded.');
         loadAssignments();
+        if (!els.commercialPanel.hidden) loadMargin();
       });
   });
 
   function loadAssignments() {
     sb.from('assignments')
       .select('id, public_reference, status, trade, start_date, request_id, ' +
-        'worker_pay_rate, client_charge_rate, ' +
-        'workers(full_name, passport_no), workforce_requests(public_reference, number_needed)')
+        'worker_pay_rate, client_charge_rate, pay_rate, charge_rate, ' +
+        'workers(full_name, passport_no, default_pay_rate, default_overtime_rate, default_weekend_rate), workforce_requests(public_reference, number_needed)')
       .order('created_at', { ascending: false })
       .limit(50)
       .then(function (res) {
@@ -1766,13 +1938,21 @@
             tr.appendChild(td);
           });
           var tdS = document.createElement('td');
+          var rateNote = '';
+          if (canManageRequests) {
+            if (a.pay_rate !== null && a.pay_rate !== undefined &&
+                a.charge_rate !== null && a.charge_rate !== undefined) {
+              rateNote = ' <span class="profile-line">pay £' + a.pay_rate +
+                '/h · charge £' + a.charge_rate + '/h</span>';
+            } else if (a.worker_pay_rate || a.client_charge_rate) {
+              rateNote = ' <span class="profile-line">pay ' + (a.worker_pay_rate || '—') +
+                ' · charge ' + (a.client_charge_rate || '—') + '</span>';
+            }
+          }
           tdS.innerHTML = badge(ASSIGN_BADGE[a.status] || 'pending',
             ASSIGN_STATUS[a.status] || a.status) +
             (req.public_reference ? ' <span class="profile-line">' +
-              req.public_reference + '</span>' : '') +
-            (canManageRequests && (a.worker_pay_rate || a.client_charge_rate)
-              ? ' <span class="profile-line">pay ' + (a.worker_pay_rate || '—') +
-                ' · charge ' + (a.client_charge_rate || '—') + '</span>' : '');
+              req.public_reference + '</span>' : '') + rateNote;
           tr.appendChild(tdS);
           var td = document.createElement('td');
           td.className = 'right';
@@ -2393,6 +2573,43 @@
           els.coStatements.innerHTML =
             '<p class="footnote">No statements generated yet.</p>';
         }
+        // own invoices (row-level security scopes this to the
+        // contractor's account)
+        sb.from('invoices')
+          .select('invoice_no, period_start, period_end, total, due_date, status')
+          .order('invoice_no', { ascending: false })
+          .limit(50)
+          .then(function (ires) {
+            els.coInvoiceRows.innerHTML = '';
+            (ires.data || []).forEach(function (i) {
+              var isOverdue = i.status === 'sent' && i.due_date &&
+                i.due_date < new Date().toISOString().slice(0, 10);
+              var tr = document.createElement('tr');
+              [i.invoice_no,
+                fmtDate(i.period_start) + ' – ' + fmtDate(i.period_end),
+                money(i.total), fmtDate(i.due_date)].forEach(function (v) {
+                var td = document.createElement('td');
+                td.textContent = v;
+                tr.appendChild(td);
+              });
+              var tdS = document.createElement('td');
+              tdS.innerHTML = isOverdue
+                ? badge('fail', 'Overdue')
+                : badge(i.status === 'paid' ? 'pass' :
+                    i.status === 'draft' ? 'pending' : 'watch',
+                    i.status.charAt(0).toUpperCase() + i.status.slice(1));
+              tr.appendChild(tdS);
+              els.coInvoiceRows.appendChild(tr);
+            });
+            if (!(ires.data || []).length) {
+              var tr = document.createElement('tr');
+              var td = document.createElement('td');
+              td.colSpan = 5;
+              td.textContent = 'No invoices yet.';
+              tr.appendChild(td);
+              els.coInvoiceRows.appendChild(tr);
+            }
+          });
       });
   }
 
@@ -2800,6 +3017,10 @@
     document.getElementById('sd-email').value = worker.email || '';
     document.getElementById('sd-trade').value = worker.trade || '';
     document.getElementById('sd-availability').value = worker.availability || '';
+    document.getElementById('sd-location').value = worker.base_location || '';
+    document.getElementById('sd-range').value =
+      worker.travel_range_km === null || worker.travel_range_km === undefined
+        ? '' : worker.travel_range_km;
   }
 
   els.selfDetailsForm.addEventListener('submit', function (e) {
@@ -2810,7 +3031,10 @@
         phone: document.getElementById('sd-phone').value.trim() || null,
         email: document.getElementById('sd-email').value.trim() || null,
         trade: document.getElementById('sd-trade').value.trim() || null,
-        availability: document.getElementById('sd-availability').value.trim() || null
+        availability: document.getElementById('sd-availability').value.trim() || null,
+        base_location: document.getElementById('sd-location').value.trim() || null,
+        travel_range_km: document.getElementById('sd-range').value.trim() === ''
+          ? null : parseInt(document.getElementById('sd-range').value, 10)
       })
       .eq('id', profile.worker_id)
       .then(function (res) {
@@ -2825,6 +3049,68 @@
           'Corrections saved — the team can see them straight away.');
       });
   });
+
+  /* Worker availability dates: the worker marks their own */
+  function loadSelfAvailability(workerId) {
+    els.passportAvailability.hidden = false;
+    sb.from('worker_unavailability')
+      .select('id, date, note')
+      .eq('worker_id', workerId)
+      .order('date', { ascending: true })
+      .limit(200)
+      .then(function (res) {
+        var rows = res.data || [];
+        if (!rows.length) {
+          els.saRows.innerHTML =
+            '<p class="profile-line">No unavailable dates marked.</p>';
+          return;
+        }
+        els.saRows.innerHTML = miniTable(rows.map(function (u) {
+          return [fmtDate(u.date), u.note || '—'];
+        }), ['Date', 'Note']);
+        var buttons = document.createElement('div');
+        buttons.className = 'row-actions';
+        rows.forEach(function (u) {
+          var b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'btn small ghost';
+          b.textContent = 'Remove ' + fmtDate(u.date);
+          b.addEventListener('click', function () {
+            sb.from('worker_unavailability').delete().eq('id', u.id)
+              .then(function () { loadSelfAvailability(workerId); });
+          });
+          buttons.appendChild(b);
+        });
+        els.saRows.appendChild(buttons);
+      });
+  }
+
+  document.getElementById('self-avail-form').addEventListener('submit',
+    function (e) {
+      e.preventDefault();
+      var date = document.getElementById('sa-date').value;
+      if (!date) {
+        showActionStatus(document.getElementById('sa-status'), false,
+          'Choose a date.');
+        return;
+      }
+      sb.from('worker_unavailability')
+        .insert({ worker_id: profile.worker_id, date: date,
+                  note: document.getElementById('sa-note').value.trim() || null,
+                  created_by: profile.id })
+        .then(function (res) {
+          if (res.error) {
+            showActionStatus(document.getElementById('sa-status'), false,
+              res.error.code === '23505'
+                ? 'That date is already marked.'
+                : friendlyDbError(res.error));
+            return;
+          }
+          document.getElementById('sa-date').value = '';
+          document.getElementById('sa-note').value = '';
+          loadSelfAvailability(profile.worker_id);
+        });
+    });
 
   function loadSelfDocuments(workerId) {
     sb.from('worker_documents')
@@ -3262,6 +3548,906 @@
     });
   });
 
+  /* ==================================================================
+     Commercial and growth layer (migration 0026): timesheets, margin,
+     invoices, contractor pipeline, Control Tower, exports, bulk
+     onboarding, worker availability.
+     ================================================================== */
+
+  var LOW_MARGIN_PCT = 15;      // below this the assignment is flagged
+  var DEFAULT_DAY_HOURS = 8;    // one attended shift = this many hours
+
+  function money(n) {
+    if (n === null || n === undefined || isNaN(n)) return '—';
+    return '£' + Number(n).toLocaleString('en-GB',
+      { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function mondayOf(d) {
+    var x = new Date(d + 'T00:00:00');
+    var day = (x.getDay() + 6) % 7;
+    x.setDate(x.getDate() - day);
+    return x.toISOString().slice(0, 10);
+  }
+
+  function tsTotals(a, basic, ot, wk) {
+    var pay = (a.pay_rate || 0) * basic +
+      (a.overtime_pay_rate || a.pay_rate || 0) * ot +
+      (a.weekend_pay_rate || a.pay_rate || 0) * wk;
+    var charge = (a.charge_rate || 0) * basic +
+      (a.overtime_charge_rate || a.charge_rate || 0) * ot +
+      (a.weekend_charge_rate || a.charge_rate || 0) * wk;
+    return { pay: Math.round(pay * 100) / 100,
+             charge: Math.round(charge * 100) / 100 };
+  }
+
+  var TS_STATUS = {
+    draft: ['pending', 'Draft'],
+    submitted: ['watch', 'Submitted'],
+    approved: ['pass', 'Approved'],
+    rejected: ['fail', 'Rejected']
+  };
+
+  /* ---------- timesheets ---------- */
+
+  var tsAssignments = [];
+
+  function loadTsAssignments() {
+    sb.from('assignments')
+      .select('id, public_reference, status, pay_rate, overtime_pay_rate, ' +
+        'weekend_pay_rate, charge_rate, overtime_charge_rate, weekend_charge_rate, ' +
+        'workers(full_name)')
+      .in('status', ['confirmed', 'active', 'completed'])
+      .order('created_at', { ascending: false })
+      .limit(100)
+      .then(function (res) {
+        tsAssignments = res.data || [];
+        var sel = els.tsAssignment;
+        if (!sel) return;
+        sel.innerHTML = '<option value="">Choose…</option>';
+        tsAssignments.forEach(function (a) {
+          var o = document.createElement('option');
+          o.value = a.id;
+          o.textContent = (a.public_reference || 'assignment') +
+            ' · ' + ((a.workers || {}).full_name || 'worker');
+          sel.appendChild(o);
+        });
+      });
+  }
+
+  function loadTimesheets() {
+    sb.from('timesheets')
+      .select('id, assignment_id, week_start, basic_hours, overtime_hours, ' +
+        'weekend_hours, pay_total, charge_total, status, notes, ' +
+        'assignments(public_reference, workers(full_name))')
+      .order('week_start', { ascending: false })
+      .limit(100)
+      .then(function (res) {
+        els.tsRows.innerHTML = '';
+        (res.data || []).forEach(function (t) {
+          var a = t.assignments || {};
+          var tr = document.createElement('tr');
+          [a.public_reference || '—',
+            ((a.workers || {}).full_name) || '—',
+            fmtDate(t.week_start),
+            t.basic_hours + ' / ' + t.overtime_hours + ' / ' + t.weekend_hours,
+            money(t.pay_total), money(t.charge_total)].forEach(function (c) {
+            var td = document.createElement('td');
+            td.textContent = c;
+            tr.appendChild(td);
+          });
+          var tdS = document.createElement('td');
+          tdS.innerHTML = badge((TS_STATUS[t.status] || ['pending', t.status])[0],
+            (TS_STATUS[t.status] || ['pending', t.status])[1]);
+          tr.appendChild(tdS);
+          var td = document.createElement('td');
+          td.className = 'right';
+          if (canManageRequests) {
+            if (t.status === 'draft') {
+              td.appendChild(tsAction('Submit', 'btn small', t, function () {
+                sb.from('timesheets').update({ status: 'submitted' })
+                  .eq('id', t.id).then(loadTimesheets);
+              }));
+              td.appendChild(tsAction('Delete', 'btn small danger', t, function () {
+                sb.from('timesheets').delete().eq('id', t.id).then(loadTimesheets);
+              }));
+            } else if (t.status === 'submitted') {
+              td.appendChild(tsAction('Approve', 'btn small', t, function () {
+                approveTimesheet(t);
+              }));
+              td.appendChild(tsAction('Reject', 'btn small danger', t, function () {
+                sb.from('timesheets').update({ status: 'rejected' })
+                  .eq('id', t.id).then(loadTimesheets);
+              }));
+            }
+          }
+          tr.appendChild(td);
+          els.tsRows.appendChild(tr);
+        });
+      });
+  }
+
+  function tsAction(label, cls, t, fn) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = cls;
+    b.textContent = label;
+    b.addEventListener('click', fn);
+    return b;
+  }
+
+  function currentTsAssignment() {
+    var id = els.tsAssignment.value;
+    for (var i = 0; i < tsAssignments.length; i++) {
+      if (tsAssignments[i].id === id) return tsAssignments[i];
+    }
+    return null;
+  }
+
+  function approveTimesheet(t) {
+    var a = null;
+    for (var i = 0; i < tsAssignments.length; i++) {
+      if (tsAssignments[i].id === t.assignment_id) { a = tsAssignments[i]; break; }
+    }
+    var totals = a
+      ? tsTotals(a, t.basic_hours, t.overtime_hours, t.weekend_hours)
+      : { pay: t.pay_total, charge: t.charge_total };
+    sb.from('timesheets')
+      .update({ status: 'approved', approved_by: profile.id,
+                approved_at: new Date().toISOString(),
+                pay_total: totals.pay, charge_total: totals.charge })
+      .eq('id', t.id)
+      .then(function (res) {
+        if (res.error) {
+          showActionStatus(els.tsStatus, false, friendlyDbError(res.error));
+          return;
+        }
+        loadTimesheets();
+        if (!els.commercialPanel.hidden) { loadMargin(); loadInvoices(); }
+      });
+  }
+
+  document.getElementById('ts-generate').addEventListener('click', function () {
+    var a = currentTsAssignment();
+    var week = document.getElementById('ts-week').value;
+    if (!a || !week) {
+      showActionStatus(els.tsStatus, false,
+        'Choose an assignment and a week first.');
+      return;
+    }
+    var start = mondayOf(week);
+    document.getElementById('ts-week').value = start;
+    var end = new Date(start + 'T00:00:00');
+    end.setDate(end.getDate() + 6);
+    var endIso = end.toISOString().slice(0, 10);
+    sb.from('attendance_evidence')
+      .select('shift_date, outcome')
+      .eq('assignment_id', a.id)
+      .gte('shift_date', start)
+      .lte('shift_date', endIso)
+      .then(function (res) {
+        var basic = 0, weekend = 0;
+        (res.data || []).forEach(function (r) {
+          if (r.outcome !== 'attended' && r.outcome !== 'late') return;
+          var d = new Date(r.shift_date + 'T00:00:00').getDay();
+          if (d === 0 || d === 6) weekend += DEFAULT_DAY_HOURS;
+          else basic += DEFAULT_DAY_HOURS;
+        });
+        document.getElementById('ts-basic').value = basic;
+        document.getElementById('ts-ot').value = 0;
+        document.getElementById('ts-wk').value = weekend;
+        showActionStatus(els.tsStatus, true,
+          (res.data || []).length + ' attendance records found — check the ' +
+          'hours and save the draft.');
+      });
+  });
+
+  document.getElementById('ts-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var a = currentTsAssignment();
+    var week = document.getElementById('ts-week').value;
+    if (!a || !week) {
+      showActionStatus(els.tsStatus, false,
+        'Choose an assignment and a week first.');
+      return;
+    }
+    var basic = parseFloat(document.getElementById('ts-basic').value) || 0;
+    var ot = parseFloat(document.getElementById('ts-ot').value) || 0;
+    var wk = parseFloat(document.getElementById('ts-wk').value) || 0;
+    if (basic + ot + wk <= 0) {
+      showActionStatus(els.tsStatus, false, 'Enter some hours.');
+      return;
+    }
+    var totals = tsTotals(a, basic, ot, wk);
+    sb.from('timesheets')
+      .upsert({
+        assignment_id: a.id, week_start: mondayOf(week),
+        basic_hours: basic, overtime_hours: ot, weekend_hours: wk,
+        pay_total: totals.pay, charge_total: totals.charge,
+        status: 'draft', from_attendance: true
+      }, { onConflict: 'assignment_id,week_start' })
+      .then(function (res) {
+        if (res.error) {
+          showActionStatus(els.tsStatus, false, friendlyDbError(res.error));
+          return;
+        }
+        showActionStatus(els.tsStatus, true, 'Draft timesheet saved.');
+        loadTimesheets();
+      });
+  });
+
+  /* ---------- margin ---------- */
+
+  function loadMargin() {
+    sb.from('assignments')
+      .select('id, public_reference, status, pay_rate, charge_rate, ' +
+        'workers(full_name), contractors(legal_name)')
+      .not('pay_rate', 'is', null)
+      .not('charge_rate', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(100)
+      .then(function (res) {
+        els.marginRows.innerHTML = '';
+        var rows = res.data || [];
+        var totalMargin = 0, weighted = 0, flagged = 0;
+        rows.forEach(function (a) {
+          var margin = a.charge_rate - a.pay_rate;
+          var pct = a.charge_rate > 0
+            ? Math.round(margin / a.charge_rate * 1000) / 10 : 0;
+          totalMargin += margin; weighted += a.charge_rate;
+          var low = pct < LOW_MARGIN_PCT;
+          if (low) flagged++;
+          var tr = document.createElement('tr');
+          [a.public_reference || '—',
+            ((a.workers || {}).full_name) || '—',
+            ((a.contractors || {}).legal_name) || '—',
+            '£' + a.pay_rate, '£' + a.charge_rate,
+            '£' + Math.round(margin * 100) / 100,
+            pct + '%'].forEach(function (c) {
+            var td = document.createElement('td');
+            td.textContent = c;
+            if (low) td.className = 'low-margin';
+            tr.appendChild(td);
+          });
+          var tdS = document.createElement('td');
+          tdS.innerHTML = low
+            ? badge('fail', 'Low margin')
+            : badge(ASSIGN_BADGE[a.status] || 'pending',
+                ASSIGN_STATUS[a.status] || a.status);
+          tr.appendChild(tdS);
+          els.marginRows.appendChild(tr);
+        });
+        var avg = weighted > 0
+          ? Math.round(totalMargin / weighted * 1000) / 10 : 0;
+        els.marginSummary.textContent = 'Average margin ' + avg + '% across ' +
+          rows.length + ' rated assignments, ' + flagged + ' below ' +
+          LOW_MARGIN_PCT + '%.';
+      });
+  }
+
+  /* ---------- invoices ---------- */
+
+  function loadInvoices() {
+    sb.from('invoices')
+      .select('id, invoice_no, contractor_id, period_start, period_end, ' +
+        'status, subtotal, vat_total, total, due_date, sent_at, paid_at, ' +
+        'contractors(legal_name)')
+      .order('invoice_no', { ascending: false })
+      .limit(100)
+      .then(function (res) {
+        els.invoiceRows.innerHTML = '';
+        var exposure = 0, overdue = 0;
+        (res.data || []).forEach(function (i) {
+          var c = (i.contractors || {}).legal_name || '—';
+          var isOverdue = i.status === 'sent' && i.due_date &&
+            i.due_date < new Date().toISOString().slice(0, 10);
+          if (i.status === 'sent') { exposure += i.total; if (isOverdue) overdue++; }
+          var tr = document.createElement('tr');
+          [i.invoice_no, c,
+            fmtDate(i.period_start) + ' – ' + fmtDate(i.period_end),
+            money(i.total), fmtDate(i.due_date)].forEach(function (v) {
+            var td = document.createElement('td');
+            td.textContent = v;
+            tr.appendChild(td);
+          });
+          var tdS = document.createElement('td');
+          tdS.innerHTML = isOverdue
+            ? badge('fail', 'Overdue')
+            : badge(i.status === 'paid' ? 'pass' :
+                i.status === 'draft' ? 'pending' : 'watch',
+                i.status.charAt(0).toUpperCase() + i.status.slice(1));
+          tr.appendChild(tdS);
+          var td = document.createElement('td');
+          td.className = 'right';
+          if (i.status === 'draft') {
+            var send = document.createElement('button');
+            send.type = 'button';
+            send.className = 'btn small';
+            send.textContent = 'Mark sent';
+            send.addEventListener('click', function () {
+              sb.from('invoices')
+                .update({ status: 'sent', sent_at: new Date().toISOString() })
+                .eq('id', i.id).then(loadInvoices);
+            });
+            td.appendChild(send);
+            var v = document.createElement('button');
+            v.type = 'button';
+            v.className = 'btn small danger';
+            v.textContent = 'Void';
+            v.addEventListener('click', function () {
+              sb.from('invoices').update({ status: 'void' })
+                .eq('id', i.id).then(loadInvoices);
+            });
+            td.appendChild(v);
+          } else if (i.status === 'sent') {
+            var paid = document.createElement('button');
+            paid.type = 'button';
+            paid.className = 'btn small';
+            paid.textContent = 'Mark paid';
+            paid.addEventListener('click', function () {
+              sb.from('invoices')
+                .update({ status: 'paid', paid_at: new Date().toISOString() })
+                .eq('id', i.id).then(loadInvoices);
+            });
+            td.appendChild(paid);
+          }
+          tr.appendChild(td);
+          els.invoiceRows.appendChild(tr);
+        });
+        renderFinAlerts(exposure, overdue);
+      });
+  }
+
+  function renderFinAlerts(exposure, overdue) {
+    sb.from('timesheets')
+      .select('id, pay_total, charge_total')
+      .eq('status', 'approved')
+      .limit(500)
+      .then(function (res) {
+        var approved = res.data || [];
+        var tsIds = approved.map(function (t) { return t.id; });
+        var liability = 0, revenue = 0;
+        sb.from('invoice_lines')
+          .select('timesheet_id')
+          .not('timesheet_id', 'is', null)
+          .limit(2000)
+          .then(function (lres) {
+            var invoiced = {};
+            (lres.data || []).forEach(function (l) {
+              invoiced[l.timesheet_id] = true;
+            });
+            approved.forEach(function (t) {
+              revenue += t.charge_total;
+              if (!invoiced[t.id]) liability += t.pay_total;
+            });
+            var html = '';
+            function alertRow(ok, text) {
+              return '<p class="' + (ok ? 'profile-line' : 'alert-line') +
+                '">' + (ok ? '' : '⚠ ') + text + '</p>';
+            }
+            html += overdue
+              ? alertRow(false, 'Overdue invoices: ' + overdue + '.')
+              : alertRow(true, 'No overdue invoices.');
+            html += alertRow(exposure > 0,
+              'Payment exposure (sent, unpaid): ' + money(exposure) + '.');
+            html += alertRow(liability > 0,
+              'Worker pay liability (approved, not yet invoiced): ' +
+              money(liability) + '.');
+            html += alertRow(true, 'Approved timesheet revenue to date: ' +
+              money(revenue) + '.');
+            els.finAlerts.innerHTML = html;
+          });
+      });
+  }
+
+  document.getElementById('invoice-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var contractorId = document.getElementById('iv-contractor').value;
+    var start = document.getElementById('iv-start').value;
+    var end = document.getElementById('iv-end').value;
+    var vat = parseFloat(document.getElementById('iv-vat').value) || 0;
+    var terms = parseInt(document.getElementById('iv-terms').value, 10) || 0;
+    if (!contractorId || !start || !end) {
+      showActionStatus(els.ivStatus, false,
+        'Choose the contractor and the period.');
+      return;
+    }
+    sb.from('timesheets')
+      .select('id, assignment_id, week_start, basic_hours, overtime_hours, ' +
+        'weekend_hours, charge_total, assignments(public_reference, contractor_id)')
+      .eq('status', 'approved')
+      .gte('week_start', mondayOf(start))
+      .lte('week_start', mondayOf(end))
+      .limit(500)
+      .then(function (res) {
+        var rows = (res.data || []).filter(function (t) {
+          return (t.assignments || {}).contractor_id === contractorId;
+        });
+        if (!rows.length) {
+          showActionStatus(els.ivStatus, false,
+            'No approved timesheets for that contractor in the period.');
+          return;
+        }
+        sb.from('invoices').select('invoice_no').order('invoice_no',
+          { ascending: false }).limit(1)
+          .then(function (nres) {
+            var last = ((nres.data || [])[0] || {}).invoice_no || 'INV-000000';
+            var next = 'INV-' + String(parseInt(last.split('-')[1], 10) + 1)
+              .padStart(6, '0');
+            var subtotal = 0;
+            rows.forEach(function (t) { subtotal += t.charge_total; });
+            var vatTotal = Math.round(subtotal * vat / 100 * 100) / 100;
+            var due = new Date(end + 'T00:00:00');
+            due.setDate(due.getDate() + terms);
+            sb.from('invoices')
+              .insert({
+                contractor_id: contractorId, invoice_no: next,
+                period_start: start, period_end: end,
+                subtotal: subtotal, vat_rate: vat, vat_total: vatTotal,
+                total: Math.round((subtotal + vatTotal) * 100) / 100,
+                due_date: due.toISOString().slice(0, 10),
+                created_by: profile.id
+              })
+              .select('id')
+              .maybeSingle()
+              .then(function (ires) {
+                if (ires.error || !ires.data) {
+                  showActionStatus(els.ivStatus, false,
+                    friendlyDbError(ires.error || {}));
+                  return;
+                }
+                var lines = rows.map(function (t) {
+                  return {
+                    invoice_id: ires.data.id,
+                    description: (t.assignments.public_reference || 'assignment') +
+                      ' · week of ' + t.week_start,
+                    quantity: t.basic_hours + t.overtime_hours + t.weekend_hours,
+                    unit: 'hours',
+                    unit_price: t.charge_total /
+                      (t.basic_hours + t.overtime_hours + t.weekend_hours || 1),
+                    amount: t.charge_total,
+                    assignment_id: t.assignment_id,
+                    timesheet_id: t.id
+                  };
+                });
+                sb.from('invoice_lines').insert(lines)
+                  .then(function () {
+                    showActionStatus(els.ivStatus, true,
+                      next + ' created with ' + lines.length + ' lines.');
+                    loadInvoices();
+                  });
+              });
+          });
+      });
+  });
+
+  /* ---------- contractor pipeline ---------- */
+
+  var PIPELINE_STAGES = {
+    enquiry: ['watch', 'Enquiry'],
+    in_review: ['pending', 'In review'],
+    approved: ['pass', 'Approved'],
+    active: ['verified', 'Active'],
+    paused: ['watch', 'Paused'],
+    declined: ['fail', 'Declined']
+  };
+
+  function loadPipeline() {
+    sb.from('contractors')
+      .select('id, legal_name, pipeline_status, credit_limit, payment_terms_days')
+      .order('created_at', { ascending: false })
+      .limit(100)
+      .then(function (res) {
+        els.pipelineRows.innerHTML = '';
+        [els.prContractor, els.ssContractor,
+          document.getElementById('iv-contractor'),
+          document.getElementById('cm-contractor')].forEach(function (sel) {
+          if (!sel) return;
+          sel.innerHTML = '<option value="">Choose…</option>';
+          (res.data || []).forEach(function (c) {
+            var o = document.createElement('option');
+            o.value = c.id;
+            o.textContent = c.legal_name;
+            sel.appendChild(o);
+          });
+        });
+        (res.data || []).forEach(function (c) {
+          var tr = document.createElement('tr');
+          var tdN = document.createElement('td');
+          tdN.textContent = c.legal_name;
+          tr.appendChild(tdN);
+          var tdStage = document.createElement('td');
+          var stage = document.createElement('select');
+          Object.keys(PIPELINE_STAGES).forEach(function (s) {
+            var o = document.createElement('option');
+            o.value = s;
+            o.textContent = PIPELINE_STAGES[s][1];
+            if (s === c.pipeline_status) o.selected = true;
+            stage.appendChild(o);
+          });
+          tdStage.appendChild(stage);
+          tr.appendChild(tdStage);
+          var tdCredit = document.createElement('td');
+          var credit = document.createElement('input');
+          credit.type = 'number';
+          credit.step = '0.01';
+          credit.min = '0';
+          credit.value = c.credit_limit === null || c.credit_limit === undefined
+            ? '' : c.credit_limit;
+          tdCredit.appendChild(credit);
+          tr.appendChild(tdCredit);
+          var tdTerms = document.createElement('td');
+          var terms = document.createElement('input');
+          terms.type = 'number';
+          terms.min = '0';
+          terms.value = c.payment_terms_days;
+          tdTerms.appendChild(terms);
+          tr.appendChild(tdTerms);
+          var td = document.createElement('td');
+          td.className = 'right';
+          var save = document.createElement('button');
+          save.type = 'button';
+          save.className = 'btn small';
+          save.textContent = 'Save';
+          save.addEventListener('click', function () {
+            sb.from('contractors')
+              .update({
+                pipeline_status: stage.value,
+                credit_limit: credit.value === '' ? null : parseFloat(credit.value),
+                payment_terms_days: terms.value === '' ? 14 : parseInt(terms.value, 10)
+              })
+              .eq('id', c.id)
+              .then(function (r) {
+                if (r.error) {
+                  showActionStatus(els.pipelineStatus, false,
+                    friendlyDbError(r.error));
+                  return;
+                }
+                showActionStatus(els.pipelineStatus, true,
+                  c.legal_name + ' saved.');
+                loadComms();
+              });
+          });
+          td.appendChild(save);
+          tr.appendChild(td);
+          els.pipelineRows.appendChild(tr);
+        });
+        loadComms();
+      });
+  }
+
+  function loadComms() {
+    sb.from('contractor_comms')
+      .select('id, channel, note, created_at, ' +
+        'contractors(legal_name), profiles(full_name)')
+      .order('created_at', { ascending: false })
+      .limit(50)
+      .then(function (res) {
+        els.commRows.innerHTML = '';
+        (res.data || []).forEach(function (m) {
+          var tr = document.createElement('tr');
+          [((m.contractors || {}).legal_name) || '—',
+            m.channel.charAt(0).toUpperCase() + m.channel.slice(1),
+            m.note,
+            fmtDate(m.created_at)].forEach(function (v) {
+            var td = document.createElement('td');
+            td.textContent = v;
+            tr.appendChild(td);
+          });
+          els.commRows.appendChild(tr);
+        });
+      });
+  }
+
+  document.getElementById('comm-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var contractorId = document.getElementById('cm-contractor').value;
+    var note = document.getElementById('cm-note').value.trim();
+    if (!contractorId || !note) {
+      showActionStatus(els.cmStatus, false,
+        'Choose the contractor and write the note.');
+      return;
+    }
+    sb.from('contractor_comms')
+      .insert({
+        contractor_id: contractorId,
+        channel: document.getElementById('cm-channel').value,
+        note: note, recorded_by: profile.id
+      })
+      .then(function (res) {
+        if (res.error) {
+          showActionStatus(els.cmStatus, false, friendlyDbError(res.error));
+          return;
+        }
+        document.getElementById('cm-note').value = '';
+        loadComms();
+      });
+  });
+
+  /* ---------- CSV exports ---------- */
+
+  function csvCell(v) {
+    v = v === null || v === undefined ? '' : String(v);
+    return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  }
+
+  function downloadCsv(name, header, rows) {
+    var csv = [header].concat(rows).map(function (r) {
+      return r.map(csvCell).join(',');
+    }).join('\n');
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+  }
+
+  function exportRows(table, select, header, map) {
+    sb.from(table).select(select).limit(2000).then(function (res) {
+      downloadCsv(table + '-' +
+        new Date().toISOString().slice(0, 10) + '.csv',
+        header, (res.data || []).map(map));
+    });
+  }
+
+  document.getElementById('exp-workers').addEventListener('click', function () {
+    exportRows('workers',
+      'passport_no, full_name, trade, status, email, phone, availability, ' +
+      'base_location, travel_range_km, default_pay_rate, default_overtime_rate, default_weekend_rate',
+      ['Passport', 'Name', 'Trade', 'Status', 'Email', 'Phone',
+       'Availability', 'Base location', 'Travel range km', 'Pay £/h',
+       'OT £/h', 'Weekend £/h'],
+      function (w) {
+        return [w.passport_no, w.full_name, w.trade, w.status, w.email,
+          w.phone, w.availability, w.base_location, w.travel_range_km,
+          w.default_pay_rate, w.default_overtime_rate, w.default_weekend_rate];
+      });
+  });
+
+  document.getElementById('exp-assignments').addEventListener('click', function () {
+    exportRows('assignments',
+      'public_reference, trade, status, start_date, end_date, pay_rate, ' +
+      'charge_rate, workers(full_name), contractors(legal_name)',
+      ['Ref', 'Worker', 'Contractor', 'Trade', 'Status', 'Start', 'End',
+       'Pay £/h', 'Charge £/h'],
+      function (a) {
+        return [a.public_reference, ((a.workers || {}).full_name),
+          ((a.contractors || {}).legal_name), a.trade, a.status,
+          a.start_date, a.end_date, a.pay_rate, a.charge_rate];
+      });
+  });
+
+  document.getElementById('exp-timesheets').addEventListener('click', function () {
+    exportRows('timesheets',
+      'week_start, basic_hours, overtime_hours, weekend_hours, pay_total, ' +
+      'charge_total, status, assignments(public_reference, workers(full_name, passport_no))',
+      ['Week', 'Worker passport', 'Worker name', 'Assignment', 'Basic h',
+       'OT h', 'Weekend h', 'Pay £', 'Charge £', 'Status'],
+      function (t) {
+        var a = t.assignments || {};
+        return [t.week_start, ((a.workers || {}).passport_no),
+          ((a.workers || {}).full_name), a.public_reference,
+          t.basic_hours, t.overtime_hours, t.weekend_hours,
+          t.pay_total, t.charge_total, t.status];
+      });
+  });
+
+  document.getElementById('exp-invoices').addEventListener('click', function () {
+    exportRows('invoices',
+      'invoice_no, status, period_start, period_end, subtotal, vat_total, ' +
+      'total, due_date, paid_at, contractors(legal_name)',
+      ['Invoice', 'Contractor', 'Status', 'Period from', 'Period to',
+       'Subtotal £', 'VAT £', 'Total £', 'Due', 'Paid'],
+      function (i) {
+        return [i.invoice_no, ((i.contractors || {}).legal_name), i.status,
+          i.period_start, i.period_end, i.subtotal, i.vat_total, i.total,
+          i.due_date, i.paid_at];
+      });
+  });
+
+  document.getElementById('exp-attendance').addEventListener('click', function () {
+    exportRows('attendance_evidence',
+      'shift_date, outcome, status, source, note, ' +
+      'assignments(public_reference, workers(full_name))',
+      ['Date', 'Worker', 'Assignment', 'Outcome', 'Status', 'Source', 'Note'],
+      function (r) {
+        var a = r.assignments || {};
+        return [r.shift_date, ((a.workers || {}).full_name),
+          a.public_reference, r.outcome, r.status, r.source, r.note];
+      });
+  });
+
+  /* ---------- Control Tower (Owner) ---------- */
+
+  function ctBox(label, value, warn) {
+    return '<div class="ct-box' + (warn ? ' ct-warn' : '') + '">' +
+      '<span class="ct-value">' + value + '</span>' +
+      '<span class="ct-label">' + label + '</span></div>';
+  }
+
+  function loadControlTower() {
+    els.ctSummary.textContent = 'Loading…';
+    els.ctMetrics.innerHTML = '';
+    els.ctAlerts.innerHTML = '';
+    var today = new Date().toISOString().slice(0, 10);
+    var d30 = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+    var since = new Date().toISOString();
+
+    Promise.all([
+      sb.from('workers').select('id, status').limit(2000),
+      sb.from('assignments')
+        .select('id, worker_id, status, created_at, request_id, ' +
+          'workforce_requests(created_at, number_needed)')
+        .limit(2000),
+      sb.from('workforce_requests')
+        .select('id, status, trade, number_needed, created_at')
+        .limit(2000),
+      sb.from('attendance_evidence')
+        .select('shift_date, outcome').gte('shift_date', d30).limit(2000),
+      sb.from('replacement_incidents')
+        .select('id, resolved_at').limit(1000),
+      sb.from('expiry_schedule')
+        .select('worker_id, band').limit(2000),
+      sb.from('invoices')
+        .select('id, status, total, due_date').limit(1000),
+      sb.from('timesheets')
+        .select('id, status, pay_total, charge_total, week_start')
+        .limit(2000),
+      sb.from('contractors')
+        .select('id, pipeline_status, credit_limit').limit(1000)
+    ]).then(function (all) {
+      var workers = all[0].data || [];
+      var assignments = all[1].data || [];
+      var requests = all[2].data || [];
+      var attendance = all[3].data || [];
+      var incidents = all[4].data || [];
+      var expiry = all[5].data || [];
+      var invoices = all[6].data || [];
+      var timesheets = all[7].data || [];
+      var contractors = all[8].data || [];
+
+      var verified = workers.filter(function (w) {
+        return w.status === 'verified';
+      });
+      var busy = {};
+      assignments.forEach(function (a) {
+        if (a.status === 'confirmed' || a.status === 'active') {
+          busy[a.worker_id] = true;
+        }
+      });
+      var available = verified.filter(function (w) { return !busy[w.id]; });
+
+      var activeAssignments = assignments.filter(function (a) {
+        return a.status === 'active' || a.status === 'confirmed';
+      });
+      var openRequests = requests.filter(function (r) {
+        return r.status === 'open' || r.status === 'matched';
+      });
+      var activeContractors = contractors.filter(function (c) {
+        return c.pipeline_status === 'active';
+      });
+
+      // fill rate and time to fill, last 30 days
+      var req30 = requests.filter(function (r) {
+        return r.created_at >= d30;
+      });
+      var asg30 = assignments.filter(function (a) {
+        return a.created_at >= d30;
+      });
+      var slots = req30.reduce(function (s, r) { return s + r.number_needed; }, 0);
+      var filled = as30filled(asg30);
+      var fillRate = slots > 0 ? Math.round(filled / slots * 100) + '%' : '—';
+      var days = [];
+      asg30.forEach(function (a) {
+        var rq = a.workforce_requests;
+        if (rq && rq.created_at) {
+          days.push((new Date(a.created_at) - new Date(rq.created_at)) / 86400000);
+        }
+      });
+      var ttf = days.length
+        ? Math.round(days.reduce(function (s, d) { return s + d; }, 0) /
+            days.length * 10) / 10 + ' days'
+        : '—';
+
+      // attendance last 30 days
+      var attended = attendance.filter(function (r) {
+        return r.outcome === 'attended' || r.outcome === 'late';
+      });
+      var noShows = attendance.filter(function (r) {
+        return r.outcome === 'no_show';
+      });
+      var attendanceRate = attendance.length
+        ? Math.round(attended.length / attendance.length * 100) + '%' : '—';
+
+      var openIncidents = incidents.filter(function (i) { return !i.resolved_at; });
+      var expiring = expiry.filter(function (e) {
+        return e.band === 'expired' || e.band === 'due_soon';
+      });
+      var sentInvoices = invoices.filter(function (i) { return i.status === 'sent'; });
+      var exposure = sentInvoices.reduce(function (s, i) { return s + i.total; }, 0);
+      var overdue = sentInvoices.filter(function (i) {
+        return i.due_date && i.due_date < today;
+      });
+      var approvedTs = timesheets.filter(function (t) {
+        return t.status === 'approved';
+      });
+      var revenue = approvedTs.reduce(function (s, t) { return s + t.charge_total; }, 0);
+
+      // demand by trade
+      var demand = {};
+      openRequests.forEach(function (r) {
+        demand[r.trade] = (demand[r.trade] || 0) + r.number_needed;
+      });
+      var demandText = Object.keys(demand).length
+        ? Object.keys(demand).map(function (t) {
+            return t + ' × ' + demand[t];
+          }).join(', ')
+        : 'No open demand';
+
+      els.ctSummary.textContent = 'As at ' + fmtDate(since);
+      els.ctMetrics.innerHTML =
+        ctBox('Workers on file', String(workers.length)) +
+        ctBox('Verified workers', String(verified.length)) +
+        ctBox('Available now', String(available.length)) +
+        ctBox('Active contractors', String(activeContractors.length)) +
+        ctBox('Open requests', String(openRequests.length)) +
+        ctBox('Active assignments', String(activeAssignments.length)) +
+        ctBox('Fill rate (30d)', fillRate) +
+        ctBox('Time to fill (30d)', ttf) +
+        ctBox('Attendance (30d)', attendanceRate, attendanceRate !== '—' &&
+          (noShows.length > 0)) +
+        ctBox('No-shows (30d)', String(noShows.length), noShows.length > 0) +
+        ctBox('Open replacements', String(openIncidents.length),
+          openIncidents.length > 0) +
+        ctBox('Expiring compliance', String(expiring.length),
+          expiring.length > 0) +
+        ctBox('Payment exposure', money(exposure), exposure > 0) +
+        ctBox('Overdue invoices', String(overdue.length), overdue.length > 0) +
+        ctBox('Approved revenue', money(revenue));
+
+      var alerts = [];
+      if (overdue.length) alerts.push('Overdue invoices: ' + overdue.length + '.');
+      if (noShows.length) alerts.push('No-shows (last 30 days): ' +
+        noShows.length + '.');
+      if (openIncidents.length) alerts.push('Unresolved replacement incidents: ' +
+        openIncidents.length + '.');
+      if (expiring.length) alerts.push('Compliance items expired or due within ' +
+        '30 days: ' + expiring.length + '.');
+      if (alerts.length) {
+        els.ctAlerts.innerHTML = alerts.map(function (a) {
+          return '<p class="alert-line">⚠ ' + a + '</p>';
+        }).join('');
+        els.ctAlertsEmpty.hidden = true;
+      } else {
+        els.ctAlertsEmpty.hidden = false;
+      }
+
+      // demand line under the metrics
+      var p = document.createElement('p');
+      p.className = 'profile-line';
+      p.textContent = 'Demand by trade (open requests): ' + demandText;
+      var old = els.ctAlerts.parentNode.querySelector('.ct-demand');
+      if (old) old.remove();
+      p.className += ' ct-demand';
+      els.ctAlerts.parentNode.insertBefore(p, els.ctAlerts);
+    });
+  }
+
+  function as30filled(asg30) {
+    // requests filled: distinct requests with at least one confirmed
+    // assignment created in the window
+    var filled = {};
+    asg30.forEach(function (a) {
+      if (a.status === 'confirmed' || a.status === 'active' ||
+          a.status === 'completed') {
+        if (a.request_id) filled[a.request_id] = true;
+      }
+    });
+    return Object.keys(filled).length;
+  }
+
   function loadProfile(user) {
     els.noProfile.hidden = true;
     els.profileLine.textContent = 'Loading your profile…';
@@ -3377,6 +4563,26 @@
           loadSubscriptions();
           loadCosts();
         }
+        // Control Tower: Owner only — the whole business on one screen
+        els.controlTower.hidden = !isOwner;
+        if (isOwner) loadControlTower();
+        // Commercial: margin and invoices are Owner territory
+        els.commercialPanel.hidden = !isOwner;
+        if (isOwner) {
+          loadMargin();
+          loadInvoices();
+        }
+        // Timesheets: the team surface (Owner and Operations manage,
+        // Compliance and Auditor read)
+        els.timesheetsPanel.hidden = !canSeeAttendance;
+        document.getElementById('ts-form').hidden = !canManageRequests;
+        if (canSeeAttendance) {
+          loadTsAssignments();
+          loadTimesheets();
+        }
+        // Contractor pipeline: Owner and Operations
+        els.pipelinePanel.hidden = !canManageRequests;
+        if (canManageRequests) loadPipeline();
         if (canSeeRequests) {
           loadRequests();
           if (canManageRequests) loadContractors();
@@ -3569,6 +4775,105 @@
 
   els.inviteRole.addEventListener('change', function () {
     els.inviteContractorField.hidden = els.inviteRole.value !== 'contractor';
+  });
+
+  /* Bulk invitations: one email per line, one invitation each */
+  document.getElementById('bi-role').addEventListener('change', function () {
+    document.getElementById('bi-contractor-field').hidden =
+      document.getElementById('bi-role').value !== 'contractor';
+  });
+
+  els.bulkInviteForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var status = document.getElementById('bi-status');
+    status.hidden = true;
+    var role = document.getElementById('bi-role').value;
+    var contractorId = role === 'contractor'
+      ? document.getElementById('bi-contractor').value : null;
+    if (role === 'contractor' && !contractorId) {
+      showActionStatus(status, false,
+        'Choose the contractor these people belong to.');
+      return;
+    }
+    var lines = document.getElementById('bi-emails').value
+      .split('\n').map(function (l) { return l.trim(); })
+      .filter(function (l) { return l && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(l); });
+    if (!lines.length) {
+      showActionStatus(status, false,
+        'Enter at least one valid email address, one per line.');
+      return;
+    }
+    var rows = lines.map(function (email) {
+      return { email: email, role: role, invited_by: profile.id,
+               contractor_id: contractorId };
+    });
+    sb.from('invitations').insert(rows)
+      .then(function (res) {
+        if (res.error) {
+          showActionStatus(status, false, friendlyDbError(res.error));
+          return;
+        }
+        document.getElementById('bi-emails').value = '';
+        showActionStatus(status, true,
+          lines.length + ' invitations created — send each from the list above.');
+        loadInvitations();
+      });
+  });
+
+  /* Bulk worker onboarding: "name, email, trade" per line creates a
+     draft worker plus a linked worker invitation */
+  els.bulkWorkerForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var status = document.getElementById('bw-status');
+    status.hidden = true;
+    var lines = document.getElementById('bw-list').value.split('\n')
+      .map(function (l) { return l.trim(); })
+      .filter(function (l) { return l; });
+    if (!lines.length) {
+      showActionStatus(status, false, 'Enter one worker per line: name, email, trade.');
+      return;
+    }
+    var bad = [];
+    var parsed = lines.map(function (l) {
+      var parts = l.split(',').map(function (p) { return p.trim(); });
+      var w = { name: parts[0] || '', email: parts[1] || '',
+                trade: parts[2] || null };
+      if (!w.name || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(w.email)) bad.push(l);
+      return w;
+    });
+    if (bad.length) {
+      showActionStatus(status, false,
+        'These lines need a name and a valid email: ' + bad.join(' / '));
+      return;
+    }
+    var created = 0, failed = 0;
+    function next(i) {
+      if (i >= parsed.length) {
+        showActionStatus(status, true, created +
+          ' worker records created with linked invitations (' + failed +
+          ' failed) — links are in the Invitations list.');
+        document.getElementById('bw-list').value = '';
+        loadWorkers();
+        loadInvitations();
+        return;
+      }
+      var w = parsed[i];
+      sb.from('workers')
+        .insert({ full_name: w.name, email: w.email, trade: w.trade })
+        .select('id')
+        .maybeSingle()
+        .then(function (res) {
+          if (res.error || !res.data) { failed++; next(i + 1); return; }
+          sb.from('invitations')
+            .insert({ email: w.email, role: 'worker',
+                      worker_id: res.data.id, invited_by: profile.id })
+            .then(function (r2) {
+              if (r2.error) failed++; else created++;
+              next(i + 1);
+            });
+        });
+    }
+    next(0);
   });
   els.inviteForm.addEventListener('submit', function (e) {
     e.preventDefault();

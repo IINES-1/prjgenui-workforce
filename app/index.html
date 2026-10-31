@@ -100,6 +100,28 @@
         <p id="profile-line" class="profile-line">Loading your profile…</p>
       </div>
 
+      <!-- Control Tower: Owner only — the whole business on one screen -->
+      <div id="control-tower" class="card" hidden>
+        <h2>Control Tower</h2>
+        <p id="ct-summary" class="profile-line">Loading…</p>
+        <div id="ct-metrics" class="ct-grid"></div>
+        <h3>Alerts</h3>
+        <div id="ct-alerts"></div>
+        <p id="ct-alerts-empty" class="profile-line" hidden>No alerts. Fill rate,
+          margins, payments and compliance are all healthy.</p>
+        <h3>Reports and exports</h3>
+        <p class="footnote">Each button downloads a CSV of the current data —
+          workers, assignments, approved timesheets (payroll-ready),
+          invoices and attendance.</p>
+        <div class="row-actions" id="ct-exports">
+          <button type="button" class="btn small" id="exp-workers">Workers</button>
+          <button type="button" class="btn small" id="exp-assignments">Assignments</button>
+          <button type="button" class="btn small" id="exp-timesheets">Timesheets (payroll)</button>
+          <button type="button" class="btn small" id="exp-invoices">Invoices</button>
+          <button type="button" class="btn small" id="exp-attendance">Attendance</button>
+        </div>
+      </div>
+
       <!-- A working sign-in with no role assigned: nothing to show, by design -->
       <div id="no-profile" class="card note" hidden>
         <h2>Your account is not linked yet</h2>
@@ -189,10 +211,38 @@
                 <label for="sd-availability">Availability</label>
                 <input id="sd-availability" autocomplete="off">
               </div>
+              <div class="field">
+                <label for="sd-location">Base location</label>
+                <input id="sd-location" autocomplete="off">
+              </div>
+              <div class="field">
+                <label for="sd-range">Travel range (km)</label>
+                <input type="number" id="sd-range" step="1" min="0">
+              </div>
               <button class="btn" type="submit" id="self-details-btn">Save corrections</button>
             </div>
             <p id="self-details-status" class="error" hidden></p>
           </form>
+        </div>
+        <div class="card" id="passport-availability" hidden>
+          <h3>My availability</h3>
+          <p class="footnote">Mark the dates you cannot work so the team
+            does not put you forward for them.</p>
+          <form id="self-avail-form" novalidate>
+            <div class="fields">
+              <div class="field">
+                <label for="sa-date">Date</label>
+                <input type="date" id="sa-date" required>
+              </div>
+              <div class="field grow">
+                <label for="sa-note">Note</label>
+                <input id="sa-note" autocomplete="off">
+              </div>
+              <button class="btn small" type="submit" id="sa-btn">Add date</button>
+            </div>
+            <p id="sa-status" class="error" hidden></p>
+          </form>
+          <div id="sa-rows"></div>
         </div>
         <div class="card" id="passport-documents" hidden>
           <h3>My documents</h3>
@@ -256,6 +306,13 @@
           </div>
           <p id="add-worker-status" class="error" hidden></p>
         </form>
+        <div class="fields" id="worker-search-row">
+          <div class="field grow">
+            <label for="w-search">Search workers</label>
+            <input id="w-search" autocomplete="off"
+                   placeholder="Name, trade or passport number">
+          </div>
+        </div>
         <table>
           <thead><tr><th>Passport</th><th>Name</th><th>Trade</th><th>Status</th><th></th></tr></thead>
           <tbody id="workers-rows"></tbody>
@@ -398,6 +455,56 @@
             </div>
             <p id="qual-status" class="error" hidden></p>
           </form>
+        </div>
+        <div class="card" id="wd-rates-card">
+          <h3>Rates and availability</h3>
+          <p class="footnote">Default hourly rates are copied into new
+            assignments. Travel range and base location feed capacity planning.</p>
+          <form id="wr-form" novalidate>
+            <div class="fields">
+              <div class="field">
+                <label for="wr-pay">Default pay (£/hour)</label>
+                <input type="number" id="wr-pay" step="0.01" min="0">
+              </div>
+              <div class="field">
+                <label for="wr-ot">Overtime pay (£/hour)</label>
+                <input type="number" id="wr-ot" step="0.01" min="0">
+              </div>
+              <div class="field">
+                <label for="wr-wk">Weekend pay (£/hour)</label>
+                <input type="number" id="wr-wk" step="0.01" min="0">
+              </div>
+              <div class="field">
+                <label for="wr-location">Base location</label>
+                <input id="wr-location" autocomplete="off"
+                       placeholder="e.g. Guildford">
+              </div>
+              <div class="field">
+                <label for="wr-range">Travel range (km)</label>
+                <input type="number" id="wr-range" step="1" min="0">
+              </div>
+              <button class="btn" type="submit" id="wr-btn">Save</button>
+            </div>
+            <p id="wr-status" class="error" hidden></p>
+          </form>
+          <h4>Unavailable dates</h4>
+          <p class="footnote">Dates this worker cannot be deployed. The worker
+            can mark their own from their sign-in; anything here is on record.</p>
+          <form id="wun-form" novalidate>
+            <div class="fields">
+              <div class="field">
+                <label for="wun-date">Date</label>
+                <input type="date" id="wun-date" required>
+              </div>
+              <div class="field grow">
+                <label for="wun-note">Note</label>
+                <input id="wun-note" autocomplete="off">
+              </div>
+              <button class="btn small" type="submit" id="wun-btn">Add date</button>
+            </div>
+            <p id="wun-status" class="error" hidden></p>
+          </form>
+          <div id="wun-rows"></div>
         </div>
       </div>
 
@@ -592,15 +699,33 @@
         </form>
         <form id="rates-form" class="card" hidden novalidate>
           <h3 id="rates-title">Assignment rates</h3>
-          <p class="footnote">Records only. Billing is built on top of these in a later stage.</p>
+          <p class="footnote">Hourly rates. The worker's defaults are filled
+            in; margin is calculated from these and frozen onto the timesheet
+            when it is approved.</p>
           <div class="fields">
             <div class="field">
-              <label for="rt-pay">Worker pay rate</label>
-              <input type="text" id="rt-pay" autocomplete="off" placeholder="e.g. £180/day">
+              <label for="rt-pay-h">Pay (£/hour)</label>
+              <input type="number" id="rt-pay-h" step="0.01" min="0">
             </div>
             <div class="field">
-              <label for="rt-charge">Client charge rate</label>
-              <input type="text" id="rt-charge" autocomplete="off" placeholder="e.g. £220/day">
+              <label for="rt-ot-pay">Overtime pay</label>
+              <input type="number" id="rt-ot-pay" step="0.01" min="0">
+            </div>
+            <div class="field">
+              <label for="rt-wk-pay">Weekend pay</label>
+              <input type="number" id="rt-wk-pay" step="0.01" min="0">
+            </div>
+            <div class="field">
+              <label for="rt-charge-h">Charge (£/hour)</label>
+              <input type="number" id="rt-charge-h" step="0.01" min="0">
+            </div>
+            <div class="field">
+              <label for="rt-ot-charge">Overtime charge</label>
+              <input type="number" id="rt-ot-charge" step="0.01" min="0">
+            </div>
+            <div class="field">
+              <label for="rt-wk-charge">Weekend charge</label>
+              <input type="number" id="rt-wk-charge" step="0.01" min="0">
             </div>
           </div>
           <div class="row-actions">
@@ -753,6 +878,141 @@
         </div>
       </div>
 
+      <!-- Timesheets: Owner and Operations manage; Compliance and
+           Auditor read; workers and contractors see their own -->
+      <div id="timesheets-panel" class="card" hidden>
+        <h2>Timesheets</h2>
+        <p class="footnote">One row per assignment per week. Generate from
+          recorded attendance or type the hours; approving freezes the pay and
+          charge totals at the assignment's rates.</p>
+        <form id="ts-form" novalidate>
+          <div class="fields">
+            <div class="field grow">
+              <label for="ts-assignment">Assignment</label>
+              <select id="ts-assignment"><option value="">Choose…</option></select>
+            </div>
+            <div class="field">
+              <label for="ts-week">Week starting (Monday)</label>
+              <input type="date" id="ts-week" required>
+            </div>
+            <div class="field">
+              <label for="ts-basic">Basic hours</label>
+              <input type="number" id="ts-basic" step="0.25" min="0" value="0">
+            </div>
+            <div class="field">
+              <label for="ts-ot">Overtime hours</label>
+              <input type="number" id="ts-ot" step="0.25" min="0" value="0">
+            </div>
+            <div class="field">
+              <label for="ts-wk">Weekend hours</label>
+              <input type="number" id="ts-wk" step="0.25" min="0" value="0">
+            </div>
+            <button type="button" class="btn small ghost" id="ts-generate">From attendance</button>
+            <button type="submit" class="btn" id="ts-btn">Save draft</button>
+          </div>
+          <p id="ts-status" class="error" hidden></p>
+        </form>
+        <table>
+          <thead><tr><th>Assignment</th><th>Worker</th><th>Week</th>
+            <th>Hours (B/OT/W)</th><th>Pay</th><th>Charge</th><th>Status</th><th></th></tr></thead>
+          <tbody id="ts-rows"></tbody>
+        </table>
+      </div>
+
+      <!-- Commercial: Owner only — margin, invoices, financial alerts -->
+      <div id="commercial-panel" class="card" hidden>
+        <h2>Commercial</h2>
+        <h3>Margin by assignment</h3>
+        <p id="margin-summary" class="profile-line"></p>
+        <table>
+          <thead><tr><th>Ref</th><th>Worker</th><th>Contractor</th>
+            <th>Pay £/h</th><th>Charge £/h</th><th>Margin £/h</th>
+            <th>Margin %</th><th>Status</th></tr></thead>
+          <tbody id="margin-rows"></tbody>
+        </table>
+
+        <h3>Invoices</h3>
+        <p class="footnote">Creates a draft invoice from the contractor's
+          approved timesheets in the period. Payment itself happens outside
+          the platform; record the outcome here.</p>
+        <form id="invoice-form" novalidate>
+          <div class="fields">
+            <div class="field">
+              <label for="iv-contractor">Contractor</label>
+              <select id="iv-contractor"><option value="">Choose…</option></select>
+            </div>
+            <div class="field">
+              <label for="iv-start">Period from</label>
+              <input type="date" id="iv-start" required>
+            </div>
+            <div class="field">
+              <label for="iv-end">Period to</label>
+              <input type="date" id="iv-end" required>
+            </div>
+            <div class="field">
+              <label for="iv-vat">VAT rate (%)</label>
+              <input type="number" id="iv-vat" step="0.5" min="0" value="20">
+            </div>
+            <div class="field">
+              <label for="iv-terms">Payment terms (days)</label>
+              <input type="number" id="iv-terms" step="1" min="0" value="14">
+            </div>
+            <button type="submit" class="btn" id="iv-btn">Create draft invoice</button>
+          </div>
+          <p id="iv-status" class="error" hidden></p>
+        </form>
+        <table>
+          <thead><tr><th>Invoice</th><th>Contractor</th><th>Period</th>
+            <th>Total</th><th>Due</th><th>Status</th><th></th></tr></thead>
+          <tbody id="invoice-rows"></tbody>
+        </table>
+
+        <h3>Financial alerts</h3>
+        <div id="fin-alerts"></div>
+      </div>
+
+      <!-- Contractor pipeline: Owner and Operations -->
+      <div id="pipeline-panel" class="card" hidden>
+        <h2>Contractor pipeline</h2>
+        <p class="footnote">Stage, credit limit and payment terms per
+          contractor. New contractors start as an enquiry.</p>
+        <table>
+          <thead><tr><th>Contractor</th><th>Stage</th><th>Credit limit (£)</th>
+            <th>Terms (days)</th><th></th></tr></thead>
+          <tbody id="pipeline-rows"></tbody>
+        </table>
+        <p id="pipeline-status" class="error" hidden></p>
+        <h3>Communication log</h3>
+        <form id="comm-form" novalidate>
+          <div class="fields">
+            <div class="field">
+              <label for="cm-contractor">Contractor</label>
+              <select id="cm-contractor"><option value="">Choose…</option></select>
+            </div>
+            <div class="field">
+              <label for="cm-channel">Channel</label>
+              <select id="cm-channel">
+                <option value="email">Email</option>
+                <option value="phone">Phone</option>
+                <option value="meeting">Meeting</option>
+                <option value="whatsapp">WhatsApp</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="field grow">
+              <label for="cm-note">Note</label>
+              <input id="cm-note" autocomplete="off" required>
+            </div>
+            <button class="btn" type="submit" id="cm-btn">Add</button>
+          </div>
+          <p id="cm-status" class="error" hidden></p>
+        </form>
+        <table>
+          <thead><tr><th>Contractor</th><th>Channel</th><th>Note</th><th>When</th></tr></thead>
+          <tbody id="comm-rows"></tbody>
+        </table>
+      </div>
+
       <!-- Assignment statement: the latest version for an assignment -->
       <div id="statement-view" class="card" hidden>
         <div class="row-between">
@@ -801,6 +1061,51 @@
           </thead>
           <tbody id="invite-rows"></tbody>
         </table>
+
+        <h3>Bulk invitations</h3>
+        <p class="footnote">One email per line. Every line becomes its own
+          invitation; send them from the list above.</p>
+        <form id="bulk-invite-form" novalidate>
+          <div class="fields">
+            <div class="field">
+              <label for="bi-role">Role</label>
+              <select id="bi-role">
+                <option value="worker" selected>Worker</option>
+                <option value="contractor">Contractor</option>
+                <option value="operations">Operations</option>
+                <option value="compliance">Compliance</option>
+                <option value="auditor">Auditor</option>
+              </select>
+            </div>
+            <div class="field" id="bi-contractor-field" hidden>
+              <label for="bi-contractor">Contractor</label>
+              <select id="bi-contractor"><option value="">Choose…</option></select>
+            </div>
+            <div class="field grow">
+              <label for="bi-emails">Emails — one per line</label>
+              <textarea id="bi-emails" rows="5" autocomplete="off"></textarea>
+            </div>
+            <button type="submit" class="btn" id="bi-btn">Create invitations</button>
+          </div>
+          <p id="bi-status" class="error" hidden></p>
+        </form>
+
+        <h3>Bulk worker onboarding</h3>
+        <p class="footnote">One worker per line: full name, email, trade.
+          Each line creates a draft worker record and a linked worker
+          invitation.</p>
+        <form id="bulk-worker-form" novalidate>
+          <div class="fields">
+            <div class="field grow">
+              <label for="bw-list">Workers — name, email, trade</label>
+              <textarea id="bw-list" rows="6" autocomplete="off"
+                placeholder="e.g. Ana Silva, ana@example.com, painter and decorator"></textarea>
+            </div>
+            <button type="submit" class="btn" id="bw-btn">Create workers and invite</button>
+          </div>
+          <p id="bw-status" class="error" hidden></p>
+        </form>
+
         <p class="footnote">Invitation emails are sent automatically once the
           invitation flow is connected in the next build step.</p>
       </div>
@@ -941,6 +1246,11 @@
         </table>
         <h3>Assignment statements</h3>
         <div id="co-statements"></div>
+        <h3>Invoices</h3>
+        <table>
+          <thead><tr><th>Invoice</th><th>Period</th><th>Total</th><th>Due</th><th>Status</th></tr></thead>
+          <tbody id="co-invoice-rows"></tbody>
+        </table>
       </div>
     </section>
   </main>
