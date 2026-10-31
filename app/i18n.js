@@ -1042,7 +1042,12 @@
       var m = text.match(RULES[i].re);
       if (m) {
         var out = RULES[i][current];
-        for (var g = 1; g < m.length; g++) out = out.replace('$' + g, m[g]);
+        /* an optional group that did not participate is undefined; it
+           must disappear from the output, not become the string
+           "undefined" */
+        for (var g = 1; g < m.length; g++) {
+          out = out.split('$' + g).join(m[g] === undefined ? '' : m[g]);
+        }
         return out;
       }
     }
