@@ -2065,10 +2065,11 @@
             .update({ status: 'filled' })
             .eq('id', a.request_id)
             .in('status', ['offered', 'matched', 'open'])
-            .then(function () { loadRequests(); loadAssignments(); });
+            .then(function () { loadRequests(); loadAssignments(); loadTsAssignments(); });
         } else {
           loadRequests();
           loadAssignments();
+          loadTsAssignments();
         }
       });
   }
