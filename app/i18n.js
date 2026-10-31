@@ -421,6 +421,7 @@
     'Weekend charge': 'Tarifa al cliente de fin de semana',
 
     /* timesheets */
+    'Timesheets': 'Partes de horas',
     'One row per assignment per week. Generate from recorded attendance or type the hours; approving freezes the pay and charge totals at the assignment\x27s rates.': 'Una fila por asignación y semana. Genere el parte a partir de la asistencia registrada o escriba las horas; al aprobarlo se congelan los totales de pago y de cobro según las tarifas de la asignación.',
     'Week starting (Monday)': 'Semana que empieza (lunes)',
     'Basic hours': 'Horas básicas',
@@ -906,6 +907,7 @@
     'Weekend charge': 'Tarifa ao cliente de fim de semana',
 
     /* timesheets */
+    'Timesheets': 'Folhas de horas',
     'One row per assignment per week. Generate from recorded attendance or type the hours; approving freezes the pay and charge totals at the assignment\x27s rates.': 'Uma linha por atribuição e semana. Gere a folha a partir da assiduidade registada ou escreva as horas; a aprovação fixa os totais de pagamento e de cobrança às tarifas da atribuição.',
     'Week starting (Monday)': 'Semana a começar (segunda-feira)',
     'Basic hours': 'Horas normais',
@@ -1010,13 +1012,13 @@
     { re: /^(\d+) attendance records found — check the hours and save the draft\.$/, es: 'Se encontraron $1 registros de asistencia — revise las horas y guarde el borrador.', pt: 'Foram encontrados $1 registos de assiduidade — verifique as horas e guarde o rascunho.' },
     { re: /^Average margin ([\d.]+)% across (\d+) rated assignments, (\d+) below (\d+)%\.$/, es: 'Margen medio del $1% en $2 asignaciones con tarifas, $3 por debajo del $4%.', pt: 'Margem média de $1% em $2 atribuições com tarifas, $3 abaixo de $4%.' },
     { re: /^(INV-\d{6}) created with (\d+) lines?\.$/, es: '$1 creada con $2 líneas.', pt: '$1 criada com $2 linhas.' },
-    { re: /^Overdue invoices: (\d+)\.$/, es: 'Facturas vencidas: $1.', pt: 'Faturas vencidas: $1.' },
-    { re: /^No-shows \(last 30 days\): (\d+)\.$/, es: 'Ausencias (últimos 30 días): $1.', pt: 'Faltas (últimos 30 dias): $1.' },
-    { re: /^Unresolved replacement incidents: (\d+)\.$/, es: 'Incidentes de sustitución sin resolver: $1.', pt: 'Incidentes de substituição por resolver: $1.' },
-    { re: /^Compliance items expired or due within 30 days: (\d+)\.$/, es: 'Elementos de cumplimiento caducados o por caducar en 30 días: $1.', pt: 'Itens de conformidade expirados ou a expirar em 30 dias: $1.' },
-    { re: /^Payment exposure \(sent, unpaid\): (.+)\.$/, es: 'Exposición de pagos (enviadas, sin pagar): $1.', pt: 'Exposição a pagamentos (enviadas, não pagas): $1.' },
-    { re: /^Worker pay liability \(approved, not yet invoiced\): (.+)\.$/, es: 'Obligación de pago a trabajadores (aprobado, aún sin facturar): $1.', pt: 'Responsabilidade de pagamento a trabalhadores (aprovada, ainda não faturada): $1.' },
-    { re: /^Approved timesheet revenue to date: (.+)\.$/, es: 'Ingresos por partes de horas aprobados hasta la fecha: $1.', pt: 'Receitas de folhas de horas aprovadas até à data: $1.' },
+    { re: /^(?:⚠ )?Overdue invoices: (\d+)\.$/, es: '⚠ $1 facturas vencidas.', pt: '⚠ $1 faturas vencidas.' },
+    { re: /^(?:⚠ )?No-shows \(last 30 days\): (\d+)\.$/, es: '⚠ Ausencias (últimos 30 días): $1.', pt: '⚠ Faltas (últimos 30 dias): $1.' },
+    { re: /^(?:⚠ )?Unresolved replacement incidents: (\d+)\.$/, es: '⚠ Incidentes de sustitución sin resolver: $1.', pt: '⚠ Incidentes de substituição por resolver: $1.' },
+    { re: /^(?:⚠ )?Compliance items expired or due within 30 days: (\d+)\.$/, es: '⚠ Elementos de cumplimiento caducados o por caducar en 30 días: $1.', pt: '⚠ Itens de conformidade expirados ou a expirar em 30 dias: $1.' },
+    { re: /^(?:⚠ )?Payment exposure \(sent, unpaid\): (.+)\.$/, es: '⚠ Exposición de pagos (enviadas, sin pagar): $1.', pt: '⚠ Exposição a pagamentos (enviadas, não pagas): $1.' },
+    { re: /^(?:⚠ )?Worker pay liability \(approved, not yet invoiced\): (.+)\.$/, es: '⚠ Obligación de pago a trabajadores (aprobado, aún sin facturar): $1.', pt: '⚠ Responsabilidade de pagamento a trabalhadores (aprovada, ainda não faturada): $1.' },
+    { re: /^(?:⚠ )?Approved timesheet revenue to date: (.+)\.$/, es: '⚠ Ingresos por partes de horas aprobados hasta la fecha: $1.', pt: '⚠ Receitas de folhas de horas aprovadas até à data: $1.' },
     { re: /^As at (.+)$/, es: 'A fecha de $1', pt: 'À data de $1' },
     { re: /^Demand by trade \(open requests\): (.+)$/, es: 'Demanda por oficio (solicitudes abiertas): $1', pt: 'Procura por ofício (pedidos abertos): $1' },
     { re: /^Remove (.+)$/, es: 'Quitar $1', pt: 'Remover $1' },
