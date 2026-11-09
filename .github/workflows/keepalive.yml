@@ -1,0 +1,32 @@
+# Supabase free-tier projects auto-pause after 7 days without activity,
+# which takes the whole platform (sign-in included) offline. This job makes
+# one database connection every day so the project stays active. The
+# database password lives in the PRJ_DB_PASSWORD repository secret.
+name: Supabase keep-alive
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping the database
+        env:
+          PRJ_DB_PASSWORD: ${{ secrets.PRJ_DB_PASSWORD }}
+        run: |
+          pip install psycopg[binary] --quiet
+          python - <<'PY'
+          import os, psycopg
+          conn = psycopg.connect(
+              host="aws-0-eu-west-2.pooler.supabase.com", port=5432,
+              user="postgres.houhfxugjgeyrmkmpvji", dbname="postgres",
+              password=os.environ["PRJ_DB_PASSWORD"], sslmode="require")
+          with conn.cursor() as cur:
+              cur.execute("select 1")
+              assert cur.fetchone()[0] == 1
+          conn.close()
+          print("keep-alive ping OK")
+          PY
