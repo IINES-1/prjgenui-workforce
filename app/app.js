@@ -4766,11 +4766,58 @@
       els.loginError.textContent = 'Enter your email above first, then try again.';
       return;
     }
-    sb.auth.resetPasswordForEmail(email).then(function (res) {
-      els.loginError.hidden = false;
-      els.loginError.textContent = res.error
-        ? 'That request could not be sent. Try again in a little while.'
-        : 'If that email has an account, a link to set a new password is on its way.';
+    sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + '/app/' })
+      .then(function (res) {
+        els.loginError.hidden = false;
+        els.loginError.textContent = res.error
+          ? 'That request could not be sent. Try again in a little while.'
+          : 'If that email has an account, a link to set a new password is on its way.';
+      });
+  });
+
+  /* Password reset completion: the recovery link signs the user in
+     with a recovery session, and this form sets the new password. */
+  var resetView = document.getElementById('reset-view');
+  var resetForm = document.getElementById('reset-form');
+  var resetStatus = document.getElementById('reset-status');
+
+  function showResetView() {
+    els.loginView.hidden = true;
+    els.redeemView.hidden = true;
+    els.mfaView.hidden = true;
+    els.appView.hidden = true;
+    resetView.hidden = false;
+  }
+
+  resetForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    resetStatus.hidden = true;
+    var pw = document.getElementById('new-password').value;
+    var pw2 = document.getElementById('new-password2').value;
+    if (pw.length < 8) {
+      resetStatus.hidden = false;
+      resetStatus.textContent = 'Choose a password of at least 8 characters.';
+      return;
+    }
+    if (pw !== pw2) {
+      resetStatus.hidden = false;
+      resetStatus.textContent = 'The two passwords do not match.';
+      return;
+    }
+    sb.auth.updateUser({ password: pw }).then(function (res) {
+      if (res.error) {
+        resetStatus.hidden = false;
+        resetStatus.textContent =
+          'The password could not be saved. Try again.';
+        return;
+      }
+      resetView.hidden = true;
+      resetStatus.className = 'ok';
+      resetStatus.hidden = false;
+      resetStatus.textContent = 'Password saved.';
+      sb.auth.getSession().then(function (sres) {
+        render(sres.data.session);
+      });
     });
   });
 
@@ -5022,5 +5069,11 @@
   })();
 
   sb.auth.getSession().then(function (res) { render(res.data.session); });
-  sb.auth.onAuthStateChange(function (_event, session) { render(session); });
+  sb.auth.onAuthStateChange(function (event, session) {
+    if (event === 'PASSWORD_RECOVERY' && session) {
+      showResetView();
+      return;
+    }
+    render(session);
+  });
 })();

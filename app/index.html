@@ -68,6 +68,28 @@
       </div>
     </section>
 
+    <!-- Password reset completion: a reset link signs in with a
+         recovery session; this form sets the new password -->
+    <section id="reset-view" hidden>
+      <div class="card login-card">
+        <h1>Choose a new password</h1>
+        <p class="lede">You followed a password reset link. Set the new
+          password for your account.</p>
+        <form id="reset-form" novalidate>
+          <label for="new-password">New password</label>
+          <input type="password" id="new-password" autocomplete="new-password"
+                 minlength="8" required>
+          <label for="new-password2">Repeat the new password</label>
+          <input type="password" id="new-password2" autocomplete="new-password"
+                 minlength="8" required>
+          <button type="submit" class="btn" id="reset-btn">Save password</button>
+          <p id="reset-status" class="error" hidden></p>
+        </form>
+        <p class="footnote">After saving, you stay signed in — no need to
+          sign in again.</p>
+      </div>
+    </section>
+
     <!-- Two-factor step for admin accounts (Owner, Operations, Compliance) -->
     <section id="mfa-view" hidden>
       <div class="card login-card">

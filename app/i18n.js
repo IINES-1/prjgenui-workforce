@@ -496,6 +496,17 @@
     'Choose a date.': 'Elija una fecha.',
     'That date is already marked.': 'Esa fecha ya está marcada.',
 
+    /* password reset completion */
+    'Choose a new password': 'Elija una nueva contraseña',
+    'You followed a password reset link. Set the new password for your account.': 'Ha seguido un enlace para restablecer la contraseña. Establezca la nueva contraseña de su cuenta.',
+    'New password': 'Nueva contraseña',
+    'Repeat the new password': 'Repita la nueva contraseña',
+    'Save password': 'Guardar contraseña',
+    'After saving, you stay signed in — no need to sign in again.': 'Después de guardar, permanece con la sesión iniciada — no hace falta iniciar sesión de nuevo.',
+    'The two passwords do not match.': 'Las dos contraseñas no coinciden.',
+    'The password could not be saved. Try again.': 'No se pudo guardar la contraseña. Inténtelo de nuevo.',
+    'Password saved.': 'Contraseña guardada.',
+
     /* shared */
     'Save': 'Guardar',
     'Delete': 'Eliminar',
@@ -981,6 +992,17 @@
     'Mark the dates you cannot work so the team does not put you forward for them.': 'Marque as datas em que não pode trabalhar para que a equipa não o proponha para elas.',
     'Choose a date.': 'Escolha uma data.',
     'That date is already marked.': 'Essa data já está marcada.',
+
+    /* password reset completion */
+    'Choose a new password': 'Escolha uma nova palavra-passe',
+    'You followed a password reset link. Set the new password for your account.': 'Seguiu uma ligação para redefinir a palavra-passe. Defina a nova palavra-passe da sua conta.',
+    'New password': 'Nova palavra-passe',
+    'Repeat the new password': 'Repita a nova palavra-passe',
+    'Save password': 'Guardar palavra-passe',
+    'After saving, you stay signed in — no need to sign in again.': 'Depois de guardar, mantém a sessão iniciada — não é necessário iniciar sessão de novo.',
+    'The two passwords do not match.': 'As duas palavras-passe não coincidem.',
+    'The password could not be saved. Try again.': 'Não foi possível guardar a palavra-passe. Tente novamente.',
+    'Password saved.': 'Palavra-passe guardada.',
 
     /* shared */
     'Note': 'Nota',
