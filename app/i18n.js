@@ -497,6 +497,7 @@
     'That date is already marked.': 'Esa fecha ya está marcada.',
 
     /* password reset completion */
+    'Change password': 'Cambiar contraseña',
     'Choose a new password': 'Elija una nueva contraseña',
     'You followed a password reset link. Set the new password for your account.': 'Ha seguido un enlace para restablecer la contraseña. Establezca la nueva contraseña de su cuenta.',
     'New password': 'Nueva contraseña',
@@ -994,6 +995,7 @@
     'That date is already marked.': 'Essa data já está marcada.',
 
     /* password reset completion */
+    'Change password': 'Alterar palavra-passe',
     'Choose a new password': 'Escolha uma nova palavra-passe',
     'You followed a password reset link. Set the new password for your account.': 'Seguiu uma ligação para redefinir a palavra-passe. Defina a nova palavra-passe da sua conta.',
     'New password': 'Nova palavra-passe',
